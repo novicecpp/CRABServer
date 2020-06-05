@@ -16,7 +16,7 @@ function manage_transfers {
         DEST_LFN=`python -c 'import sys, json; print json.loads( open("task_process/transfers.txt").readlines()[0] )["destination_lfn"]' `
 
         if [[ $DEST_LFN =~ ^/store/test/rucio/* ]]; then
-        export PYTHONPATH=$PYTHONPATH:/cvmfs/cms.cern.ch/rucio/current/lib/python2.7/site-packages
+        source /cvmfs/cms.cern.ch/rucio/setup.sh
         timeout 15m python task_process/RUCIO_Transfers.py
         else
         timeout 15m python task_process/FTS_Transfers.py
