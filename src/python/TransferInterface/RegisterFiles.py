@@ -205,7 +205,7 @@ class submit_thread(threading.Thread):
             try:
                 crabInj.add_dataset()
             except Exception as ex:
-                self.log.error("Failed to create dataset %s:%s on Rucio server: %s", "user.%s" % self.taskname, self.taskname, ex)
+                self.log.error("Failed to create dataset %s:%s on Rucio server: %s", "user.%s" % self.username, self.taskname, ex)
                 self.threadLock.release()
                 return
 
