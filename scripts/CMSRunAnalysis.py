@@ -539,9 +539,8 @@ def parseArgs():
 
 #TODO: MM I do not believe this is necessary at all
 def prepSandbox(opts):
-    return
-    """
     print("==== Sandbox preparation STARTING at %s ====" % time.asctime(time.gmtime()))
+    """
     os.environ['WMAGENTJOBDIR'] = os.getcwd()
     if opts.archiveJob and not "CRAB3_RUNTIME_DEBUG" in os.environ:
         if os.path.exists(opts.archiveJob):
@@ -571,6 +570,7 @@ def prepSandbox(opts):
                     handleException("FAILED", EC_WGET, 'CMSRunAnalysisERROR: could not get jobO files from panda server')
                     sys.exit(EC_WGET)
                 time.sleep(30)
+    """
     #The user sandbox.tar.gz has to be unpacked no matter what (even in DEBUG mode)
     print(commands.getoutput('tar xfm %s' % opts.archiveJob))
     print("==== Sandbox preparation FINISHED at %s ====" % time.asctime(time.gmtime()))
@@ -589,7 +589,6 @@ def prepSandbox(opts):
         for myfile in opts.userFiles.split(','):
             os.rename(myfile, destDir + '/' + myfile)
     print("==== WMCore filesystem preparation FINISHED at %s ====" % time.asctime(time.gmtime()))
-    """
 
 def extractUserSandbox(archiveJob, cmsswVersion):
     # the user sandbox contains the user scram directory files and thus
@@ -729,7 +728,7 @@ def executeCMSSWStack(opts, scram):
     print(scram.diagnostic())
 
     # real thing
-    command_ = 'pwd; cmsRun -p PSet.py -j jobReportXML'
+    command_ = 'pwd; cmsRun -p PSet.py -j FrameworkJobReport.xml'
     with tempSetLogLevel(logger=logging.getLogger(), level=logging.DEBUG):
         ret = scram(command_, runtimeDir = os.getcwd(), cleanEnv = False)
     if ret > 0:
