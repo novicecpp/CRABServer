@@ -101,7 +101,6 @@ class RESTCache(RESTEntity):
             validate_str('tarballname', param, safe, RX_TARBALLNAME, optional=True)
 
     @restcall
-    @profile
     def get(self, subresource, objecttype, taskname, username, tarballname):  # pylint: disable=redefined-builtin
         """
            :arg str subresource: the specific information to be accessed;

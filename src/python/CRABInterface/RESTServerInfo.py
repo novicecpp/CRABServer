@@ -29,7 +29,6 @@ class RESTServerInfo(RESTEntity):
             validate_str('workflow', param, safe, RX_TASKNAME, optional=True)
 
     @restcall
-    @profile
     def get(self, subresource , **kwargs):
         """Retrieves the server information, like delegateDN, filecacheurls ...
            :arg str subresource: the specific server information to be accessed;
