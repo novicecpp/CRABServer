@@ -555,6 +555,7 @@ class RESTUserWorkflow(RESTEntity):
 
 
     @restcall
+    @profile
     #@getUserCert(headers=cherrypy.request.headers)
     def put(self, workflow, activity, jobtype, jobsw, jobarch, inputdata, primarydataset, nonvaliddata, useparent, secondarydata, generator, eventsperlumi,
             siteblacklist, sitewhitelist, splitalgo, algoargs, cachefilename, debugfilename, cacheurl, addoutputfiles,
@@ -636,6 +637,7 @@ class RESTUserWorkflow(RESTEntity):
                                            submitipaddr=cherrypy.request.headers['X-Forwarded-For'], ignoreglobalblacklist=ignoreglobalblacklist)
 
     @restcall
+    @profile
     def post(self, workflow, subresource, publication, jobids, force, siteblacklist, sitewhitelist, maxjobruntime, maxmemory,
              numcores, priority):
         """Resubmit or continue an existing workflow. The caller needs to be a CMS user owner of the workflow.
@@ -671,6 +673,7 @@ class RESTUserWorkflow(RESTEntity):
             return self.userworkflowmgr.proceed(workflow=workflow)
 
     @restcall
+    @profile
     def get(self, workflow, subresource, username, limit, shortformat, exitcode, jobids, verbose, timestamp, asourl, asodb):
         """Retrieves the workflow information, like a status summary, in case the workflow unique name is specified.
            Otherwise returns all workflows since (now - age) for which the user is the owner.
@@ -720,6 +723,7 @@ class RESTUserWorkflow(RESTEntity):
         return result
 
     @restcall
+    @profile
     def delete(self, workflow, killwarning=''):
         """Aborts a workflow. The user needs to be a CMS owner of the workflow.
 
