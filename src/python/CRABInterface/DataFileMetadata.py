@@ -3,7 +3,7 @@
     (if it already exists)
 """
 from memory_profiler import profile
-fp = open('/data/srv/logs/crabserver/mp_getFiles.log')
+fp = open('/data/srv/logs/crabserver/mp_getFiles.log', 'w+')
 
 import json
 import logging
