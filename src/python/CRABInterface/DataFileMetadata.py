@@ -13,6 +13,14 @@ from Utils.Utilities import decodeBytesToUnicode
 
 from CRABInterface.Utilities import getDBinstance
 
+@profile(stream=fp)
+def dummy():
+    a = 1
+    b = 2
+    print(a+b)
+
+dummy()
+
 class DataFileMetadata(object):
     """ DataFileMetadata class
     """
