@@ -30,17 +30,17 @@ class DataFileMetadata(object):
         DataFileMetadata.api = dbapi
         DataFileMetadata.config = config
         logger = logging.getLogger("CRABLogger.DataFileMetadata")
-        logger.info("wa-dario-debug: %s %s " % (DataFileMetadata.api, DataFileMetadata.config))
 
     def __init__(self, config):
         self.logger = logging.getLogger("CRABLogger.DataFileMetadata")
         self.FileMetaData = getDBinstance(config, 'FileMetaDataDB', 'FileMetaData')
-        self.logger.info("wa-dario-debug: %s " % config)
 
     def getFiles(self, taskname, filetype, howmany, lfn):
         """ Given a taskname, a filetype and a number return a list of filemetadata from this task
         """
-        self.logger.debug("Calling jobmetadata for task %s and filetype %s" % (taskname, filetype))
+        self.logger.info("wa-dario-debug: %s " % (self.FileMetaData))
+        self.logger.info("wa-dario-debug: %s %s " % (DataFileMetadata.api, DataFileMetadata.config))
+        #self.logger.debug("Calling jobmetadata for task %s and filetype %s" % (taskname, filetype))
         if howmany == None:
             howmany = -1
         binds = {'taskname': taskname, 'filetype': filetype, 'howmany': howmany}
@@ -95,7 +95,7 @@ class DataFileMetadata(object):
                 # 'state': None,
                 # 'created': "[b'/store/[...]-0CC47A7C34C8.root']",      ## THIS CONTAINS BYTES
                 # 'tmplfn': '/store/user/dmapelli/GenericTTbar/[...]/220113_142727/0000/output_7.root'}
-                self.logger.info("converting bytes into unicode in filemetadata - before - %s", filedict)
+                #self.logger.info("converting bytes into unicode in filemetadata - before - %s", filedict)
                 for key0, val0 in filedict.items():
                     if isinstance(val0, list):  # 'parents' and 'created'
                         filedict[key0]  = [decodeBytesToUnicode(el) for el in val0]
@@ -107,7 +107,7 @@ class DataFileMetadata(object):
                                 for key2, val2 in list(val1.items()):
                                     val1.pop(key2)
                                     val1[decodeBytesToUnicode(key2)] = decodeBytesToUnicode(val2)
-                self.logger.info("converting bytes into unicode in filemetadata - after - %s", filedict)
+                #self.logger.info("converting bytes into unicode in filemetadata - after - %s", filedict)
                 ## temporary changes for making REST py3 compatible with Publisher py2 - end
                 filedict['created'] = str(filedict['created'])   # convert to str, after removal of bytes
                 yield json.dumps(filedict)
