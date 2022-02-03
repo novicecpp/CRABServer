@@ -1,5 +1,5 @@
 from memory_profiler import profile
-fp = open('/data/srv/logs/crabserver/mp_RESTFileMetadata.log', 'w+')
+#fp = open('/data/srv/logs/crabserver/mp_RESTFileMetadata.log', 'w+')
 
 # WMCore dependecies here
 from WMCore.REST.Error import InvalidParameter
@@ -97,7 +97,7 @@ class RESTFileMetadata(RESTEntity):
         return self.jobmetadata.changeState(taskname=taskname, outlfn=outlfn, filestate=filestate)
 
     @restcall
-    @profile(stream=fp)
+    @profile
     def get(self, taskname, filetype, howmany, lfn):
         """Retrieves a specific job metadata information.
 
