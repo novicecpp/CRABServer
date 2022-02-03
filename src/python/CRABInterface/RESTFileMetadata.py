@@ -97,7 +97,7 @@ class RESTFileMetadata(RESTEntity):
         return self.jobmetadata.changeState(taskname=taskname, outlfn=outlfn, filestate=filestate)
 
     @restcall
-    @profile
+    #@profile
     def get(self, taskname, filetype, howmany, lfn):
         """Retrieves a specific job metadata information.
 

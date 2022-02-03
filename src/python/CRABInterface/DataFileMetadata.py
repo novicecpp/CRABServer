@@ -13,13 +13,13 @@ from Utils.Utilities import decodeBytesToUnicode
 
 from CRABInterface.Utilities import getDBinstance
 
-@profile
-def dummy():
-    a = 1
-    b = 2
-    print(a+b)
-
-dummy()
+#@profile
+#def dummy():
+#    a = 1
+#    b = 2
+#    print(a+b)
+#
+#dummy()
 
 class DataFileMetadata(object):
     """ DataFileMetadata class
@@ -29,12 +29,14 @@ class DataFileMetadata(object):
         """ Called by RESTBaseAPI to initialize some parameters that are common between all the DataFileMetadata instances"""
         DataFileMetadata.api = dbapi
         DataFileMetadata.config = config
+        logger = logging.getLogger("CRABLogger.DataFileMetadata")
+        logger.info("wa-dario-debug: %s %s " % (DataFileMetadata.api, DataFileMetadata.config))
 
     def __init__(self, config):
         self.logger = logging.getLogger("CRABLogger.DataFileMetadata")
         self.FileMetaData = getDBinstance(config, 'FileMetaDataDB', 'FileMetaData')
+        self.logger.info("wa-dario-debug: %s " % config)
 
-    @profile
     def getFiles(self, taskname, filetype, howmany, lfn):
         """ Given a taskname, a filetype and a number return a list of filemetadata from this task
         """
