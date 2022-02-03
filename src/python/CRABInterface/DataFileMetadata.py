@@ -3,7 +3,7 @@
     (if it already exists)
 """
 from memory_profiler import profile
-#fp = open('/data/srv/logs/crabserver/mp_getFiles.log', 'w+')
+fpwa = open('/data/srv/logs/crabserver/mp_getFiles.log', 'w+')
 
 import json
 import logging
@@ -13,7 +13,7 @@ from Utils.Utilities import decodeBytesToUnicode
 
 from CRABInterface.Utilities import getDBinstance
 
-@profile
+@profile(stream=fpwa)
 def dummy():
     a = 1
     b = 2
@@ -34,7 +34,7 @@ class DataFileMetadata(object):
         self.logger = logging.getLogger("CRABLogger.DataFileMetadata")
         self.FileMetaData = getDBinstance(config, 'FileMetaDataDB', 'FileMetaData')
 
-    @profile
+    @profile(stream=fpwa)
     def getFiles(self, taskname, filetype, howmany, lfn):
         """ Given a taskname, a filetype and a number return a list of filemetadata from this task
         """
