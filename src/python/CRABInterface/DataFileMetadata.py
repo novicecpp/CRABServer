@@ -95,19 +95,19 @@ class DataFileMetadata(object):
                     self.logger.info("MP_L95: %s", memory_usage())
                     if isinstance(val0, list):  # 'parents' and 'created'
                         filedict[key0]  = [decodeBytesToUnicode(el) for el in val0]
-                        self.logger.info("MP_L98: %s", memory_usage())
+                        #self.logger.info("MP_L98: %s", memory_usage())
                     if isinstance(val0, dict):  # 'runlumi'
                         for key1, val1 in list(val0.items()):
                             val0.pop(key1)
-                            self.logger.info("MP_L102: %s", memory_usage())
+                            #self.logger.info("MP_L102: %s", memory_usage())
                             val0[decodeBytesToUnicode(key1)] = val1
-                            self.logger.info("MP_L104: %s", memory_usage())
+                            #self.logger.info("MP_L104: %s", memory_usage())
                             if isinstance(val1, dict):
                                 for key2, val2 in list(val1.items()):
                                     val1.pop(key2)
-                                    self.logger.info("MP_L108: %s", memory_usage())
+                                    #self.logger.info("MP_L108: %s", memory_usage())
                                     val1[decodeBytesToUnicode(key2)] = decodeBytesToUnicode(val2)
-                                    self.logger.info("MP_L110: %s", memory_usage())
+                                    #self.logger.info("MP_L110: %s", memory_usage())
                 #self.logger.info("converting bytes into unicode in filemetadata - after - %s", filedict)
                 ## temporary changes for making REST py3 compatible with Publisher py2 - end
                 self.logger.info("MP_L113: %s", memory_usage())
