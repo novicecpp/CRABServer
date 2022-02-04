@@ -33,13 +33,13 @@ class DataFileMetadata(object):
         if howmany == None:
             howmany = -1
         binds = {'taskname': taskname, 'filetype': filetype, 'howmany': howmany}
-        self.logger.info("MP_L36: %s", memory_usage())
+        #self.logger.info("MP_L36: %s", memory_usage())
         rows = self.api.query(None, None, self.FileMetaData.GetFromTaskAndType_sql, **binds)
-        self.logger.info("MP_L38: %s", memory_usage())
+        #self.logger.info("MP_L38: %s", memory_usage())
         for row in rows:
-            self.logger.info("MP_L40: %s", memory_usage())
+            #self.logger.info("MP_L40: %s", memory_usage())
             row = self.FileMetaData.GetFromTaskAndType_tuple(*row)
-            self.logger.info("MP_L42: %s", memory_usage())
+            #self.logger.info("MP_L42: %s", memory_usage())
             if lfn==[] or row.lfn in lfn:
                 filedict = {
                     'taskname': taskname,
@@ -64,7 +64,7 @@ class DataFileMetadata(object):
                      'created': literal_eval(row.parents.read()),  # postpone conversion to str
                      'tmplfn': row.tmplfn
                 }
-                self.logger.info("MP_L67: %s", memory_usage())
+                #self.logger.info("MP_L67: %s", memory_usage())
                 ## temporary changes for making REST py3 compatible with Publisher py2 - start
                 ## this block of code can be removed after we complete the
                 ## deployment in production of the services running in python3
@@ -110,9 +110,9 @@ class DataFileMetadata(object):
                                     #self.logger.info("MP_L110: %s", memory_usage())
                 #self.logger.info("converting bytes into unicode in filemetadata - after - %s", filedict)
                 ## temporary changes for making REST py3 compatible with Publisher py2 - end
-                self.logger.info("MP_L113: %s", memory_usage())
+                #self.logger.info("MP_L113: %s", memory_usage())
                 filedict['created'] = str(filedict['created'])   # convert to str, after removal of bytes
-                self.logger.info("MP_L115: %s", memory_usage())
+                #self.logger.info("MP_L115: %s", memory_usage())
                 yield json.dumps(filedict)
 
 
