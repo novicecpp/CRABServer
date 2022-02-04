@@ -104,7 +104,7 @@ class RESTFileMetadata(RESTEntity):
            :arg int howmany: how many rows to retrieve;
            :return: generator looping through the resulting db rows."""
         self.jobmetadata.logger.info("MP2_L105: %s", memory_usage())
-        x = self.jobmetadata.getFiles(taskname, filetype, howmany, lfn)
+        x = list(self.jobmetadata.getFiles(taskname, filetype, howmany, lfn))
         self.jobmetadata.logger.info("MP2_L107: %s", memory_usage())
         return x
 
