@@ -39,7 +39,7 @@ class DataFileMetadata(object):
         for row in rows:
             self.logger.info("MP_L40: %s", memory_usage())
             row = self.FileMetaData.GetFromTaskAndType_tuple(*row)
-            self.logger.info("MP_L42: %s", memory_usage())
+            #self.logger.info("MP_L42: %s", memory_usage())
             if lfn==[] or row.lfn in lfn:
                 filedict = {
                     'taskname': taskname,
@@ -64,7 +64,7 @@ class DataFileMetadata(object):
                      'created': literal_eval(row.parents.read()),  # postpone conversion to str
                      'tmplfn': row.tmplfn
                 }
-                self.logger.info("MP_L67: %s", memory_usage())
+                #self.logger.info("MP_L67: %s", memory_usage())
                 ## temporary changes for making REST py3 compatible with Publisher py2 - start
                 ## this block of code can be removed after we complete the
                 ## deployment in production of the services running in python3
@@ -90,9 +90,9 @@ class DataFileMetadata(object):
                 # 'created': "[b'/store/[...]-0CC47A7C34C8.root']",      ## THIS CONTAINS BYTES
                 # 'tmplfn': '/store/user/dmapelli/GenericTTbar/[...]/220113_142727/0000/output_7.root'}
                 #self.logger.info("converting bytes into unicode in filemetadata - before - %s", filedict)
-                self.logger.info("MP_L93: %s", memory_usage())
+                #self.logger.info("MP_L93: %s", memory_usage())
                 for key0, val0 in filedict.items():
-                    self.logger.info("MP_L95: %s", memory_usage())
+                    #self.logger.info("MP_L95: %s", memory_usage())
                     if isinstance(val0, list):  # 'parents' and 'created'
                         filedict[key0]  = [decodeBytesToUnicode(el) for el in val0]
                         #self.logger.info("MP_L98: %s", memory_usage())
@@ -110,7 +110,7 @@ class DataFileMetadata(object):
                                     #self.logger.info("MP_L110: %s", memory_usage())
                 #self.logger.info("converting bytes into unicode in filemetadata - after - %s", filedict)
                 ## temporary changes for making REST py3 compatible with Publisher py2 - end
-                self.logger.info("MP_L113: %s", memory_usage())
+                #self.logger.info("MP_L113: %s", memory_usage())
                 filedict['created'] = str(filedict['created'])   # convert to str, after removal of bytes
                 self.logger.info("MP_L115: %s", memory_usage())
                 yield json.dumps(filedict)
