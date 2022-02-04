@@ -7,6 +7,8 @@ import json
 import logging
 from ast import literal_eval
 
+from memory_profiler import memory_usage
+
 from Utils.Utilities import decodeBytesToUnicode
 
 from CRABInterface.Utilities import getDBinstance
@@ -31,9 +33,13 @@ class DataFileMetadata(object):
         if howmany == None:
             howmany = -1
         binds = {'taskname': taskname, 'filetype': filetype, 'howmany': howmany}
+        self.logger.info("MP_L36: %s" memory_usage())
         rows = self.api.query(None, None, self.FileMetaData.GetFromTaskAndType_sql, **binds)
+        self.logger.info("MP_L38: %s" memory_usage())
         for row in rows:
+            self.logger.info("MP_L40: %s" memory_usage())
             row = self.FileMetaData.GetFromTaskAndType_tuple(*row)
+            self.logger.info("MP_L42: %s" memory_usage())
             if lfn==[] or row.lfn in lfn:
                 filedict = {
                     'taskname': taskname,
@@ -58,46 +64,57 @@ class DataFileMetadata(object):
                      'created': literal_eval(row.parents.read()),  # postpone conversion to str
                      'tmplfn': row.tmplfn
                 }
+                self.logger.info("MP_L67: %s" memory_usage())
                 ## temporary changes for making REST py3 compatible with Publisher py2 - start
-                ## this block of code can be removed after we complete the 
+                ## this block of code can be removed after we complete the
                 ## deployment in production of the services running in python3
                 # we aim at replacing with unicode all the bytes from such a dictionary:
-                # {'taskname': '220113_142727:dmapelli_crab_20220113_152722', 
-                # 'filetype': 'EDM', 
-                # 'jobid': '7', 
-                # 'outdataset': '/GenericTTbar/dmapelli-[...]-94ba0e06145abd65ccb1d21786dc7e1d/USER', 
-                # 'acquisitionera': 'null', 
-                # 'swversion': 'CMSSW_10_6_29', 
-                # 'inevents': 300, 
-                # 'globaltag': 'None', 
-                # 'publishname': '[...]-94ba0e06145abd65ccb1d21786dc7e1d', 
-                # 'location': 'T2_CH_CERN', 
-                # 'tmplocation': 'T2_UK_London_Brunel', 
+                # {'taskname': '220113_142727:dmapelli_crab_20220113_152722',
+                # 'filetype': 'EDM',
+                # 'jobid': '7',
+                # 'outdataset': '/GenericTTbar/dmapelli-[...]-94ba0e06145abd65ccb1d21786dc7e1d/USER',
+                # 'acquisitionera': 'null',
+                # 'swversion': 'CMSSW_10_6_29',
+                # 'inevents': 300,
+                # 'globaltag': 'None',
+                # 'publishname': '[...]-94ba0e06145abd65ccb1d21786dc7e1d',
+                # 'location': 'T2_CH_CERN',
+                # 'tmplocation': 'T2_UK_London_Brunel',
                 # 'runlumi': {b'1': {b'2521': b'300'}},                  ## THIS CONTAINS BYTES
-                # 'adler32': '31018715', 
-                # 'cksum': 2091402041, 'md5': 'asda', 
-                # 'lfn': '/store/user/dmapelli/GenericTTbar/[...]/220113_142727/0000/output_7.root', 
-                # 'filesize': 651499, 
+                # 'adler32': '31018715',
+                # 'cksum': 2091402041, 'md5': 'asda',
+                # 'lfn': '/store/user/dmapelli/GenericTTbar/[...]/220113_142727/0000/output_7.root',
+                # 'filesize': 651499,
                 # 'parents': [b'/store/[...]-0CC47A7C34C8.root'],        ## THIS CONTAINS BYTES
-                # 'state': None, 
+                # 'state': None,
                 # 'created': "[b'/store/[...]-0CC47A7C34C8.root']",      ## THIS CONTAINS BYTES
                 # 'tmplfn': '/store/user/dmapelli/GenericTTbar/[...]/220113_142727/0000/output_7.root'}
-                self.logger.info("converting bytes into unicode in filemetadata - before - %s", filedict)
+                #self.logger.info("converting bytes into unicode in filemetadata - before - %s", filedict)
+                self.logger.info("MP_L93: %s" memory_usage())
                 for key0, val0 in filedict.items():
+                    self.logger.info("MP_L95: %s" memory_usage())
                     if isinstance(val0, list):  # 'parents' and 'created'
                         filedict[key0]  = [decodeBytesToUnicode(el) for el in val0]
+                        self.logger.info("MP_L98: %s" memory_usage())
                     if isinstance(val0, dict):  # 'runlumi'
                         for key1, val1 in list(val0.items()):
                             val0.pop(key1)
+                            self.logger.info("MP_L102: %s" memory_usage())
                             val0[decodeBytesToUnicode(key1)] = val1
+                            self.logger.info("MP_L104: %s" memory_usage())
                             if isinstance(val1, dict):
                                 for key2, val2 in list(val1.items()):
                                     val1.pop(key2)
+                                    self.logger.info("MP_L108: %s" memory_usage())
                                     val1[decodeBytesToUnicode(key2)] = decodeBytesToUnicode(val2)
-                self.logger.info("converting bytes into unicode in filemetadata - after - %s", filedict)
+                                    self.logger.info("MP_L110: %s" memory_usage())
+                #self.logger.info("converting bytes into unicode in filemetadata - after - %s", filedict)
                 ## temporary changes for making REST py3 compatible with Publisher py2 - end
+                self.logger.info("MP_L113: %s" memory_usage())
                 filedict['created'] = str(filedict['created'])   # convert to str, after removal of bytes
+                self.logger.info("MP_L115: %s" memory_usage())
                 yield json.dumps(filedict)
+
 
     def inject(self, **kwargs):
         """ Insert or update a record in the database
