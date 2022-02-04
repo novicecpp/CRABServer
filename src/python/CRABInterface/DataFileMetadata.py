@@ -59,30 +59,30 @@ class DataFileMetadata(object):
                      'tmplfn': row.tmplfn
                 }
                 ## temporary changes for making REST py3 compatible with Publisher py2 - start
-                ## this block of code can be removed after we complete the 
+                ## this block of code can be removed after we complete the
                 ## deployment in production of the services running in python3
                 # we aim at replacing with unicode all the bytes from such a dictionary:
-                # {'taskname': '220113_142727:dmapelli_crab_20220113_152722', 
-                # 'filetype': 'EDM', 
-                # 'jobid': '7', 
-                # 'outdataset': '/GenericTTbar/dmapelli-[...]-94ba0e06145abd65ccb1d21786dc7e1d/USER', 
-                # 'acquisitionera': 'null', 
-                # 'swversion': 'CMSSW_10_6_29', 
-                # 'inevents': 300, 
-                # 'globaltag': 'None', 
-                # 'publishname': '[...]-94ba0e06145abd65ccb1d21786dc7e1d', 
-                # 'location': 'T2_CH_CERN', 
-                # 'tmplocation': 'T2_UK_London_Brunel', 
+                # {'taskname': '220113_142727:dmapelli_crab_20220113_152722',
+                # 'filetype': 'EDM',
+                # 'jobid': '7',
+                # 'outdataset': '/GenericTTbar/dmapelli-[...]-94ba0e06145abd65ccb1d21786dc7e1d/USER',
+                # 'acquisitionera': 'null',
+                # 'swversion': 'CMSSW_10_6_29',
+                # 'inevents': 300,
+                # 'globaltag': 'None',
+                # 'publishname': '[...]-94ba0e06145abd65ccb1d21786dc7e1d',
+                # 'location': 'T2_CH_CERN',
+                # 'tmplocation': 'T2_UK_London_Brunel',
                 # 'runlumi': {b'1': {b'2521': b'300'}},                  ## THIS CONTAINS BYTES
-                # 'adler32': '31018715', 
-                # 'cksum': 2091402041, 'md5': 'asda', 
-                # 'lfn': '/store/user/dmapelli/GenericTTbar/[...]/220113_142727/0000/output_7.root', 
-                # 'filesize': 651499, 
+                # 'adler32': '31018715',
+                # 'cksum': 2091402041, 'md5': 'asda',
+                # 'lfn': '/store/user/dmapelli/GenericTTbar/[...]/220113_142727/0000/output_7.root',
+                # 'filesize': 651499,
                 # 'parents': [b'/store/[...]-0CC47A7C34C8.root'],        ## THIS CONTAINS BYTES
-                # 'state': None, 
+                # 'state': None,
                 # 'created': "[b'/store/[...]-0CC47A7C34C8.root']",      ## THIS CONTAINS BYTES
                 # 'tmplfn': '/store/user/dmapelli/GenericTTbar/[...]/220113_142727/0000/output_7.root'}
-                self.logger.info("converting bytes into unicode in filemetadata - before - %s", filedict)
+                #self.logger.info("converting bytes into unicode in filemetadata - before - %s", filedict)
                 for key0, val0 in filedict.items():
                     if isinstance(val0, list):  # 'parents' and 'created'
                         filedict[key0]  = [decodeBytesToUnicode(el) for el in val0]
@@ -94,7 +94,7 @@ class DataFileMetadata(object):
                                 for key2, val2 in list(val1.items()):
                                     val1.pop(key2)
                                     val1[decodeBytesToUnicode(key2)] = decodeBytesToUnicode(val2)
-                self.logger.info("converting bytes into unicode in filemetadata - after - %s", filedict)
+                #self.logger.info("converting bytes into unicode in filemetadata - after - %s", filedict)
                 ## temporary changes for making REST py3 compatible with Publisher py2 - end
                 filedict['created'] = str(filedict['created'])   # convert to str, after removal of bytes
                 yield json.dumps(filedict)
