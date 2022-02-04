@@ -1,4 +1,5 @@
 # WMCore dependecies here
+import logging
 from memory_profiler import memory_usage
 from WMCore.REST.Error import InvalidParameter
 from WMCore.REST.Server import RESTEntity, restcall
@@ -18,6 +19,7 @@ class RESTFileMetadata(RESTEntity):
     def __init__(self, app, api, config, mount):
         RESTEntity.__init__(self, app, api, config, mount)
         self.jobmetadata = DataFileMetadata(config)
+        self.logger = logging.getLogger("CRABLogger.DataFileMetadata")
 
     def validate(self, apiobj, method, api, param, safe):
         """Validating all the input parameter as enforced by the WMCore.REST module"""
