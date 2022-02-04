@@ -1,3 +1,4 @@
+from memory_profiler import memory_usage()
 # WMCore dependecies here
 from WMCore.REST.Error import InvalidParameter
 from WMCore.REST.Server import RESTEntity, restcall
@@ -102,7 +103,10 @@ class RESTFileMetadata(RESTEntity):
            :arg str filetype: filter the file type to return;
            :arg int howmany: how many rows to retrieve;
            :return: generator looping through the resulting db rows."""
-        return self.jobmetadata.getFiles(taskname, filetype, howmany, lfn)
+        self.jobmetadata.logger.info("MP2_L105: %s", memory_usage())
+        x = list(self.jobmetadata.getFiles(taskname, filetype, howmany, lfn))
+        self.jobmetadata.logger.info("MP2_L107: %s", memory_usage())
+        return x
 
     @restcall
     def delete(self, taskname, hours):
