@@ -1,4 +1,4 @@
-from memory_profiler import memory_usage()
+from memory_profiler import memory_usage
 # WMCore dependecies here
 from WMCore.REST.Error import InvalidParameter
 from WMCore.REST.Server import RESTEntity, restcall
