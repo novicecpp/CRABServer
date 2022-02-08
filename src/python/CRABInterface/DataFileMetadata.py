@@ -47,15 +47,15 @@ class DataFileMetadata(object):
                      'publishname': row.publishname,
                      'location': row.location,
                      'tmplocation': row.tmplocation,
-                     'runlumi': literal_eval(row.runlumi.read()),
+                     #'runlumi': literal_eval(row.runlumi.read()),
                      'adler32': row.adler32,
                      'cksum': row.cksum,
                      'md5': row.md5,
                      'lfn': row.lfn,
                      'filesize': row.filesize,
-                     'parents': literal_eval(row.parents.read()),
+                     #'parents': literal_eval(row.parents.read()),
                      'state': row.state,
-                     'created': literal_eval(row.parents.read()),  # postpone conversion to str
+                     #'created': literal_eval(row.parents.read()),  # postpone conversion to str
                      'tmplfn': row.tmplfn
                 }
                 ## temporary changes for making REST py3 compatible with Publisher py2 - start
@@ -96,7 +96,7 @@ class DataFileMetadata(object):
                                     val1[decodeBytesToUnicode(key2)] = decodeBytesToUnicode(val2)
                 #self.logger.info("converting bytes into unicode in filemetadata - after - %s", filedict)
                 ## temporary changes for making REST py3 compatible with Publisher py2 - end
-                filedict['created'] = str(filedict['created'])   # convert to str, after removal of bytes
+                #filedict['created'] = str(filedict['created'])   # convert to str, after removal of bytes
                 yield json.dumps(filedict)
 
     def inject(self, **kwargs):
