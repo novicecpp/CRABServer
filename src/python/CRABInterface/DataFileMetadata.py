@@ -97,8 +97,8 @@ class DataFileMetadata(object):
                 #self.logger.info("converting bytes into unicode in filemetadata - after - %s", filedict)
                 ## temporary changes for making REST py3 compatible with Publisher py2 - end
                 filedict['created'] = str(filedict['created'])   # convert to str, after removal of bytes
-                import pdb
-                pdb.set_trace()
+                with open('/data/srv/'+filedict['cksum']+'.json', 'w+') as w:
+                    json.dump(filedict, w)
                 yield json.dumps(filedict)
 
     def inject(self, **kwargs):
