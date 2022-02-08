@@ -32,6 +32,8 @@ class DataFileMetadata(object):
             howmany = -1
         binds = {'taskname': taskname, 'filetype': filetype, 'howmany': howmany}
         rows = self.api.query(None, None, self.FileMetaData.GetFromTaskAndType_sql, **binds)
+        import pdb
+        pdb.set_trace()
         for row in rows:
             row = self.FileMetaData.GetFromTaskAndType_tuple(*row)
             if lfn==[] or row.lfn in lfn:
