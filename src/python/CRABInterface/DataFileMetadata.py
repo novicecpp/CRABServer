@@ -101,7 +101,7 @@ class DataFileMetadata(object):
         #            json.dump(filedict, w)
         #        yield json.dumps(filedict)
         for fn in return_files:
-            with open(fn, 'r') as r:
+            with open('/data/srv/'+fn, 'r') as r:
                 filedict = json.load(r)
             yield json.dumps(filedict)
 
