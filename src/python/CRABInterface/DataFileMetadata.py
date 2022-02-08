@@ -32,8 +32,6 @@ class DataFileMetadata(object):
             howmany = -1
         binds = {'taskname': taskname, 'filetype': filetype, 'howmany': howmany}
         rows = self.api.query(None, None, self.FileMetaData.GetFromTaskAndType_sql, **binds)
-        import pdb
-        pdb.set_trace()
         for row in rows:
             row = self.FileMetaData.GetFromTaskAndType_tuple(*row)
             if lfn==[] or row.lfn in lfn:
@@ -99,6 +97,8 @@ class DataFileMetadata(object):
                 #self.logger.info("converting bytes into unicode in filemetadata - after - %s", filedict)
                 ## temporary changes for making REST py3 compatible with Publisher py2 - end
                 filedict['created'] = str(filedict['created'])   # convert to str, after removal of bytes
+                import pdb
+                pdb.set_trace()
                 yield json.dumps(filedict)
 
     def inject(self, **kwargs):
