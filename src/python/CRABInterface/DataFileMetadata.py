@@ -35,6 +35,8 @@ class DataFileMetadata(object):
         for row in rows:
             row = self.FileMetaData.GetFromTaskAndType_tuple(*row)
             if lfn==[] or row.lfn in lfn:
+                import pdb
+                pdb.set_trace()
                 filedict = {
                     'taskname': taskname,
                     'filetype': filetype,
