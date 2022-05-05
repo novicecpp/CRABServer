@@ -2,6 +2,8 @@ from __future__ import absolute_import
 import logging
 
 import cherrypy
+from cherrypy import request
+import time
 from subprocess import getstatusoutput
 from time import mktime, gmtime
 
@@ -83,6 +85,36 @@ class RESTBaseAPI(DatabaseRESTApi):
         trace and cherrypy.log("%s commit" % trace)  # pylint: disable=expression-not-assigned
         cherrypy.request.db["handle"]["connection"].commit()
         return rows([{ "modified": c.rowcount }])
+
+    def execute(self, sql, *binds, **kwbinds):
+        """override execute function and logging time use at cursor().execute()
+        """
+        c = self.prepare(sql)
+        trace = request.db["handle"]["trace"]
+        request.db["last_bind"] = (binds, kwbinds)
+        trace and cherrypy.log("%s execute: %s %s" % (trace, binds, kwbinds))
+        if request.db['type'].__name__ == 'MySQLdb':
+            return c, c.execute(sql, kwbinds)
+        st = time.time()
+        ret = c.execute(None, *binds, **kwbinds)
+        ed = time.time() - st
+        cherrypy.log("execute time: %6f" % (ed,))
+        return c, ret
+
+    def executemany(self, sql, *binds, **kwbinds):
+        """same as execute()"""
+
+        c = self.prepare(sql)
+        trace = request.db["handle"]["trace"]
+        request.db["last_bind"] = (binds, kwbinds)
+        trace and cherrypy.log("%s executemany: %s %s" % (trace, binds, kwbinds))
+        if request.db['type'].__name__ == 'MySQLdb':
+            return c, c.executemany(sql, binds[0])
+        st = time.time()
+        ret = c.executemany(None, *binds, **kwbinds)
+        ed = time.time() - st
+        cherrypy.log("executemany time: %6f" % (ed,))
+        return c, ret
 
     def _initLogger(self, logfile, loglevel, keptDays=0):
         """
