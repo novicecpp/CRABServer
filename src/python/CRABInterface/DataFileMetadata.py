@@ -38,11 +38,14 @@ class DataFileMetadata(object):
         else:
             allRows = []
             lfns = makeList(lfnList)  # from a string to a python list of strings
+            st = time.time()
             for lfn in lfns:
                 binds = {'taskname': taskname, 'lfn': lfn}
                 rows = self.api.query(None, None, self.FileMetaData.GetFromTaskAndLfn_sql, **binds)
                 for row in rows:  # above call returns a generator, but we want a list
                     allRows.append(row)
+            ep = time.time() - st
+            cherrypy.log('FileMetaData.GetFromTaskAndType_sql (for each lfn) query time: %.6f' % ep)
         for row in allRows:
             row = self.FileMetaData.GetFromTaskAndType_tuple(*row)
             filedict = {
