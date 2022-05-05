@@ -13,6 +13,7 @@ from CRABInterface.Regexps import RX_USERNAME, RX_TASKNAME, RX_SUBGETUSERTRANSFE
 from ServerUtilities import TRANSFERDB_STATUSES, PUBLICATIONDB_STATUSES
 # external dependecies here
 import time
+import cherrypy
 import logging
 
 
@@ -255,7 +256,11 @@ class RESTFileUserTransfers(RESTEntity):
             # username: username
             # taskname: taskname
             ###############################################
-            return self.api.query(None, None, self.transferDB.GetTaskStatusForTransfers_sql, **binds)
+            st = time.time()
+            ret = list(self.api.query(None, None, self.transferDB.GetTaskStatusForTransfers_sql, **binds))
+            ep = time.time() - st
+            cherrypy.log('transferDB.GetTaskStatusForTransfers_sql query time: %.6f' % ep)
+            return ret
         elif subresource == 'getPublicationStatus':
             ###############################################
             # getPublicationStatus API
