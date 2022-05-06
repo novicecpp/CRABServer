@@ -8,7 +8,7 @@ from subprocess import getstatusoutput
 from time import mktime, gmtime
 
 # WMCore dependecies here
-from WMCore.REST.Server import DatabaseRESTApi, rows, rxfilter
+from WMCore.REST.Server import DatabaseRESTApi, rows
 from WMCore.REST.Format import JSONFormat
 from WMCore.REST.Error import ExecutionError
 
@@ -116,23 +116,6 @@ class RESTBaseAPI(DatabaseRESTApi):
         cherrypy.log("executemany time: %6f" % (ed,))
         return c, ret
 
-    def query(self, match, select, sql, *binds, **kwbinds):
-        """ Ctrl+c, Ctrl+v
-        """
-        st = time.time()
-        c, _ = self.execute(sql, *binds, **kwbinds)
-        request.rest_generate_preamble["columns"] = \
-            [x[0].lower() for x in c.description]
-        if match:
-            ret = list(rxfilter(match, select, c))
-        else:
-            ret = list(rows(c))
-        ed = time.time() - st
-        cherrypy.log("query time: %6f" % (ed,))
-        return ret
-
-
-
     def _initLogger(self, logfile, loglevel, keptDays=0):
         """
         Setup the logger for all the CRAB API's. If loglevel is not specified (==None) we use the NullHandler which just 'pass' and does not log
@@ -151,31 +134,3 @@ class RESTBaseAPI(DatabaseRESTApi):
             logger.setLevel(loglevel)
         else:
             logger.addHandler( NullHandler() )
-
-
-def rows(cursor):
-    """Utility function to convert a sequence `cursor` to a generator."""
-    for row in cursor:
-        yield row
-
-
-def rxfilter(rx, select, cursor):
-    """Utility function to convert a sequence `cursor` to a generator, but
-    applying a filtering predicate to select which rows to return.
-
-    The assumption is that `cursor` yields uniform sequence objects ("rows"),
-    and the `select` operator can be invoked with ``select(row)`` for each
-    retrieved row to return a string. If the value returned matches the
-    regular expression `rx`, the original row is included in the generator
-    output, otherwise it's skipped.
-
-    :arg re.RegexObject rx: Regular expression to match against, or at least
-     any object which supports ``rx.match(value)`` on the value returned by
-     the ``select(row)`` operator.
-    :arg callable select: An operator which returns the item to filter on,
-     given a row of values, typically an :func:`operator.itemgetter`.
-    :arg sequence cursor: Input sequence."""
-
-    for row in cursor:
-        if rx.match(select(row)):
-            yield row
