@@ -4,7 +4,9 @@
 """
 
 import json
+import cherrypy
 import logging
+import time
 from ast import literal_eval
 
 from Utils.Utilities import decodeBytesToUnicode
@@ -31,7 +33,11 @@ class DataFileMetadata(object):
         if howmany == None:
             howmany = -1
         binds = {'taskname': taskname, 'filetype': filetype, 'howmany': howmany}
+        st = time.time()
         rows = list(self.api.query(None, None, self.FileMetaData.GetFromTaskAndType_sql, **binds))
+        ep = time.time() - st
+        cherrypy.log('GetFromTaskAndType_sql query time: %.6f' % ep)
+
         for row in rows:
             row = self.FileMetaData.GetFromTaskAndType_tuple(*row)
             if lfn==[] or row.lfn in lfn:
