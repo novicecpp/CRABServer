@@ -156,7 +156,7 @@ class HTCondorDataWorkflow(DataWorkflow):
         ## files in the job.)
         st = time.time()
         rows = list(self.api.query(None, None, self.FileMetaData.GetFromTaskAndType_sql, filetype='EDM,TFILE,FAKE,POOLIN', taskname=workflow, howmany=-1))
-        ep = st - time.time()
+        ep = time.time() - st
         cherrypy.log('FileMetaData.GetFromTaskAndType_sql query time: %.6f' % ep)
 
         # Return only the info relevant to the client.
