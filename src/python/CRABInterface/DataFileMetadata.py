@@ -36,7 +36,7 @@ class DataFileMetadata(object):
         st = time.time()
         rows = list(self.api.query(None, None, self.FileMetaData.GetFromTaskAndType_sql, **binds))
         ep = time.time() - st
-        cherrypy.log('GetFromTaskAndType_sql query time: %.6f' % ep)
+        cherrypy.log('FileMetaData.GetFromTaskAndType_sql query time: %.6f' % ep)
 
         for row in rows:
             row = self.FileMetaData.GetFromTaskAndType_tuple(*row)
