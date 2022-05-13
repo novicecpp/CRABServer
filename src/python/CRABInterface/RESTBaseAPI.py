@@ -22,6 +22,7 @@ from CRABInterface.RESTFileTransfers import RESTFileTransfers
 from CRABInterface.RESTFileUserTransfers import RESTFileUserTransfers
 from CRABInterface.RESTWorkerWorkflow import RESTWorkerWorkflow
 from CRABInterface.RESTCache import RESTCache
+from CRABInterface.RESTTestAPI import RESTTestAPI
 from CRABInterface.DataFileMetadata import DataFileMetadata
 from CRABInterface.DataWorkflow import DataWorkflow
 from CRABInterface.DataUserWorkflow import DataUserWorkflow
@@ -59,6 +60,7 @@ class RESTBaseAPI(DatabaseRESTApi):
                     'task': RESTTask(app, self, config, mount),
                     'filetransfers': RESTFileTransfers(app, self, config, mount),
                     'fileusertransfers': RESTFileUserTransfers(app, self, config, mount),
+                    'testapi': RESTTestAPI(app, self, config, mount),
                    })
         cacheSSL = extconfig.centralconfig['backend-urls']['cacheSSL']
         if 'S3' in cacheSSL.upper():
