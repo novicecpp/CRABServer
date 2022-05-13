@@ -11,7 +11,7 @@ import time
 import random
 
 
-class RESTServerInfo(RESTEntity):
+class RESTTestAPI(RESTEntity):
     """REST entity for workflows and relative subresources"""
 
     def __init__(self, app, api, config, mount, centralcfg):
