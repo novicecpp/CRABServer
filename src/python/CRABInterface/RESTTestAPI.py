@@ -14,9 +14,8 @@ import random
 class RESTTestAPI(RESTEntity):
     """REST entity for workflows and relative subresources"""
 
-    def __init__(self, app, api, config, mount, centralcfg):
+    def __init__(self, app, api, config, mount):
         RESTEntity.__init__(self, app, api, config, mount)
-        self.centralcfg = centralcfg
         self.logger = logging.getLogger("CRABLogger:RESTTestAPI")
         #used by the client to get the url where to update the cache (cacheSSL)
 
