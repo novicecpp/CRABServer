@@ -375,7 +375,7 @@ class RESTFileTransfers(RESTEntity):
                         raise InvalidParameter('Username is not defined')
                     binds['username'] = username
                     sqlQuery = self.transferDB.GetDocsPublication1_sql
-                rows = list(self.api.query_load_all_rows(None, None, sqlQuery, **binds))
+                rows = self.api.query_load_all_rows(None, None, sqlQuery, **binds)
                 return rows
 
         if subresource == 'getTransfersToKill':
