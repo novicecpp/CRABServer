@@ -117,7 +117,7 @@ class RESTBaseAPI(DatabaseRESTApi):
         cherrypy.log("executemany time: %6f" % (ed,))
         return c, ret
 
-    def query_load_all_row(self, match, select, sql, *binds, **kwbinds):
+    def query_load_all_rows(self, match, select, sql, *binds, **kwbinds):
         st = time.time()
         ret = list(super().query(match, select, sql, *binds, **kwbinds))
         ep = time.time() - st
