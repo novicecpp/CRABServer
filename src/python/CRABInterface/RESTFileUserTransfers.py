@@ -256,7 +256,7 @@ class RESTFileUserTransfers(RESTEntity):
             # username: username
             # taskname: taskname
             ###############################################
-            ret = self.api.query(None, None, self.transferDB.GetTaskStatusForTransfers_sql, **binds)
+            ret = self.api.query_load_all_rows(None, None, self.transferDB.GetTaskStatusForTransfers_sql, **binds)
             return ret
         elif subresource == 'getPublicationStatus':
             ###############################################
