@@ -244,7 +244,7 @@ class RESTFileUserTransfers(RESTEntity):
             raise InvalidParameter('TaskName is not defined')
         binds['username'] = username
         binds['taskname'] = taskname
-        print (binds)
+        print(binds)
         if subresource == 'getTransferStatus':
             ###############################################
             # getTransferStatus API
@@ -256,10 +256,7 @@ class RESTFileUserTransfers(RESTEntity):
             # username: username
             # taskname: taskname
             ###############################################
-            st = time.time()
-            ret = list(self.api.query(None, None, self.transferDB.GetTaskStatusForTransfers_sql, **binds))
-            ep = time.time() - st
-            cherrypy.log('transferDB.GetTaskStatusForTransfers_sql query time: %.6f' % ep)
+            ret = self.api.query(None, None, self.transferDB.GetTaskStatusForTransfers_sql, **binds)
             return ret
         elif subresource == 'getPublicationStatus':
             ###############################################
