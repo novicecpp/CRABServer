@@ -178,7 +178,7 @@ def checkOutLFN(lfn, username):
     """
     if lfn.startswith('/store/user/rucio/'):
         if lfn.split('/')[4] != username:
-            return False 
+            return False
     elif lfn.startswith('/store/user/'):
         if lfn.split('/')[3] != username:
             return False
@@ -444,7 +444,7 @@ def getTimeFromTaskname(taskname):
 def encodeRequest(configreq, listParams=None):
     """ Used to encode the request from a dict to a string. Include the code needed for transforming lists in the format required by
         cmsweb, e.g.:   adduserfiles = ['file1','file2']  ===>  [...]adduserfiles=file1&adduserfiles=file2[...]
-        The list of dictionary keys like adduserfiles above, which have a list as value, needs to be passed in the listParams argument  
+        The list of dictionary keys like adduserfiles above, which have a list as value, needs to be passed in the listParams argument
     """
     listParams = listParams or []
     encodedLists = ''
@@ -880,3 +880,25 @@ def downloadFromS3ViaPSU(filepath=None, preSignedUrl=None, logger=None):
         raise Exception("Download failure with %s. File %s was not created" % (downloadCommand, filepath))
 
     return
+
+def get_size(obj, seen=None):
+    """Recursively finds size of objects
+    Copy from https://gist.github.com/bosswissam/a369b7a31d9dcab46b4a034be7d263b2#file-pysize-py"""
+
+    size = sys.getsizeof(obj)
+    if seen is None:
+        seen = set()
+    obj_id = id(obj)
+    if obj_id in seen:
+        return 0
+    # Important mark as seen *before* entering recursion to gracefully handle
+    # self-referential objects
+    seen.add(obj_id)
+    if isinstance(obj, dict):
+        size += sum([get_size(v, seen) for v in obj.values()])
+        size += sum([get_size(k, seen) for k in obj.keys()])
+    elif hasattr(obj, '__dict__'):
+        size += get_size(obj.__dict__, seen)
+    elif hasattr(obj, '__iter__') and not isinstance(obj, (str, bytes, bytearray)):
+        size += sum([get_size(i, seen) for i in obj])
+    return size
