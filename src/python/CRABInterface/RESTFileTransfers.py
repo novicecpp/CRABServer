@@ -375,10 +375,7 @@ class RESTFileTransfers(RESTEntity):
                         raise InvalidParameter('Username is not defined')
                     binds['username'] = username
                     sqlQuery = self.transferDB.GetDocsPublication1_sql
-                st = time.time()
-                rows = list(self.api.query(None, None, sqlQuery, **binds))
-                ep = time.time() - st
-                cherrypy.log('transferDB.GetDocsPublicationN_sql query time: %.6f' % ep)
+                rows = list(self.api.query_load_all_rows(None, None, sqlQuery, **binds))
                 return rows
 
         if subresource == 'getTransfersToKill':
