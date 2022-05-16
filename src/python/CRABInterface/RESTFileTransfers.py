@@ -376,7 +376,7 @@ class RESTFileTransfers(RESTEntity):
                     binds['username'] = username
                     sqlQuery = self.transferDB.GetDocsPublication1_sql
                 st = time.time()
-                rows = self.api.query(None, None, sqlQuery, **binds)
+                rows = list(self.api.query(None, None, sqlQuery, **binds))
                 ep = time.time() - st
                 cherrypy.log('transferDB.GetDocsPublicationN_sql query time: %.6f' % ep)
                 return rows
