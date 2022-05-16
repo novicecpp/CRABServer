@@ -25,6 +25,7 @@ from CRABInterface.RESTCache import RESTCache
 from CRABInterface.DataFileMetadata import DataFileMetadata
 from CRABInterface.DataWorkflow import DataWorkflow
 from CRABInterface.DataUserWorkflow import DataUserWorkflow
+from ServerUtilities import get_size
 
 #In case the log level is not specified in the configuration we use the NullHandler and we do not print messages
 #The NullHandler is included as of python 3.1
@@ -115,6 +116,14 @@ class RESTBaseAPI(DatabaseRESTApi):
         ed = time.time() - st
         cherrypy.log("executemany time: %6f" % (ed,))
         return c, ret
+
+    def query_load_all_row(self, match, select, sql, *binds, **kwbinds):
+        st = time.time()
+        ret = list(super().query(match, select, sql, *binds, **kwbinds))
+        ep = time.time() - st
+        size = get_size(ret)
+        cherrypy.log('query time: %6f, size %6f' % (ep, size))
+        return iter(ret) # return iterable object
 
     def _initLogger(self, logfile, loglevel, keptDays=0):
         """
