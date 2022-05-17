@@ -34,7 +34,7 @@ class DataFileMetadata(object):
             howmany = -1
         if not lfnList:
             binds = {'taskname': taskname, 'filetype': filetype, 'howmany': howmany}
-            allRows = self.api.query_load_all_rows(None, None, self.FileMetaData.GetFromTaskAndType_sql, **binds)
+            allRows = self.api.query(None, None, self.FileMetaData.GetFromTaskAndType_sql, **binds)
         else:
             allRows = []
             lfns = makeList(lfnList)  # from a string to a python list of strings
@@ -43,7 +43,11 @@ class DataFileMetadata(object):
                 rows = self.api.query_load_all_rows(None, None, self.FileMetaData.GetFromTaskAndLfn_sql, **binds)
                 for row in rows:  # above call returns a generator, but we want a list
                     allRows.append(row)
+        import random, time, cherrypy
         for row in allRows:
+            x = random.randint(0,5)
+            cherrypy.log(f'random sleep inside GET /filemetadata: {x}s')
+            time.sleep(x)
             row = self.FileMetaData.GetFromTaskAndType_tuple(*row)
             filedict = {
                 'taskname': taskname,
