@@ -89,7 +89,9 @@ class RESTBaseAPI(DatabaseRESTApi):
         return rows([{ "modified": c.rowcount }])
 
     def execute(self, sql, *binds, **kwbinds):
-        """override execute function and logging time use at cursor().execute()
+        """override DatabaseRESTApi.execute() function for measure time that
+           use by cursor.execute(). Code is copy from those function and
+           sandwich cursor.execute() with time.perf_counter().
         """
         c = self.prepare(sql)
         trace = request.db["handle"]["trace"]
@@ -97,14 +99,16 @@ class RESTBaseAPI(DatabaseRESTApi):
         trace and cherrypy.log("%s execute: %s %s" % (trace, binds, kwbinds))
         if request.db['type'].__name__ == 'MySQLdb':
             return c, c.execute(sql, kwbinds)
-        st = time.time()
+        start_time = time.perf_counter()
         ret = c.execute(None, *binds, **kwbinds)
-        ed = time.time() - st
-        cherrypy.log("execute time: %6f" % (ed,))
+        elapsed_time = time.perf_counter() - start_time
+        cherrypy.log("execute time: %6f" % (elapsed_time,))
         return c, ret
 
     def executemany(self, sql, *binds, **kwbinds):
-        """same as execute()"""
+        """Override DatabaseRESTApi.executemany() function. Same as execute
+           function above to measuring a time.
+        """
 
         c = self.prepare(sql)
         trace = request.db["handle"]["trace"]
@@ -112,23 +116,24 @@ class RESTBaseAPI(DatabaseRESTApi):
         trace and cherrypy.log("%s executemany: %s %s" % (trace, binds, kwbinds))
         if request.db['type'].__name__ == 'MySQLdb':
             return c, c.executemany(sql, binds[0])
-        st = time.time()
+        start_time = time.perf_counter()
         ret = c.executemany(None, *binds, **kwbinds)
-        ed = time.time() - st
-        cherrypy.log("executemany time: %6f" % (ed,))
+        elapsed_time = time.perf_counter() - start_time
+        cherrypy.log("executemany time: %6f" % (elapsed_time,))
         return c, ret
 
     def query_load_all_rows(self, match, select, sql, *binds, **kwbinds):
-        """Same functionality as DatabaseRESTApi.query() function except return all
-           data from db in one go instead of generator. This load data include Oracle
-           LOB objects which fetch by LOB.read() (without load chunk). So caller
-           should expect CLOB/BLOB column as python string/bytes instead of cx_Oracle
-           object.
+        """Same functionality as DatabaseRESTApi.query() function except
+           return all data from db in one go instead of generator. This
+           function also load Oracle LOB objects which fetch by LOB.read()
+           (without load in chunk). So caller should expect CLOB/BLOB column
+           as python string/bytes instead of cx_Oracle object.
+
            Note that this function only support Oracle DB Connector.
         """
         if cherrypy.request.db['handle']['type'].__name__ == 'MySQLdb':
             raise NotImplementedError
-        start_time = time.time()
+        start_time = time.perf_counter()
         rows = super().query(match, select, sql, *binds, **kwbinds)
         ret = []
 
@@ -139,7 +144,7 @@ class RESTBaseAPI(DatabaseRESTApi):
                     tmp = new_row[i].read()
                     new_row[i] = tmp
             ret.append(new_row)
-        elapsed_time = time.time() - start_time
+        elapsed_time = time.perf_counter() - start_time
         size = get_size(ret)
         cherrypy.log('query time: %6f, size %6f' % (elapsed_time, size))
         return iter(ret) # return iterable object
