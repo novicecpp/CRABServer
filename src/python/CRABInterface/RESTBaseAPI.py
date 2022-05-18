@@ -118,18 +118,25 @@ class RESTBaseAPI(DatabaseRESTApi):
         return c, ret
 
     def query_load_all_rows(self, match, select, sql, *binds, **kwbinds):
+        """Same functionality as DatabaseRESTApi.query() function except return all
+           data from db in one go instead of generator. This load data include Oracle
+           LOB objects which fetch by LOB.read() (without load chunk). So caller
+           should expect CLOB/BLOB column as python string/bytes instead of cx_Oracle
+           object.
+           Note that this function only support Oracle DB Connector.
+        """
+        if cherrypy.request.db['handle']['type'].__name__ == 'MySQLdb':
+            raise NotImplementedError
         start_time = time.time()
         rows = super().query(match, select, sql, *binds, **kwbinds)
         ret = []
+
         for row in rows:
             new_row = list(row)
             for i in range(len(new_row)):
-                if cherrypy.request.db['handle']['type'].__name__ == 'cx_Oracle':
-                    if isinstance(new_row[i], cherrypy.request.db['handle']['type'].LOB):
-                        tmp = new_row[i].read()
-                        new_row[i] = tmp
-                elif cherrypy.request.db['handle']['type'].__name__ == 'MySQLdb':
-                    raise NotImplementedError
+                if isinstance(new_row[i], cherrypy.request.db['handle']['type'].LOB):
+                    tmp = new_row[i].read()
+                    new_row[i] = tmp
             ret.append(new_row)
         elapsed_time = time.time() - start_time
         size = get_size(ret)
