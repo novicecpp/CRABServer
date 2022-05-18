@@ -118,11 +118,22 @@ class RESTBaseAPI(DatabaseRESTApi):
         return c, ret
 
     def query_load_all_rows(self, match, select, sql, *binds, **kwbinds):
-        st = time.time()
-        ret = list(super().query(match, select, sql, *binds, **kwbinds))
-        ep = time.time() - st
+        start_time = time.time()
+        rows = super().query(match, select, sql, *binds, **kwbinds)
+        ret = []
+        for row in rows:
+            new_row = list(row)
+            for i in range(len(new_row)):
+                if cherrypy.request.db['handle']['type'].__name__ == 'cx_Oracle':
+                    if isinstance(new_row[i], cherrypy.request.db['handle']['type'].LOB):
+                        tmp = new_row[i].read()
+                        new_row[i] = tmp
+                elif cherrypy.request.db['handle']['type'].__name__ == 'MySQLdb':
+                    raise NotImplementedError
+            ret.append(new_row)
+        elapsed_time = time.time() - start_time
         size = get_size(ret)
-        cherrypy.log('query time: %6f, size %6f' % (ep, size))
+        cherrypy.log('query time: %6f, size %6f' % (elapsed_time, size))
         return iter(ret) # return iterable object
 
     def _initLogger(self, logfile, loglevel, keptDays=0):
