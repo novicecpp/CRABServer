@@ -100,7 +100,7 @@ class RESTBaseAPI(DatabaseRESTApi):
         start_time = time.perf_counter()
         ret = c.execute(None, *binds, **kwbinds)
         elapsed_time = time.perf_counter() - start_time
-        cherrypy.log("execute time: %6f" % (elapsed_time,))
+        cherrypy.log("%s execute time: %6f" % (trace, elapsed_time,))
         return c, ret
 
     def executemany(self, sql, *binds, **kwbinds):
@@ -117,7 +117,7 @@ class RESTBaseAPI(DatabaseRESTApi):
         start_time = time.perf_counter()
         ret = c.executemany(None, *binds, **kwbinds)
         elapsed_time = time.perf_counter() - start_time
-        cherrypy.log("executemany time: %6f" % (elapsed_time,))
+        cherrypy.log("%s executemany time: %6f" % (trace, elapsed_time,))
         return c, ret
 
     def query_load_all_rows(self, match, select, sql, *binds, **kwbinds):
