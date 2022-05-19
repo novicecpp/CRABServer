@@ -13,7 +13,6 @@ from CRABInterface.Regexps import RX_USERNAME, RX_TASKNAME, RX_SUBGETUSERTRANSFE
 from ServerUtilities import TRANSFERDB_STATUSES, PUBLICATIONDB_STATUSES
 # external dependecies here
 import time
-import cherrypy
 import logging
 
 
