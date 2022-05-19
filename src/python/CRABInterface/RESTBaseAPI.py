@@ -135,7 +135,6 @@ class RESTBaseAPI(DatabaseRESTApi):
         start_time = time.perf_counter()
         rows = super().query(match, select, sql, *binds, **kwbinds)
         ret = []
-
         for row in rows:
             new_row = list(row)
             for i in range(len(new_row)):
@@ -145,7 +144,8 @@ class RESTBaseAPI(DatabaseRESTApi):
             ret.append(new_row)
         elapsed_time = time.perf_counter() - start_time
         size = get_size(ret)
-        cherrypy.log('query time: %6f, size: %d' % (elapsed_time, size))
+        trace = cherrypy.request.db["handle"]["trace"]
+        cherrypy.log('%s query time: %6f, size: %d' % (trace, elapsed_time, size))
         return iter(ret) # return iterable object
 
     def _initLogger(self, logfile, loglevel, keptDays=0):
