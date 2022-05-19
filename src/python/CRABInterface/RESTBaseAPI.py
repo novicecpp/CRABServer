@@ -88,9 +88,9 @@ class RESTBaseAPI(DatabaseRESTApi):
         return rows([{ "modified": c.rowcount }])
 
     def execute(self, sql, *binds, **kwbinds):
-        """override DatabaseRESTApi.execute() function for measure time that
-           use by cursor.execute(). Code is copy from those function and
-           sandwich cursor.execute() with time.perf_counter().
+        """overrides WMCore/REST/Server.py/DatabaseRESTApi.execute() function
+           in order to measure time used by cursor.execute(). Code is copied
+           from WMCore but we sandwich cursor.execute() with time.perf_counter().
         """
         c = self.prepare(sql)
         trace = request.db["handle"]["trace"]
@@ -106,7 +106,7 @@ class RESTBaseAPI(DatabaseRESTApi):
 
     def executemany(self, sql, *binds, **kwbinds):
         """Override DatabaseRESTApi.executemany() function. Same as execute
-           function above to measuring a time.
+           function above to measure elapsed time.
         """
 
         c = self.prepare(sql)
@@ -122,9 +122,9 @@ class RESTBaseAPI(DatabaseRESTApi):
         return c, ret
 
     def query_load_all_rows(self, match, select, sql, *binds, **kwbinds):
-        """Same functionality as DatabaseRESTApi.query() function except
-           return all data from db in one go instead of generator. This
-           function also load Oracle LOB objects which fetch by LOB.read()
+        """Same functionality as DatabaseRESTApi.query() function except it
+           returns all data from db in one go instead of returning a egenerator.
+           This function also loads Oracle LOB objects fetching them via LOB.read()
            (without load in chunk). So caller should expect CLOB/BLOB column
            as python string/bytes instead of cx_Oracle object.
 
