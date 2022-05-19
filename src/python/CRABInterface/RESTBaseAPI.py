@@ -2,7 +2,6 @@ from __future__ import absolute_import
 import logging
 
 import cherrypy
-from cherrypy import request
 import time
 from subprocess import getstatusoutput
 from time import mktime, gmtime
@@ -93,10 +92,10 @@ class RESTBaseAPI(DatabaseRESTApi):
            from WMCore but we sandwich cursor.execute() with time.perf_counter().
         """
         c = self.prepare(sql)
-        trace = request.db["handle"]["trace"]
-        request.db["last_bind"] = (binds, kwbinds)
+        trace = cherrypy.request.db["handle"]["trace"]
+        cherrypy.request.db["last_bind"] = (binds, kwbinds)
         trace and cherrypy.log("%s execute: %s %s" % (trace, binds, kwbinds))
-        if request.db['type'].__name__ == 'MySQLdb':
+        if cherrypy.request.db['type'].__name__ == 'MySQLdb':
             return c, c.execute(sql, kwbinds)
         start_time = time.perf_counter()
         ret = c.execute(None, *binds, **kwbinds)
@@ -110,10 +109,10 @@ class RESTBaseAPI(DatabaseRESTApi):
         """
 
         c = self.prepare(sql)
-        trace = request.db["handle"]["trace"]
-        request.db["last_bind"] = (binds, kwbinds)
+        trace = cherrypy.request.db["handle"]["trace"]
+        cherrypy.request.db["last_bind"] = (binds, kwbinds)
         trace and cherrypy.log("%s executemany: %s %s" % (trace, binds, kwbinds))
-        if request.db['type'].__name__ == 'MySQLdb':
+        if cherrypy.request.db['type'].__name__ == 'MySQLdb':
             return c, c.executemany(sql, binds[0])
         start_time = time.perf_counter()
         ret = c.executemany(None, *binds, **kwbinds)
@@ -145,7 +144,7 @@ class RESTBaseAPI(DatabaseRESTApi):
             ret.append(new_row)
         elapsed_time = time.perf_counter() - start_time
         size = get_size(ret)
-        cherrypy.log('query time: %6f, size %6f' % (elapsed_time, size))
+        cherrypy.log('query time: %6f, size: %d' % (elapsed_time, size))
         return iter(ret) # return iterable object
 
     def _initLogger(self, logfile, loglevel, keptDays=0):
