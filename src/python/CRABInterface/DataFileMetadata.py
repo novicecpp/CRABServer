@@ -43,6 +43,7 @@ class DataFileMetadata(object):
                 rows = self.api.query_load_all_rows(None, None, self.FileMetaData.GetFromTaskAndLfn_sql, **binds)
                 for row in rows:  # above call returns a generator, but we want a list
                     allRows.append(row)
+            allRows.append(row)
         for row in allRows:
             row = self.FileMetaData.GetFromTaskAndType_tuple(*row)
             filedict = {
