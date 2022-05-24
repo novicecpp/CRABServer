@@ -78,7 +78,7 @@ if __name__ == '__main__':
                         help='database instance (dev/devtwo/preprod/prod')
     parser.add_argument('--rest',
                         type=str,
-                        default=os.getenv('CRABSERVER_HOSTNAME','cmsweb-test11.cern.ch'),
+                        default=os.getenv('CRABSERVER_HOSTNAME', 'cmsweb-test11.cern.ch'),
                         help='rest hostname e.g. cmsweb-test11.cern.ch.')
     parser.add_argument('--userproxy',
                         type=str,
