@@ -24,7 +24,7 @@ from CRABInterface.RESTCache import RESTCache
 from CRABInterface.DataFileMetadata import DataFileMetadata
 from CRABInterface.DataWorkflow import DataWorkflow
 from CRABInterface.DataUserWorkflow import DataUserWorkflow
-from ServerUtilities import get_size
+from ServerUtilities import get_size, MeasureTime
 
 #In case the log level is not specified in the configuration we use the NullHandler and we do not print messages
 #The NullHandler is included as of python 3.1
@@ -131,20 +131,20 @@ class RESTBaseAPI(DatabaseRESTApi):
         """
         if cherrypy.request.db['handle']['type'].__name__ == 'MySQLdb':
             raise NotImplementedError
-        start_time = time.perf_counter()
-        rows = super().query(match, select, sql, *binds, **kwbinds)
-        ret = []
-        for row in rows:
-            new_row = list(row)
-            for i in range(len(new_row)):
-                if isinstance(new_row[i], cherrypy.request.db['handle']['type'].LOB):
-                    tmp = new_row[i].read()
-                    new_row[i] = tmp
-            ret.append(new_row)
-        elapsed_time = time.perf_counter() - start_time
-        size = get_size(ret)
         trace = cherrypy.request.db["handle"]["trace"]
-        cherrypy.log('%s query time: %6f, size: %d' % (trace, elapsed_time, size))
+        # abuse label args here to put the trace in log, it would be nice to add
+        # automatically by logger somehow.
+        with MeasureTime(self.logger, modulename=__name__, label=f'query_load_all_rows trace={trace}'):
+            rows = super().query(match, select, sql, *binds, **kwbinds)
+            ret = []
+            for row in rows:
+                new_row = list(row)
+                for i in range(len(new_row)):
+                    if isinstance(new_row[i], cherrypy.request.db['handle']['type'].LOB):
+                        tmp = new_row[i].read()
+                        new_row[i] = tmp
+                ret.append(new_row)
+        self.logger.log("%s query size: %d", trace, get_size(ret)
         return iter(ret) # return iterable object
 
     def _initLogger(self, logfile, loglevel, keptDays=0):
