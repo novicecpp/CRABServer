@@ -1,21 +1,22 @@
 # task: 220518_101719:tseethon_crab_20220518_121215
-# /filemetadata
+# API: filemetadata
 # all lfn
-GET /crabserver/prod/filemetadata?taskname=220518_101719%3Atseethon_crab_20220518_121215&filetype=EDM
+/crabserver/prod/filemetadata?taskname=220518_101719%3Atseethon_crab_20220518_121215&filetype=EDM
 # single lfn
-GET /crabserver/prod/filemetadata?taskname=220518_101719%3Atseethon_crab_20220518_121215&lfnList=%5B%27%2Fstore%2Fuser%2Ftseethon%2FGenericTTbar%2Fautotest-1652868735%2F220518_101719%2F0000%2Foutput_5.root%27%5D
+/crabserver/prod/filemetadata?taskname=220518_101719%3Atseethon_crab_20220518_121215&lfnList=%5B%27%2Fstore%2Fuser%2Ftseethon%2FGenericTTbar%2Fautotest-1652868735%2F220518_101719%2F0000%2Foutput_5.root%27%5D
 # mutltiple lfn
-GET /crabserver/prod/filemetadata?taskname=220518_101719%3Atseethon_crab_20220518_121215&lfnList=%5B%27/store/user/tseethon/GenericTTbar/autotest-1652868735/220518_101719/0000/output_5.root%27%2C%2B%27/store/user/tseethon/GenericTTbar/autotest-1652868735/220518_101719/0000/output_3.root%27%2C%2B%27/store/user/tseethon/GenericTTbar/autotest-1652868735/220518_101719/0000/output_9.root%27%5D
+/crabserver/prod/filemetadata?taskname=220518_101719%3Atseethon_crab_20220518_121215&lfnList=%5B%27/store/user/tseethon/GenericTTbar/autotest-1652868735/220518_101719/0000/output_5.root%27%2C%2B%27/store/user/tseethon/GenericTTbar/autotest-1652868735/220518_101719/0000/output_3.root%27%2C%2B%27/store/user/tseethon/GenericTTbar/autotest-1652868735/220518_101719/0000/output_9.root%27%5D
 
-# /workflow
+# API: workflow
 # subresource=report2
 # I do not see any subresource=getFiles2 for past 1 month
-GET /crabserver/prod/workflow?subresource=report2&workflow=220518_101719%3Atseethon_crab_20220518_121215
+/crabserver/prod/workflow?subresource=report2&workflow=220518_101719%3Atseethon_crab_20220518_121215
 # subresource=getfiles2
 # skip, I do not see any subresource=getFiles2 for past 1 month
 
-# /fileusertransfer
-GET /crabserver/prod/fileusertransfers?subresource=getTransferStatus&username=tseethon&taskname=220518_101719%3Atseethon_crab_20220518_121215
-# /filetransfers
+# API: fileusertransfer
+/crabserver/prod/fileusertransfers?subresource=getTransferStatus&username=tseethon&taskname=220518_101719%3Atseethon_crab_20220518_121215
+
+# API: filetransfers
 # Not testing it because data from this api is not idempotent.
-# GET /crabserver/prod/filetransfers?asoworker=schedd&subresource=acquiredPublication&grouping=0&limit=100000
+# /crabserver/prod/filetransfers?asoworker=schedd&subresource=acquiredPublication&grouping=0&limit=100000
