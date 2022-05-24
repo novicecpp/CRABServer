@@ -132,7 +132,8 @@ class RESTBaseAPI(DatabaseRESTApi):
         """
         if cherrypy.request.db['handle']['type'].__name__ == 'MySQLdb':
             raise NotImplementedError
-        trace = cherrypy.request.db["handle"]["trace"]
+        # remove RESTSQL: from random string
+        trace = cherrypy.request.db["handle"]["trace"].replace('RESTSQL:', '')
         # abuse label args here to put the trace in log, it would be nice to add
         # automatically by logger somehow.
         with MeasureTime(self.logger, modulename=__name__, label=f'query_load_all_rows trace={trace}'):
@@ -145,7 +146,7 @@ class RESTBaseAPI(DatabaseRESTApi):
                         tmp = new_row[i].read()
                         new_row[i] = tmp
                 ret.append(new_row)
-        self.logger.info("%s query size: %d", trace, get_size(ret))
+        self.logger.info("trace=%s query_size=%d", trace, get_size(ret))
         return iter(ret) # return iterable object
 
     def _initLogger(self, logfile, loglevel, keptDays=0):
