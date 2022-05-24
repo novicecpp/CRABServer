@@ -66,6 +66,7 @@ class RESTBaseAPI(DatabaseRESTApi):
 
         self._initLogger( getattr(config, 'loggingFile', None), getattr(config, 'loggingLevel', None),
                           getattr(config, 'keptLogDays', 0))
+        self.logger = logger = logging.getLogger("CRABLogger.RESTBeseAPI")
 
     def modifynocheck(self, sql, *binds, **kwbinds):
         """This is the same as `WMCore.REST.Server`:modify method but
