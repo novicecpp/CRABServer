@@ -893,10 +893,11 @@ class MeasureTime:
         myfuncname()
 
     """
-    def __init__(self, logger, modulename="", label=""):
+    def __init__(self, logger, modulename="", label="", trace=""):
         self.logger = logger
         self.modulename = modulename
         self.label = label
+        self.trace = ""
 
     def __enter__(self):
         self.perf_counter = time.perf_counter()
@@ -910,8 +911,8 @@ class MeasureTime:
         self.perf_counter = time.perf_counter() - self.perf_counter
         self.readout = 'tot={:.4f} proc={:.4f} thread={:.4f}'.format(
                  self.perf_counter, self.process_time, self.thread_time )
-        self.logger.info("MeasureTime:seconds - modulename=%s label='%s' - %s",
-                 self.modulename, self.label, self.readout)
+        self.logger.info("MeasureTime:seconds - modulename=%s label='%s' - %s - trace=%s",
+                         self.modulename, self.label, self.readout, self.trace)
 
 
 def get_size(obj, seen=None):
