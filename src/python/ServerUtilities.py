@@ -897,7 +897,7 @@ class MeasureTime:
         self.logger = logger
         self.modulename = modulename
         self.label = label
-        self.trace = ""
+        self.trace = trace
 
     def __enter__(self):
         self.perf_counter = time.perf_counter()
