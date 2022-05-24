@@ -66,7 +66,7 @@ class RESTBaseAPI(DatabaseRESTApi):
 
         self._initLogger( getattr(config, 'loggingFile', None), getattr(config, 'loggingLevel', None),
                           getattr(config, 'keptLogDays', 0))
-        self.logger = logger = logging.getLogger("CRABLogger.RESTBeseAPI")
+        self.logger = logging.getLogger("CRABLogger.RESTBeseAPI")
 
     def modifynocheck(self, sql, *binds, **kwbinds):
         """This is the same as `WMCore.REST.Server`:modify method but
@@ -145,7 +145,7 @@ class RESTBaseAPI(DatabaseRESTApi):
                         tmp = new_row[i].read()
                         new_row[i] = tmp
                 ret.append(new_row)
-        self.logger.log("%s query size: %d", trace, get_size(ret))
+        self.logger.info("%s query size: %d", trace, get_size(ret))
         return iter(ret) # return iterable object
 
     def _initLogger(self, logfile, loglevel, keptDays=0):
