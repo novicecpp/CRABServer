@@ -144,7 +144,7 @@ class RESTBaseAPI(DatabaseRESTApi):
                         tmp = new_row[i].read()
                         new_row[i] = tmp
                 ret.append(new_row)
-        self.logger.log("%s query size: %d", trace, get_size(ret)
+        self.logger.log("%s query size: %d", trace, get_size(ret))
         return iter(ret) # return iterable object
 
     def _initLogger(self, logfile, loglevel, keptDays=0):
