@@ -1,21 +1,21 @@
 import os
 import sys
 import logging
+import hashlib
+import json
 import pprint
+import argparse
 from RESTInteractions import CRABRest
 from urllib.parse import urlparse, parse_qs
+from utils import EnvDefault
 
 X509_USER_PROXY = os.environ['X509_USER_PROXY']
-USER_AGENT = os.environ.get('USER_AGENT', 'CRABTest')
-DATABASE_INSTANCE = os.environ.get('DATABASE_INSTANCE', 'prod')
-
 
 logger = logging.getLogger('CRABTest')
 handler = logging.StreamHandler()
 formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(module)s:%(message)s')
 handler.setFormatter(formatter)
 logger.addHandler(handler)
-logger.setLevel('DEBUG')
 
 def create_requests(list_request_str):
     ret = []
@@ -28,42 +28,78 @@ def create_requests(list_request_str):
         url = urlparse(s)
         api = url.path.split('/')[-1]
         data = parse_qs(url.query)
-        ret.append({'method': method, 'api': api, 'data': data})
+        ret.append({'method': method,
+                    'request': request,
+                    'request_hash': hashlib.md5(request.encode()).hexdigest(),
+                    'api': api,
+                    'data': data,
+                    })
     return ret
 
+def create(requests, output_dir, restclient):
+    """get output from request list and dump it out to file
+    """
+    for request in requests:
+        output_path = os.path.join(output_dir, request['request_hash']) + '.json'
+        logger.debug(f"Retrieving {request['method']} /{request['api']}")
+        output = restclient.get(request['api'], request['data'])[0]
+        with open(output_path, 'w') as w:
+            json.dump(output, w)
 
-def main():
-    with open(sys.argv[1], 'r') as r:
-        requests = create_requests(r.read())
-    crabserver_prod = CRABRest(hostname='cmsweb.cern.ch',
-                               localcert=X509_USER_PROXY,
-                               localkey=X509_USER_PROXY,
-                               userAgent=USER_AGENT,
-                               logger=logger,
-                               version='0.0.0')
-    crabserver_prod.setDbInstance('prod')
-    crabserver_dev = CRABRest(hostname='cmsweb-test11.cern.ch',
-                              localcert=X509_USER_PROXY,
-                              localkey=X509_USER_PROXY,
-                              userAgent=USER_AGENT,
-                              logger=logger,
-                              version='0.0.0')
-    crabserver_dev.setDbInstance('prod')
-    for r in requests:
-        logger.debug(f"Retrieving {r['method']} /{r['api']} from dev.")
-        dev_result = crabserver_dev.get(r['api'], r['data'])[0]
-        logger.debug(f"Retrieving {r['method']} /{r['api']} from prod.")
-        prod_result = crabserver_prod.get(r['api'], r['data'])[0]
-        compare_result = prod_result == dev_result
-        logger.info(f"{r['method']} {r['api']} compare result: {compare_result}")
+def compare(requests, input_dir, rest_client):
+    for request in requests:
+        logger.debug(f"Retrieving {request['method']} /{request['api']}")
+        server_output = crabserver.get(request['api'], request['data'])[0]
+        with open(os.path.join(input_dir, request['request_hash'] + '.json'), 'r') as r:
+            expected_output = json.load(r)
+        compare_result = server_output == expected_output
+        logger.info(f"{request['method']} /{request['api']} compare result: {compare_result}")
         if compare_result:
-            logger.debug(f"\nprod value:\n{pprint.pformat(prod_result)}\n\ndev value:\n{pprint.pformat(dev_result)}")
-            sys.exit(1)
+            logger.debug("\nServer output:\n%s\n\nexpected output:\n%s", pprint.pformat(server_output), pprint.pformat(expected_output))
         else:
-            logger.error(f"result from prod and dev is not equal. See output below")
-            logger.error(f"\nprod value:\n{pprint.pformat(prod_result)}\n\ndev value:\n{pprint.pformat(dev_result)}")
+            logger.error("Result from server and expected file is equal. See output below")
+            logger.debug(f"\nServer output:\n{pprint.pformat(server_output)}\n\nexpected output:\n{pprint.pformat(expected_output)}")
             sys.exit(1)
 
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser(prog=__file__)
+    parser.add_argument('mode', type=str, help='mode')
+    parser.add_argument('url_path', type=str, help='url file path')
+    parser.add_argument('--db',
+                        action=EnvDefault,
+                        envvar='DATABASE_INSTANCE',
+                        type=str,
+                        help='database instance (dev/devtwo/preprod/prod')
+    parser.add_argument('--rest',
+                        type=str,
+                        action=EnvDefault,
+                        envvar='CRABSERVER_HOSTNAME',
+                        default='cmsweb-test11.cern.ch',
+                        help='rest hostname e.g. cmsweb-test11.cern.ch.')
+    parser.add_argument('--userproxy',
+                        type=str,
+                        action=EnvDefault,
+                        envvar='X509_USER_PROXY',
+                        default='devtwo',
+                        help='user proxy file path')
+    parser.add_argument('--loglevel',
+                        type=str,
+                        default='INFO',
+                        help='log level')
+    args = parser.parse_args()
+    logger.setLevel(args.loglevel)
+
+    with open(args.url_path, 'r') as r:
+        requests = create_requests(r.read())
+    crabserver = CRABRest(hostname=args.rest,
+                          localcert=X509_USER_PROXY,
+                          localkey=X509_USER_PROXY,
+                          userAgent='CRABRest',
+                          logger=logger,
+                          version='0.0.0')
+    crabserver.setDbInstance(args.db)
+    if args.mode == 'create':
+        create(requests, os.path.dirname(args.url_path), crabserver)
+    if args.mode == 'compare':
+        compare(requests, os.path.dirname(args.url_path), crabserver)
