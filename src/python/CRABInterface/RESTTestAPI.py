@@ -31,6 +31,7 @@ class RESTTestAPI(RESTEntity):
         """Retrieves the server information, like delegateDN, filecacheurls ...
            :arg str subresource: the specific server information to be accessed;
         """
+        import pdb; pdb.set_trace()
         self.logger.info('testlog trace=%s', request.request_trace_id)
         if subresource == 'exception':
             raise Exception('test raise exception in crab code')
