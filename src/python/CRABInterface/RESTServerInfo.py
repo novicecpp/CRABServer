@@ -33,6 +33,7 @@ class RESTServerInfo(RESTEntity):
         """Retrieves the server information, like delegateDN, filecacheurls ...
            :arg str subresource: the specific server information to be accessed;
         """
+        import pdb; pdb.set_trace()
         if subresource:
             return getattr(RESTServerInfo, subresource)(self, **kwargs)
         else:
