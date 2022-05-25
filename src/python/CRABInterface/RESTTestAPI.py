@@ -22,15 +22,18 @@ class RESTTestAPI(RESTEntity):
     def validate(self, apiobj, method, api, param, safe):
         """Validating all the input parameter as enforced by the WMCore.REST module"""
         authz_login_valid()
-        #if method in ['GET']:
-        #    validate_str('subresource', param, safe, RX_SUBRES_SI, optional=True)
+        if method in ['GET']:
+            validate_str('subresource', param, safe, RX_SUBRES_SI, optional=True)
         #    validate_str('workflow', param, safe, RX_TASKNAME, optional=True)
 
     @restcall
-    def get(self, **kwargs):
+    def get(self, subresource, **kwargs):
         """Retrieves the server information, like delegateDN, filecacheurls ...
            :arg str subresource: the specific server information to be accessed;
         """
         self.logger.info('testlog trace=%s', request.request_trace_id)
-        ret = [{"crabserver":"Welcome to himalaya"}]
-        return ret
+        if subresource == 'exception':
+            raise Exception('test raise exception in crab code')
+        else:
+            ret = [{"crabserver":"Welcome to himalaya"}]
+            return ret
