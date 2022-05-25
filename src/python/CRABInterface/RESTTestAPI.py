@@ -17,7 +17,7 @@ class RESTTestAPI(RESTEntity):
 
     def __init__(self, app, api, config, mount):
         RESTEntity.__init__(self, app, api, config, mount)
-        self.logger = logging.getLogger("CRABLogger:RESTTestAPI")
+        self.logger = logging.getLogger("CRABLogger.RESTTestAPI")
 
     def validate(self, apiobj, method, api, param, safe):
         """Validating all the input parameter as enforced by the WMCore.REST module"""
