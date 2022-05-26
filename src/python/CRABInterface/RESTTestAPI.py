@@ -1,4 +1,5 @@
 import logging
+import re
 
 # WMCore dependecies here
 from WMCore.REST.Server import RESTEntity, restcall
