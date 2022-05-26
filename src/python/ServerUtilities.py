@@ -917,7 +917,7 @@ class MeasureTime:
 import cherrypy
 import logging
 
-class TestFilter(logging.Logger):
+class TestFilter(logging.Filter):
     def filter(self, record):
         record.trace_id = cherrypy.request.request_trace_id
         return True
