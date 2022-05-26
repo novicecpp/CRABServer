@@ -96,7 +96,7 @@ class RESTBaseAPI(DatabaseRESTApi):
         """
         import logging.handlers
         init_logger = logging.getLogger('CRABLogger')
-        logger = CustomAdapter(init_logger, {'trace_id': cherrypy.request.request_trace_id})
+        logger = CustomAdapter(init_logger)
 
 
         if loglevel:
@@ -115,4 +115,4 @@ class CustomAdapter(logging.LoggerAdapter):
     'connid' key, whose value in brackets is prepended to the log message.
     """
     def process(self, msg, kwargs):
-        return '[%s] %s' % (self.extra['trace_id'], msg), kwargs
+        return '[%s] %s' % cherrypy.request.request_trace_id, msg), kwargs
