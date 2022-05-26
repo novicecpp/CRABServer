@@ -95,8 +95,7 @@ class RESTBaseAPI(DatabaseRESTApi):
         the logging in a flexible way (a module logs at DEBUG level to a file, another module logs at INFO level to stdout, etc)
         """
         import logging.handlers
-        init_logger = logging.getLogger('CRABLogger')
-        logger = CustomAdapter(init_logger, {})
+        logger = logging.getLogger('CRABLogger')
 
 
         if loglevel:
@@ -105,6 +104,7 @@ class RESTBaseAPI(DatabaseRESTApi):
             hdlr.setFormatter(formatter)
             logger.addHandler(hdlr)
             logger.setLevel(loglevel)
+            logger = CustomAdapter(logger, {})
         else:
             logger.addHandler( NullHandler() )
 
