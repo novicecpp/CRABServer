@@ -98,9 +98,9 @@ class RESTBaseAPI(DatabaseRESTApi):
         logger = logging.getLogger('CRABLogger')
         if loglevel:
             hdlr = logging.handlers.TimedRotatingFileHandler(logfile, when='D', interval=1, backupCount=keptDays)
-            formatter = logging.Formatter('%(asctime)s:%(trace_id)s:%(trace_id2)s:%(levelname)s:%(module)s:%(message)s')
+            formatter = logging.Formatter('%(asctime)s:%(trace_id)s:%(levelname)s:%(module)s:%(message)s')
             hdlr.setFormatter(formatter)
-            f = TestFilter2()
+            f = TraceIDFilter()
             hdlr.addFilter(f)
 
             logger.addHandler(hdlr)
@@ -109,16 +109,7 @@ class RESTBaseAPI(DatabaseRESTApi):
         else:
             logger.addHandler( NullHandler() )
 
-
-class CustomAdapter(logging.LoggerAdapter):
-    """
-    This example adapter expects the passed in dict-like object to have a
-    'connid' key, whose value in brackets is prepended to the log message.
-    """
-    def process(self, msg, kwargs):
-        return '[%s] %s' % (cherrypy.request.request_trace_id, msg), kwargs
-
-class TestFilter2(logging.Filter):
+class TraceIDFilter(logging.Filter):
     def filter(self, record):
-        record.trace_id2 = cherrypy.request.request_trace_id
+        record.trace_id = cherrypy.request.request_trace_id
         return True

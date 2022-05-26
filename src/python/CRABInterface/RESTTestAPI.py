@@ -18,8 +18,6 @@ class RESTTestAPI(RESTEntity):
     def __init__(self, app, api, config, mount):
         RESTEntity.__init__(self, app, api, config, mount)
         self.logger = logging.getLogger("CRABLogger.RESTTestAPI")
-        f = TestFilter()
-        self.logger.addFilter(f)
 
     def validate(self, apiobj, method, api, param, safe):
         """Validating all the input parameter as enforced by the WMCore.REST module"""
@@ -40,11 +38,3 @@ class RESTTestAPI(RESTEntity):
         else:
             ret = [{"crabserver":"Welcome to himalaya"}]
             return ret
-
-import cherrypy
-import logging
-
-class TestFilter(logging.Filter):
-    def filter(self, record):
-        record.trace_id = cherrypy.request.request_trace_id
-        return True
