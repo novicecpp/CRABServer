@@ -96,13 +96,13 @@ class RESTBaseAPI(DatabaseRESTApi):
         """
         import logging.handlers
         logger = logging.getLogger('CRABLogger')
-        f = TestFilter2()
-        logger.addFilter(f)
-
         if loglevel:
             hdlr = logging.handlers.TimedRotatingFileHandler(logfile, when='D', interval=1, backupCount=keptDays)
             formatter = logging.Formatter('%(asctime)s:%(trace_id)s:%(trace_id2)s:%(levelname)s:%(module)s:%(message)s')
             hdlr.setFormatter(formatter)
+            f = TestFilter2()
+            hdlr.addFilter(f)
+
             logger.addHandler(hdlr)
             logger.setLevel(loglevel)
             logger = CustomAdapter(logger, {})
