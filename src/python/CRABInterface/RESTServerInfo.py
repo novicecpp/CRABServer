@@ -1,4 +1,5 @@
 import logging
+import re
 
 # WMCore dependecies here
 from WMCore.REST.Server import RESTEntity, restcall
@@ -11,6 +12,7 @@ from CRABInterface.Regexps import RX_SUBRES_SI, RX_TASKNAME
 from CRABInterface.Utilities import conn_handler
 from CRABInterface.__init__ import __version__
 
+RX_ALLOW_ALL_SUBRESOURCE = re.compile(r"^[a-z][a-z0-9]+$")
 
 class RESTServerInfo(RESTEntity):
     """REST entity for workflows and relative subresources"""
@@ -19,13 +21,14 @@ class RESTServerInfo(RESTEntity):
         RESTEntity.__init__(self, app, api, config, mount)
         self.centralcfg = centralcfg
         self.logger = logging.getLogger("CRABLogger.RESTServerInfo")
+
         #used by the client to get the url where to update the cache (cacheSSL)
 
     def validate(self, apiobj, method, api, param, safe ):
         """Validating all the input parameter as enforced by the WMCore.REST module"""
         authz_login_valid()
         if method in ['GET']:
-            validate_str('subresource', param, safe, RX_SUBRES_SI, optional=True)
+            validate_str('subresource', param, safe, RX_ALLOW_ALL_SUBRESOURCE, optional=True)
             validate_str('workflow', param, safe, RX_TASKNAME, optional=True)
 
     @restcall
