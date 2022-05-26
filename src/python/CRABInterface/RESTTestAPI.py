@@ -33,8 +33,10 @@ class RESTTestAPI(RESTEntity):
         """
         #import pdb; pdb.set_trace()
         self.logger.info('testlog trace=%s', request.request_trace_id)
+        ret = [{"crabserver":"Welcome to himalaya", 'subresource': subresource}]
         if subresource == 'exception':
             raise Exception('test raise exception in crab code')
+        elif subresource == 'pdb':
+            import pdb; pdb.set_trace()
         else:
-            ret = [{"crabserver":"Welcome to himalaya"}]
             return ret
