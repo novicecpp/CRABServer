@@ -115,4 +115,4 @@ class CustomAdapter(logging.LoggerAdapter):
     'connid' key, whose value in brackets is prepended to the log message.
     """
     def process(self, msg, kwargs):
-        return '[%s] %s' % cherrypy.request.request_trace_id, msg), kwargs
+        return '[%s] %s' % (cherrypy.request.request_trace_id, msg), kwargs
