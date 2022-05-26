@@ -95,11 +95,11 @@ class RESTBaseAPI(DatabaseRESTApi):
         the logging in a flexible way (a module logs at DEBUG level to a file, another module logs at INFO level to stdout, etc)
         """
         import logging.handlers
-        logger = logging.getLogger('CRABLogger')
+        init_logger = logging.getLogger('CRABLogger')
+        logger = CustomAdapter(init_logger, {'trace_id': cherrypy.request.request_trace_id})
+
 
         if loglevel:
-            f = TestFilter()
-            logger.addFilter(f)
             hdlr = logging.handlers.TimedRotatingFileHandler(logfile, when='D', interval=1, backupCount=keptDays)
             formatter = logging.Formatter('%(asctime)s:%(trace_id)s:%(levelname)s:%(module)s:%(message)s')
             hdlr.setFormatter(formatter)
@@ -108,7 +108,11 @@ class RESTBaseAPI(DatabaseRESTApi):
         else:
             logger.addHandler( NullHandler() )
 
-class TestFilter(logging.Filter):
-    def filter(self, record):
-        record.trace_id = cherrypy.request.request_trace_id
-        return True
+
+class CustomAdapter(logging.LoggerAdapter):
+    """
+    This example adapter expects the passed in dict-like object to have a
+    'connid' key, whose value in brackets is prepended to the log message.
+    """
+    def process(self, msg, kwargs):
+        return '[%s] %s' % (self.extra['trace_id'], msg), kwargs

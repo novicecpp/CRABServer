@@ -8,7 +8,6 @@ from cherrypy import request
 # CRABServer dependecies here
 from CRABInterface.RESTExtensions import authz_login_valid
 from CRABInterface.Regexps import RX_SUBRES_SI, RX_TASKNAME
-from ServerUtilities import TestFilter
 import time
 import random
 
@@ -34,10 +33,18 @@ class RESTTestAPI(RESTEntity):
         """Retrieves the server information, like delegateDN, filecacheurls ...
            :arg str subresource: the specific server information to be accessed;
         """
-        import pdb; pdb.set_trace()
+        #import pdb; pdb.set_trace()
         self.logger.info('testlog trace=%s', request.request_trace_id)
         if subresource == 'exception':
             raise Exception('test raise exception in crab code')
         else:
             ret = [{"crabserver":"Welcome to himalaya"}]
             return ret
+
+#import cherrypy
+#import logging
+#
+#class TestFilter(logging.Filter):
+#    def filter(self, record):
+#        record.trace_id = cherrypy.request.request_trace_id
+#        return True

@@ -912,12 +912,3 @@ class MeasureTime:
                  self.perf_counter, self.process_time, self.thread_time )
         self.logger.info("MeasureTime:seconds - modulename=%s label='%s' - %s",
                  self.modulename, self.label, self.readout)
-
-
-import cherrypy
-import logging
-
-class TestFilter(logging.Filter):
-    def filter(self, record):
-        record.trace_id = cherrypy.request.request_trace_id
-        return True
