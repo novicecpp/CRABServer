@@ -8,6 +8,7 @@ from cherrypy import request
 # CRABServer dependecies here
 from CRABInterface.RESTExtensions import authz_login_valid
 from CRABInterface.Regexps import RX_SUBRES_SI, RX_TASKNAME
+from CRABInterface.RESTBaseAPI import TestFilter
 import time
 import random
 
@@ -18,6 +19,8 @@ class RESTTestAPI(RESTEntity):
     def __init__(self, app, api, config, mount):
         RESTEntity.__init__(self, app, api, config, mount)
         self.logger = logging.getLogger("CRABLogger.RESTTestAPI")
+        f = TestFilter()
+        self.logger.addFilter(f)
 
     def validate(self, apiobj, method, api, param, safe):
         """Validating all the input parameter as enforced by the WMCore.REST module"""
