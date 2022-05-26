@@ -96,7 +96,7 @@ class RESTBaseAPI(DatabaseRESTApi):
         """
         import logging.handlers
         init_logger = logging.getLogger('CRABLogger')
-        logger = CustomAdapter(init_logger)
+        logger = CustomAdapter(init_logger, {})
 
 
         if loglevel:
