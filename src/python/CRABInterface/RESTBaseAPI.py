@@ -105,7 +105,6 @@ class RESTBaseAPI(DatabaseRESTApi):
 
             logger.addHandler(hdlr)
             logger.setLevel(loglevel)
-            logger = CustomAdapter(logger, {})
         else:
             logger.addHandler( NullHandler() )
 
