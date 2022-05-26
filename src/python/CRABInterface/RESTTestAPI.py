@@ -9,6 +9,7 @@ from cherrypy import request
 from CRABInterface.RESTExtensions import authz_login_valid
 from CRABInterface.Regexps import RX_SUBRES_SI, RX_TASKNAME
 from CRABInterface.RESTBaseAPI import TestFilter
+from ServerUtilities import TestFilter
 import time
 import random
 

@@ -885,13 +885,13 @@ def downloadFromS3ViaPSU(filepath=None, preSignedUrl=None, logger=None):
 
 class MeasureTime:
     """
-    Context manager to measure how long a portion of code takes. 
+    Context manager to measure how long a portion of code takes.
     It is intended to be used as:
 
     logger = logging.getLogger()
     with MeasureTime(logger, modulename=__name__, label="myfuncname") as _:
         myfuncname()
-    
+
     """
     def __init__(self, logger, modulename="", label=""):
         self.logger = logger
@@ -910,5 +910,14 @@ class MeasureTime:
         self.perf_counter = time.perf_counter() - self.perf_counter
         self.readout = 'tot={:.4f} proc={:.4f} thread={:.4f}'.format(
                  self.perf_counter, self.process_time, self.thread_time )
-        self.logger.info("MeasureTime:seconds - modulename=%s label='%s' - %s", 
+        self.logger.info("MeasureTime:seconds - modulename=%s label='%s' - %s",
                  self.modulename, self.label, self.readout)
+
+
+import cherrypy
+import logging
+
+class TestFilter(logging.Logger):
+    def filter(self, record):
+        record.trace_id = cherrypy.request.request_trace_id
+        return True
