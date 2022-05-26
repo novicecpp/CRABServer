@@ -41,10 +41,10 @@ class RESTTestAPI(RESTEntity):
             ret = [{"crabserver":"Welcome to himalaya"}]
             return ret
 
-#import cherrypy
-#import logging
-#
-#class TestFilter(logging.Filter):
-#    def filter(self, record):
-#        record.trace_id = cherrypy.request.request_trace_id
-#        return True
+import cherrypy
+import logging
+
+class TestFilter(logging.Filter):
+    def filter(self, record):
+        record.trace_id = cherrypy.request.request_trace_id
+        return True
