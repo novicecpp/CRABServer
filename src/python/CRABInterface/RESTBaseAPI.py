@@ -141,7 +141,7 @@ class RESTBaseAPI(DatabaseRESTApi):
             ret = []
             for row in all_rows:
                 new_row = list(row)
-                for i in enumerate(new_row):
+                for i in range(len(new_row)):
                     if isinstance(new_row[i], cherrypy.request.db['handle']['type'].LOB):
                         tmp = io.StringIO(new_row[i].read())
                         new_row[i] = tmp
