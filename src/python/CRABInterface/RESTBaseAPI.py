@@ -139,7 +139,7 @@ class RESTBaseAPI(DatabaseRESTApi):
         #
         if getattr(self._config, 'enableQueryLoadAllRows', True):
             ret = []
-            for row in rows:
+            for row in all_rows:
                 new_row = list(row)
                 for i in enumerate(new_row):
                     if isinstance(new_row[i], cherrypy.request.db['handle']['type'].LOB):
