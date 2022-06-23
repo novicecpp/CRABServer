@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 import logging
+import io
 
 import cherrypy
 import time
@@ -66,6 +67,7 @@ class RESTBaseAPI(DatabaseRESTApi):
 
         self._initLogger( getattr(config, 'loggingFile', None), getattr(config, 'loggingLevel', None),
                           getattr(config, 'keptLogDays', 0))
+        self._config = config
 
     def modifynocheck(self, sql, *binds, **kwbinds):
         """This is the same as `WMCore.REST.Server`:modify method but
@@ -132,20 +134,24 @@ class RESTBaseAPI(DatabaseRESTApi):
         if cherrypy.request.db['handle']['type'].__name__ == 'MySQLdb':
             raise NotImplementedError
         start_time = time.perf_counter()
-        rows = super().query(match, select, sql, *binds, **kwbinds)
-        ret = []
-        for row in rows:
-            new_row = list(row)
-            for i in range(len(new_row)):
-                if isinstance(new_row[i], cherrypy.request.db['handle']['type'].LOB):
-                    tmp = new_row[i].read()
-                    new_row[i] = tmp
-            ret.append(new_row)
-        elapsed_time = time.perf_counter() - start_time
-        size = get_size(ret)
-        trace = cherrypy.request.db["handle"]["trace"]
-        cherrypy.log('%s query time: %6f, size: %d' % (trace, elapsed_time, size))
-        return iter(ret) # return iterable object
+        all_rows = super().query(match, select, sql, *binds, **kwbinds)
+        # put kill switch as suggested in
+        #
+        if getattr(self._config, 'enableQueryLoadAllRows', True):
+            ret = []
+            for row in rows:
+                new_row = list(row)
+                for i in enumerate(new_row):
+                    if isinstance(new_row[i], cherrypy.request.db['handle']['type'].LOB):
+                        tmp = io.StringIO(new_row[i].read())
+                        new_row[i] = tmp
+                ret.append(new_row)
+            elapsed_time = time.perf_counter() - start_time
+            size = get_size(ret)
+            trace = cherrypy.request.db["handle"]["trace"]
+            cherrypy.log('%s query time: %6f, size: %d' % (trace, elapsed_time, size))
+            all_rows = iter(ret) # return as iterable object
+        return all_rows
 
     def _initLogger(self, logfile, loglevel, keptDays=0):
         """
