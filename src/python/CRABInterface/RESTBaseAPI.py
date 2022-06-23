@@ -134,8 +134,6 @@ class RESTBaseAPI(DatabaseRESTApi):
             raise NotImplementedError
         start_time = time.perf_counter()
         all_rows = super().query(match, select, sql, *binds, **kwbinds)
-        # put kill switch as suggested in
-        #
         if getattr(self._config, 'enableQueryLoadAllRows', True):
             ret = []
             for row in all_rows:
