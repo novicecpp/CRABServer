@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 import logging
-import io
 
 import cherrypy
 import time
@@ -143,7 +142,7 @@ class RESTBaseAPI(DatabaseRESTApi):
                 new_row = list(row)
                 for i in range(len(new_row)):
                     if isinstance(new_row[i], cherrypy.request.db['handle']['type'].LOB):
-                        tmp = io.FakeLOB(new_row[i].read())
+                        tmp = _FakeLOB(new_row[i].read())
                         new_row[i] = tmp
                 ret.append(new_row)
             elapsed_time = time.perf_counter() - start_time
@@ -173,7 +172,7 @@ class RESTBaseAPI(DatabaseRESTApi):
             logger.addHandler( NullHandler() )
 
 
-class FakeLOB:
+class _FakeLOB:
     """Simplest way to mock LOB object inside tuple return by DatabaseRESTApi.query(),
        use by quey_load_all_rows(). This way, we do not need to change  code on
        the caller side, and we can put the configuration option inside query_load_all_rows
