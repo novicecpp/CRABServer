@@ -127,12 +127,13 @@ class RESTBaseAPI(DatabaseRESTApi):
         """Same functionality as DatabaseRESTApi.query() function except it
            returns all data from db in one go instead of returning a generator.
            This function also loads Oracle LOB objects fetching them via LOB.read()
-           (without load in chunk). So caller should expect CLOB/BLOB column
-           as python string/bytes instead of cx_Oracle object.
+           (without load in chunk). Caller will get _FakeLOB object instead of
+           cx_Oracle.LOB, which has .read() to get all LOB data that is already
+           loaded into memory.
 
            Can disable this functionality in case of memory usage issues by
-           setting the configuration option "enableQueryLoadAllRows" to False
-           (default is True)
+           setting the configuration option "data.enableQueryLoadAllRows"
+           to False (default is True)
 
            Note that this function only support Oracle DB Connector.
         """
