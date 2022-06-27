@@ -24,7 +24,7 @@ from CRABInterface.RESTCache import RESTCache
 from CRABInterface.DataFileMetadata import DataFileMetadata
 from CRABInterface.DataWorkflow import DataWorkflow
 from CRABInterface.DataUserWorkflow import DataUserWorkflow
-from ServerUtilities import get_size
+from ServerUtilities import get_size, MeasureTime
 
 #In case the log level is not specified in the configuration we use the NullHandler and we do not print messages
 #The NullHandler is included as of python 3.1
@@ -67,6 +67,7 @@ class RESTBaseAPI(DatabaseRESTApi):
         self._initLogger( getattr(config, 'loggingFile', None), getattr(config, 'loggingLevel', None),
                           getattr(config, 'keptLogDays', 0))
         self._config = config
+        self.logger = logging.getLogger("CRABLogger.RESTBaseAPI")
 
     def modifynocheck(self, sql, *binds, **kwbinds):
         """This is the same as `WMCore.REST.Server`:modify method but
@@ -123,31 +124,32 @@ class RESTBaseAPI(DatabaseRESTApi):
 
     def query_load_all_rows(self, match, select, sql, *binds, **kwbinds):
         """Same functionality as DatabaseRESTApi.query() function except it
-           returns all data from db in one go instead of returning a egenerator.
+           returns all data from db in one go instead of returning a generator.
            This function also loads Oracle LOB objects fetching them via LOB.read()
            (without load in chunk). So caller should expect CLOB/BLOB column
            as python string/bytes instead of cx_Oracle object.
+
+           Can disable this functionality in case of memory usage issues by
+           setting the configuration option "enableQueryLoadAllRows" to False
+           (default is True)
 
            Note that this function only support Oracle DB Connector.
         """
         if cherrypy.request.db['handle']['type'].__name__ == 'MySQLdb':
             raise NotImplementedError
-        start_time = time.perf_counter()
         all_rows = super().query(match, select, sql, *binds, **kwbinds)
         if getattr(self._config, 'enableQueryLoadAllRows', True):
-            ret = []
-            for row in all_rows:
-                new_row = list(row)
-                for i in range(len(new_row)):
-                    if isinstance(new_row[i], cherrypy.request.db['handle']['type'].LOB):
-                        tmp = _FakeLOB(new_row[i].read())
-                        new_row[i] = tmp
-                ret.append(new_row)
-            elapsed_time = time.perf_counter() - start_time
-            size = get_size(ret)
-            trace = cherrypy.request.db["handle"]["trace"]
-            cherrypy.log('%s query time: %6f, size: %d' % (trace, elapsed_time, size))
-            all_rows = iter(ret) # return as iterable object
+            with MeasureTime(self.logger, modulename=__name__, label="RESTBaseAPI.query_load_all_rows") as _:
+                ret = []
+                for row in all_rows:
+                    new_row = list(row)
+                    for i in range(len(new_row)):
+                        if isinstance(new_row[i], cherrypy.request.db['handle']['type'].LOB):
+                            tmp = _FakeLOB(new_row[i].read())
+                            new_row[i] = tmp
+                    ret.append(new_row)
+                self.logger('query size: %d' % get_size(ret))
+                all_rows = iter(ret)  # return as iterable object
         return all_rows
 
     def _initLogger(self, logfile, loglevel, keptDays=0):
