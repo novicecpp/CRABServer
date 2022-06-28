@@ -150,7 +150,7 @@ class RESTBaseAPI(DatabaseRESTApi):
                             tmp = _FakeLOB(new_row[i].read())
                             new_row[i] = tmp
                     ret.append(new_row)
-                self.logger.info('query size: %d' % get_size(ret))
+                self.logger.info('query_size=%d' % get_size(ret))
                 all_rows = iter(ret)  # return as iterable object
         return all_rows
 
