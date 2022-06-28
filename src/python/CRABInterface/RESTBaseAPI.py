@@ -139,6 +139,7 @@ class RESTBaseAPI(DatabaseRESTApi):
         if cherrypy.request.db['handle']['type'].__name__ == 'MySQLdb':
             raise NotImplementedError
         all_rows = super().query(match, select, sql, *binds, **kwbinds)
+        import pdb; pdb.set_trace()
         if getattr(self._config, 'enableQueryLoadAllRows', True):
             with MeasureTime(self.logger, modulename=__name__, label="RESTBaseAPI.query_load_all_rows") as _:
                 ret = []
