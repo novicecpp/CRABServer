@@ -287,6 +287,7 @@ class RESTUserWorkflow(RESTEntity):
             validate_str("secondarydata", param, safe, RX_DATASET, optional=True)
             # site black/white list needs to be cast to unicode for later use in self._expandSites
             validate_strlist("siteblacklist", param, safe, RX_CMSSITE)
+            import pdb; pdb.set_trace();
             safe.kwargs['siteblacklist'] = self._expandSites(safe.kwargs['siteblacklist'])
             validate_strlist("sitewhitelist", param, safe, RX_CMSSITE)
             safe.kwargs['sitewhitelist'] = self._expandSites(safe.kwargs['sitewhitelist'])
