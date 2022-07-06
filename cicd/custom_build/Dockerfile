@@ -4,6 +4,6 @@ COPY . /tmp/context
 RUN cd /tmp/context \
     && ls \
     && bash install.sh  \
-    && cd -
+    && cd - \
     && rm -rf /tmp/context
 USER 1000
