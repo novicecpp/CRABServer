@@ -10,4 +10,3 @@ cp -r WMCore/src/python/WMCore $CRAB_INSTALLED_PATH/
 cp -r WMCore/src/python/Utils $CRAB_INSTALLED_PATH/
 chown -R 1000:1000 *
 ls -alh
-cd -
