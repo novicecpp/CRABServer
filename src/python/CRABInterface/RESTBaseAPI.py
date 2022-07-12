@@ -180,7 +180,10 @@ class TraceIDFilter(logging.Filter):
     """
     def filter(self, record):
         try:
-            record.trace_id = cherrypy.request.db['handle']['trace'].replace('RESTSQL:','')
+            if getattr(cherrypy.request, 'trace_id', False):
+                record.trace_id = cherrypy.request.trace_id
+            else:
+                record.trace_id = ''
         except Exception:  # pylint: disable=broad-except
             traceback.print_exc()
             record.trace_id = ""
