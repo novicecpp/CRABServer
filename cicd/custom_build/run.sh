@@ -9,7 +9,7 @@ echo "(DEBUG) WMCore repo: $WMCORE_REPO branch: $WMCORE_BRANCH"
 if [[ -n $CRABSERVER_BASEIMAGE ]]; then
     echo "FROM $CRABSERVER_BASEIMAGE" > Dockerfile2
     sed '1,1d' Dockerfile >> Dockerfile2
-    diff -u Dockerfile Dockerfile2
+    diff -u Dockerfile Dockerfile2 || true # prevent script exit from "set -e"
     mv Dockerfile2 Dockerfile
 fi
 
