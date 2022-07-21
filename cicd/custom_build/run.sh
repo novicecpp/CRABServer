@@ -1,12 +1,12 @@
 #! /bin/bash
 
-set -euo pipefail
+set -eo pipefail
 set -x
 echo "(DEBUG) crabserver image: $CRABSERVER_BASEIMAGE"
 echo "(DEBUG) crabserver repo: $CRABSERVER_REPO branch: $CRABSERVER_BRANCH"
 echo "(DEBUG) WMCore repo: $WMCORE_REPO branch: $WMCORE_BRANCH"
 
-if [[ ! -n $CRABSERVER_BASEIMAGE ]]; then
+if [[ -n $CRABSERVER_BASEIMAGE ]]; then
     echo "FROM $CRABSERVER_BASEIMAGE" > Dockerfile2
     sed '1,1d' Dockerfile >> Dockerfile2
     diff -u Dockerfile Dockerfile2
@@ -14,7 +14,10 @@ if [[ ! -n $CRABSERVER_BASEIMAGE ]]; then
 fi
 
 # default wmcore branch
+# FIXME: find from CRABServer/requirements.txt instead
 export WMCORE_BRANCH=${WMCORE_BRANCH:2.0.2}
+
+set -u
 
 # FIXME: find tag in remote instead clone
 git clone $CRABSERVER_REPO -b $CRABSERVER_BRANCH --depth 1
