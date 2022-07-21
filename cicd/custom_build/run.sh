@@ -1,9 +1,21 @@
 #! /bin/bash
 
 set -euo pipefail
-
+set -x
+echo "(DEBUG) crabserver image: $CRABSERVER_BASEIMAGE"
 echo "(DEBUG) crabserver repo: $CRABSERVER_REPO branch: $CRABSERVER_BRANCH"
 echo "(DEBUG) WMCore repo: $WMCORE_REPO branch: $WMCORE_BRANCH"
+
+if [[ ! -n $CRABSERVER_BASEIMAGE ]]; then
+    echo "FROM $CRABSERVER_BASEIMAGE" > Dockerfile2
+    sed '1,1d' Dockerfile >> Dockerfile2
+    diff -u Dockerfile Dockerfile2
+    mv Dockerfile2 Dockerfile
+fi
+
+# default wmcore branch
+export WMCORE_BRANCH=${WMCORE_BRANCH:2.0.2}
+
 # FIXME: find tag in remote instead clone
 git clone $CRABSERVER_REPO -b $CRABSERVER_BRANCH --depth 1
 git clone $WMCORE_REPO -b $WMCORE_BRANCH --depth 1
@@ -22,7 +34,3 @@ docker build \
 export DOCKER_CONFIG=$PWD/docker_login
 docker login registry.cern.ch --username $HARBOR_CMSCRAB_USERNAME --password-stdin <<< $HARBOR_CMSCRAB_PASSWORD
 docker push $DOCKER_IMAGE_NAMETAG
-
-
-echo "DOCKER_IMAGE_NAMETAG=registry.cern.ch/cmscrab/crabserver:crabserver_$CRABSERVER_HASH.wmcore_$WMCORE_HASH" >> jenkins_parameters
-echo "REST_Instance=${REST_Instance:-test11}">> jenkins_parameters
