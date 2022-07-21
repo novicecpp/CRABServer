@@ -2,8 +2,9 @@
 set -eo pipefail
 
 # jenkins parameter
+export CRABSERVER_BASEIMAGE=registry.cern.ch/cmsweb/crabserver:v3.220713
 export CRABSERVER_REPO=https://github.com/novicecpp/CRABServer.git
-export CRABSERVER_BRANCH=load_data_from_db_before_streaming_to_client
+export CRABSERVER_BRANCH=revert_s3_force_ipv4
 export WMCORE_REPO=https://github.com/dmwm/WMCore.git
 export WMCORE_BRANCH=2.0.2
 # expect harbor username/password
