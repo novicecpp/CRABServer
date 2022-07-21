@@ -15,7 +15,9 @@ fi
 
 # default wmcore branch
 # FIXME: find from CRABServer/requirements.txt instead
-export WMCORE_BRANCH=${WMCORE_BRANCH:2.0.2}
+if [[ -z $WMCORE_BRANCH ]]; then
+    export WMCORE_BRANCH=2.0.2
+fi
 
 set -u
 
