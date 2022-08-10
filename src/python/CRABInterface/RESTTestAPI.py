@@ -6,7 +6,7 @@ from WMCore.REST.Validation import validate_str
 
 # CRABServer dependecies here
 from CRABInterface.RESTExtensions import authz_login_valid
-from CRABInterface.Regexps import RX_SUBRES_SI, RX_TASKNAME
+from CRABInterface.Regexps import RX_SUBRES_TESTAPI, RX_TASKNAME
 import time
 import random
 
@@ -23,7 +23,7 @@ class RESTTestAPI(RESTEntity):
         """Validating all the input parameter as enforced by the WMCore.REST module"""
         authz_login_valid()
         if method in ['GET']:
-            validate_str('subresource', param, safe, RX_SUBRES_SI, optional=True)
+            validate_str('subresource', param, safe, RX_SUBRES_TESTAPI, optional=True)
         #    validate_str('workflow', param, safe, RX_TASKNAME, optional=True)
 
     @restcall
