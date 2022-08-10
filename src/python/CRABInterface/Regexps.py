@@ -138,3 +138,6 @@ RX_ASO_WORKERNAME = RX_WORKER_NAME
 
 RX_SUBGETUSERTRANSFER = re.compile(r"^(getById|getTransferStatus|getPublicationStatus)$")
 RX_SUBPOSTUSERTRANSFER = re.compile(r"^(killTransfers|retryPublication|retryTransfers|killTransfersById|updateDoc)$")
+
+#subresources of testapi
+RX_SUBRES_CACHE = re.compile(r"^(error)$")
