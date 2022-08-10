@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 import logging
-import traceback
 
 import cherrypy
 from subprocess import getstatusoutput
@@ -185,7 +184,6 @@ class TraceIDFilter(logging.Filter):
             else:
                 record.trace_id = ''
         except Exception:  # pylint: disable=broad-except
-            traceback.print_exc()
             record.trace_id = ""
         return True
 
