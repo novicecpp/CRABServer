@@ -140,4 +140,4 @@ RX_SUBGETUSERTRANSFER = re.compile(r"^(getById|getTransferStatus|getPublicationS
 RX_SUBPOSTUSERTRANSFER = re.compile(r"^(killTransfers|retryPublication|retryTransfers|killTransfersById|updateDoc)$")
 
 #subresources of testapi
-RX_SUBRES_CACHE = re.compile(r"^(error)$")
+RX_SUBRES_TESTAPI = re.compile(r"^(error)$")
