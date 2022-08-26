@@ -54,3 +54,8 @@ echo "(DEBUG) end"
 # relogin to using cmsweb robot account
 docker login registry.cern.ch --username $HARBOR_CMSWEB_USERNAME --password-stdin <<< $HARBOR_CMSWEB_PASSWORD
 CMSK8STAG=${IMAGE_TAG} ./build.sh "crabserver"
+
+# push crabserver to cmscrab
+docker login registry.cern.ch --username $HARBOR_CMSCRAB_USERNAME --password-stdin <<< $HARBOR_CMSCRAB_PASSWORD
+docker tag registry.cern.ch/cmsweb/crabserver:${IMAGE_TAG} registry.cern.ch/cmscrab/crabserver:${IMAGE_TAG}
+docker push registry.cern.ch/cmscrab/crabserver:${IMAGE_TAG}
