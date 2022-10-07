@@ -502,15 +502,12 @@ class DagmanCreator(TaskAction):
         if task['tm_user_config']['require_accelerator']:
             info['accelerator_jdl'] = '+RequiresGPU=1\nrequest_GPUs=1'
             cudacapability_requirements = ''
-            self.logger.debug(task['tm_user_config']['cuda_capability'])
             for cap in task['tm_user_config']['cuda_capability']:
                 cudacapability_requirements += 'CUDACapability == %s || ' % (cap)
-            info['cudacapability'] = '&& ( %s )' % (cudacapability_requirements[-4])
+            info['cudacapability'] = '&& ( %s )' % (cudacapability_requirements[:-4])
         else:
             info['accelerator_jdl'] = ''
             info['cudacapability'] = ''
-        self.logger.debug(info['cudacapability'])
-        info['cudacapability'] = ''
         info['extra_jdl'] = '\n'.join(literal_eval(task['tm_extrajdl']))
 
         # info['jobarch_flatten'].split("_")[0]: extracts "slc7" from "slc7_amd64_gcc10"
