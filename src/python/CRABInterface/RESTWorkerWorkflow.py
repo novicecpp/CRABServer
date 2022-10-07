@@ -157,6 +157,7 @@ def fixupTask(task):
     user_config_default = {
         'partialdataset': False,
         'require_accelerator': False,
+        'cuda_capability': ["7.0", "7.5", "8.0"], # hardcode cuda capability
     }
     if result['tm_user_config']:
         result['tm_user_config'] = json.loads(result['tm_user_config'])
