@@ -503,7 +503,7 @@ class DagmanCreator(TaskAction):
             info['accelerator_jdl'] = '+RequiresGPU=1\nrequest_GPUs=1'
             if task['tm_user_config']['cudacapability']:
                 cudacapability_requirements = ''
-                for cap in task['tm_user_config']['cuda_capability']:
+                for cap in task['tm_user_config']['cudacapability']:
                     cudacapability_requirements += 'CUDACapability == %s || ' % (cap)
                 info['cudacapability'] = '&& ( %s )' % (cudacapability_requirements[:-4])
             else:
