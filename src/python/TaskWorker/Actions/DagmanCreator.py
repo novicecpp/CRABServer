@@ -501,7 +501,7 @@ class DagmanCreator(TaskAction):
         # hardcoding accelerator to GPU (SI currently only have nvidia GPU)
         if task['tm_user_config']['require_accelerator']:
             info['accelerator_jdl'] = '+RequiresGPU=1\nrequest_GPUs=1'
-            info['cudacapability'] = '&& CUDACapabiltiy >= 8'
+            info['cudacapability'] = '&& (CUDACapability >= 8 || CUDACapability == "8.0")'
         else:
             info['accelerator_jdl'] = ''
             info['cudacapability'] = ''
