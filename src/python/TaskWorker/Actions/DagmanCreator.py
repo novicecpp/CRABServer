@@ -146,7 +146,7 @@ should_transfer_files = YES
 #x509userproxy = %(x509up_file)s
 use_x509userproxy = true
 %(opsys_req)s
-Requirements = ((target.IS_GLIDEIN =!= TRUE) || (target.GLIDEIN_CMSSite =!= UNDEFINED)) && ( %(cudacapability)s )
+Requirements = ((target.IS_GLIDEIN =!= TRUE) || (target.GLIDEIN_CMSSite =!= UNDEFINED)) %(cudacapability)s
 periodic_release = (HoldReasonCode == 28) || (HoldReasonCode == 30) || (HoldReasonCode == 13) || (HoldReasonCode == 6)
 # Remove if
 # a) job is in the 'held' status for more than 7 minutes
@@ -504,10 +504,11 @@ class DagmanCreator(TaskAction):
             cudacapability_requirements = ''
             for cap in task['tm_user_config']['cuda_capability']:
                 cudacapability_requirements += 'CUDACapability == %s || ' % (cap)
-            info['cudacapability'] = '%s' % (cudacapability_requirements[-4])
+            info['cudacapability'] = '&& ( %s )' % (cudacapability_requirements[-4])
         else:
             info['accelerator_jdl'] = ''
             info['cudacapability'] = ''
+        self.logger.info(info['cudacapability'])
         info['extra_jdl'] = '\n'.join(literal_eval(task['tm_extrajdl']))
 
         # info['jobarch_flatten'].split("_")[0]: extracts "slc7" from "slc7_amd64_gcc10"
