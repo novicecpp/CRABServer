@@ -501,14 +501,17 @@ class DagmanCreator(TaskAction):
         # hardcoding accelerator to GPU (SI currently only have nvidia GPU)
         if task['tm_user_config']['require_accelerator']:
             info['accelerator_jdl'] = '+RequiresGPU=1\nrequest_GPUs=1'
-            cudacapability_requirements = ''
-            for cap in task['tm_user_config']['cuda_capability']:
-                cudacapability_requirements += 'CUDACapability == %s || ' % (cap)
-            info['cudacapability'] = '&& ( %s )' % (cudacapability_requirements[:-4])
+            if task['tm_user_config']['cudacapability']:
+                cudacapability_requirements = ''
+                for cap in task['tm_user_config']['cuda_capability']:
+                    cudacapability_requirements += 'CUDACapability == %s || ' % (cap)
+                info['cudacapability'] = '&& ( %s )' % (cudacapability_requirements[:-4])
+            else:
+                info['cudacapability'] = ''
         else:
             info['accelerator_jdl'] = ''
-            info['cudacapability'] = ''
         info['extra_jdl'] = '\n'.join(literal_eval(task['tm_extrajdl']))
+
 
         # info['jobarch_flatten'].split("_")[0]: extracts "slc7" from "slc7_amd64_gcc10"
         required_os_list = ARCH_TO_OS.get(info['jobarch_flatten'].split("_")[0])
