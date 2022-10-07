@@ -146,7 +146,7 @@ should_transfer_files = YES
 #x509userproxy = %(x509up_file)s
 use_x509userproxy = true
 %(opsys_req)s
-Requirements = ((target.IS_GLIDEIN =!= TRUE) || (target.GLIDEIN_CMSSite =!= UNDEFINED))
+Requirements = ((target.IS_GLIDEIN =!= TRUE) || (target.GLIDEIN_CMSSite =!= UNDEFINED)) %(cudacapability)s
 periodic_release = (HoldReasonCode == 28) || (HoldReasonCode == 30) || (HoldReasonCode == 13) || (HoldReasonCode == 6)
 # Remove if
 # a) job is in the 'held' status for more than 7 minutes
@@ -501,8 +501,10 @@ class DagmanCreator(TaskAction):
         # hardcoding accelerator to GPU (SI currently only have nvidia GPU)
         if task['tm_user_config']['require_accelerator']:
             info['accelerator_jdl'] = '+RequiresGPU=1\nrequest_GPUs=1'
+            info['cudacapability'] = '&& CUDACapabiltiy=="6.0,7.0"'
         else:
             info['accelerator_jdl'] = ''
+            info['cudacapability'] = ''
         info['extra_jdl'] = '\n'.join(literal_eval(task['tm_extrajdl']))
 
         # info['jobarch_flatten'].split("_")[0]: extracts "slc7" from "slc7_amd64_gcc10"
