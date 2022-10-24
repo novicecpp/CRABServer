@@ -760,7 +760,7 @@ class DagmanCreator(TaskAction):
         global_blacklist = set(self.loadJSONFromFileInScratchDir('blacklistedSites.txt'))
         self.logger.debug("CRAB site blacklist: %s", list(global_blacklist))
 
-        # This config setting acts as a global black list
+        # Get accleratorsites from GetAcceleratorSite recurring action.
         acceleratorsites = set(self.loadJSONFromFileInScratchDir('acceleratorSites.txt'))
         self.logger.debug("Accelerator site from pilot pool: %s", list(accelerator_sites))
 
