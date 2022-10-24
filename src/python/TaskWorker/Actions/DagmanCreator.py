@@ -762,7 +762,7 @@ class DagmanCreator(TaskAction):
 
         # Get accleratorsites from GetAcceleratorSite recurring action.
         acceleratorsites = set(self.loadJSONFromFileInScratchDir('acceleratorSites.txt'))
-        self.logger.debug("Accelerator site from pilot pool: %s", list(accelerator_sites))
+        self.logger.debug("Accelerator site from pilot pool: %s", list(acceleratorsites))
 
         # This is needed for Site Metrics
         # It should not block any site for Site Metrics and if needed for other activities
