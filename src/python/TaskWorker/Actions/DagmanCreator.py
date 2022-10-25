@@ -497,7 +497,7 @@ class DagmanCreator(TaskAction):
         info = transform_strings(info)
         info['faillimit'] = task['tm_fail_limit']
         # hardcoding accelerator to GPU (SI currently only have nvidia GPU)
-        if task['tm_user_config']['require_accelerator']:
+        if task['tm_user_config']['requireaccelerator']:
             info['accelerator_jdl'] = '+RequiresGPU=1\nrequest_GPUs=1'
         else:
             info['accelerator_jdl'] = ''
@@ -877,7 +877,7 @@ class DagmanCreator(TaskAction):
                 continue
 
             # Intersect with sites that only have accelerator (currently we only have nvidia GPU)
-            if kwargs['task']['tm_user_config']['require_accelerator']:
+            if kwargs['task']['tm_user_config']['requireaccelerator']:
                 availablesites &= acceleratorsites
                 if availablesites:
                     msg = "Site.requireAccelerator is True. CRAB will restrict sites to run the jobs to %s."
@@ -952,7 +952,7 @@ class DagmanCreator(TaskAction):
             msg += " because they are only present at blacklisted, not-whitelisted, and/or non-accelerator sites.\n"
             msg += " List is: %s.\n" % (sorted(list(blocksWithBannedLocations)))
             msg += getBlacklistMsg()
-        if blocksWithNoLocations or blocksWithBannedLocations or kwargs['task']['tm_user_config']['require_accelerator']:
+        if blocksWithNoLocations or blocksWithBannedLocations:
             msg += " Dataset processing will be incomplete because %s (out of %s) blocks" %\
                    (len(blocksWithNoLocations) + len(blocksWithBannedLocations), len(allblocks))
             msg += " are only present at blacklisted and/or not whitelisted site(s)"
