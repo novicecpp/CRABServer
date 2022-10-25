@@ -546,7 +546,7 @@ class RESTUserWorkflow(RESTEntity):
 
         user_config = {
             'partialdataset': True if partialdataset else False,
-            'require_accelerator': True if requireaccelerator else False,
+            'requireaccelerator': True if requireaccelerator else False,
         }
 
         return self.userworkflowmgr.submit(workflow=workflow, activity=activity, jobtype=jobtype, jobsw=jobsw, jobarch=jobarch,
