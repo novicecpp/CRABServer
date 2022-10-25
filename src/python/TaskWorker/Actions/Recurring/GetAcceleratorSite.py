@@ -10,7 +10,7 @@ class GetAcceleratorSite(BaseRecurringAction):
     pollingTime = 1  # testing #60 * 12 #minutes
 
     def _execute(self, config, task):  # pylint: disable=unused-argument
-        collector_url = config.Taskworker.glideinPool
+        collector_url = config.TaskWorker.glideinPool
         collector = htcondor.Collector(collector_url)
         try:
             result = collector.query(htcondor.AdTypes.Any,
