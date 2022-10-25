@@ -880,8 +880,8 @@ class DagmanCreator(TaskAction):
             if kwargs['task']['tm_user_config']['require_accelerator']:
                 availablesites &= acceleratorsites
                 if availablesites:
-                    msg = "'Site.requireAccelerator is True. CRAB restrict sites to %s."
-                    msg = msg % (jgblocks, list(availablesites))
+                    msg = "Site.requireAccelerator is True. CRAB will restrict sites to run the jobs to %s."
+                    msg = msg % (list(availablesites), )
                     self.logger.warning(msg)
                     self.uploadWarning(msg, kwargs['task']['user_proxy'], kwargs['task']['tm_taskname'])
                 else:

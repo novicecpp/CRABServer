@@ -25,7 +25,7 @@ class GetAcceleratorSite(BaseRecurringAction):
             traceback.print_exc()
             self.logger.error('Cannot fetch accelerator site from collector %s.', collector_url)
             return
-        sites = {x.get('GLIDEIN_CMSSite') for x in result}
+        sites = list({x.get('GLIDEIN_CMSSite') for x in result})
         saveLocation = os.path.join(config.TaskWorker.scratchDir, "acceleratorSites.json")
         tmpLocation = saveLocation + ".tmp"
         with open(tmpLocation, 'w', encoding='utf-8') as fd:
