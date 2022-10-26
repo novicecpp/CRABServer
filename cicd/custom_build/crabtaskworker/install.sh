@@ -9,6 +9,7 @@ rm -rf $CRABTW_INSTALL_PATH/*
 cp -r CRABServer/src/python/* $CRABTW_INSTALL_PATH/
 cp -r WMCore/src/python/WMCore $CRABTW_INSTALL_PATH/
 cp -r WMCore/src/python/Utils $CRABTW_INSTALL_PATH/
+cp -r WMCore/src/python/PSetTweaks $CRABTW_INSTALL_PATH/
 chown -R 1000:1000 $CRABTW_INSTALL_PATH/
 ls -alh $CRABTW_INSTALL_PATH/
 # update tw runtime, set GHrepoDir to current dir
