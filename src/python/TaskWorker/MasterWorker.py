@@ -248,7 +248,7 @@ class MasterWorker(object):
         try:
             mod = __import__('TaskWorker.Actions.Recurring.%s' % actionName, fromlist=actionName)
         except ModuleNotFoundError:
-            traceback.print_exec()
+            traceback.print_exc()
             self.logger.error('Recurring Action [%s] not found, skipping')
             return
         return getattr(mod, actionName)(self.config.TaskWorker.logsDir)
