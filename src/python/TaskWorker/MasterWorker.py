@@ -9,7 +9,6 @@ import sys
 import time
 import signal
 import logging
-import traceback
 
 from http.client import HTTPException
 from MultiProcessingLog import MultiProcessingLog
@@ -248,7 +247,6 @@ class MasterWorker(object):
         try:
             mod = __import__('TaskWorker.Actions.Recurring.%s' % actionName, fromlist=actionName)
         except ModuleNotFoundError:
-            traceback.print_exc()
             self.logger.error('Recurring Action module "<%s>" not found, skipping', actionName)
             return
         return getattr(mod, actionName)(self.config.TaskWorker.logsDir)
