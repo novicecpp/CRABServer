@@ -501,6 +501,15 @@ class DagmanCreator(TaskAction):
         # hardcoding accelerator to GPU (SI currently only have nvidia GPU)
         if task['tm_user_config']['requireaccelerator']:
             info['accelerator_jdl'] = '+RequiresGPU=1\nrequest_GPUs=1'
+            if task['tm_user_config']['acccelerator_gpumemorymb']:
+                info['accelerator_jdl'] += '\n'
+                info['accelerator_jdl'] += f"GPUMemoryMB={task['tm_user_config']['acccelerator_gpumemorymb']}"
+            if task['tm_user_config']['acccelerator_cudacapabilities']:
+                info['accelerator_jdl'] += '\n'
+                info['accelerator_jdl'] += f"CUDACapability={task['tm_user_config']['acccelerator_cudacapabilities']}"
+            if task['tm_user_config']['acccelerator_cudaruntime']:
+                info['accelerator_jdl'] += '\n'
+                info['accelerator_jdl'] += f"CUDARuntime={task['tm_user_config']['acccelerator_cudaruntime']}"
         else:
             info['accelerator_jdl'] = ''
         info['extra_jdl'] = '\n'.join(literal_eval(task['tm_extrajdl']))
