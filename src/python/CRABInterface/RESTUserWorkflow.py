@@ -5,13 +5,14 @@
 import re
 import random
 import logging
+import json
 import cherrypy
 # WMCore dependecies here
 from WMCore.REST.Server import RESTEntity, restcall
 from WMCore.REST.Error import ExecutionError, InvalidParameter
 from WMCore.REST.Validation import validate_str, validate_strlist, validate_num, validate_real
 from WMCore.Services.TagCollector.TagCollector import TagCollector
-from WMCore.Lexicon import userprocdataset, userProcDSParts, primdataset
+from WMCore.Lexicon import userprocdataset, userProcDSParts, primdataset, check
 
 # CRABServer dependecies here
 from CRABInterface.DataUserWorkflow import DataUserWorkflow
@@ -264,6 +265,47 @@ class RESTUserWorkflow(RESTEntity):
             #Need to log the message in the db for the users
             self.logger.warning(msg)
 
+    def _parseAcceleratorParams(self, candidate):
+        """
+        """
+        CUDA_VERSION_REGEX = {"re": r"^\d+\.\d+(\.\d+)?$", "maxLength": 100}
+        acceleratorArgs = set(["GPUMemoryMB", "CUDARuntime", "CUDACapabilities"])
+
+        try:
+            try:
+                data = json.loads(candidate)
+            except Exception:
+                raise AssertionError("Params is not valid JSON object")
+            if data is None:
+                raise AssertionError("Params is not defined")
+            if not isinstance(data, dict):
+                raise AssertionError("Params is not a dictionary encoded as JSON object")
+            paramSet = set(data.keys())
+            unknownArgs = paramSet - acceleratorArgs
+            if unknownArgs:
+                msg = "Params contains arguments that are not supported. Args provided: {}, ".format(paramSet)
+                raise AssertionError(msg)
+
+            # validate params
+            # GPUMemoryMB validation
+            if not isinstance(candidate["GPUMemoryMB"], int) or not candidate["GPUMemoryMB"] > 0:
+                raise AssertionError("GPUMemoryMB must be an integer and greater than 0")
+            # CUDACapabilities validation
+            if not isinstance(candidate["CUDACapabilities"], list) or not candidate["CUDACapabilities"]:
+                raise AssertionError("CUDACapabilities must be a non-empty list")
+            for cudaCapabItem in candidate["CUDACapabilities"]:
+                if not isinstance(cudaCapabItem, str):
+                    raise AssertionError("CUDACapabilities must be a list of strings")
+                check(CUDA_VERSION_REGEX["re"], cudaCapabItem, CUDA_VERSION_REGEX["maxLength"])
+            # CUDARuntime validation
+            if not isinstance(candidate["CUDARuntime"], str) or\
+                    not check(CUDA_VERSION_REGEX["re"], candidate["CUDARuntime"], CUDA_VERSION_REGEX["maxLength"]):
+                raise AssertionError("CUDARuntime must be a string and shorter than 100 chars")
+            return data
+        except AssertionError as e:
+            raise InvalidParameter from e
+
+
     @conn_handler(services=['cric', 'centralconfig'])
     def validate(self, apiobj, method, api, param, safe): #pylint: disable=unused-argument
         """Validating all the input parameter as enforced by the WMCore.REST module"""
@@ -294,7 +336,7 @@ class RESTUserWorkflow(RESTEntity):
             validate_num("algoargs", param, safe, optional=False)
             try:
                 validate_num("totalunits", param, safe, optional=True)
-            except InvalidParameter:
+            except AssertionError:
                 validate_real("totalunits", param, safe, optional=True)
             validate_str("cachefilename", param, safe, RX_CACHENAME, optional=False)
             validate_str("debugfilename", param, safe, RX_CACHENAME, optional=True)
@@ -347,12 +389,12 @@ class RESTUserWorkflow(RESTEntity):
                     msg = "Invalid 'inputdata' parameter."
                     msg += " Job type PrivateMC does not take any input dataset."
                     msg += " If you really intend to run over an input dataset, then you must use job type Analysis."
-                    raise InvalidParameter(msg)
+                    raise AssertionError(msg)
                 if safe.kwargs['userfiles']:
                     msg = "Invalid 'userfiles' parameter."
                     msg += " Job type PrivateMC does not take any input files."
                     msg += " If you really intend to run over input files, then you must use job type Analysis."
-                    raise InvalidParameter(msg)
+                    raise AssertionError(msg)
 
             ## Client versions < 3.3.1511 may put in the input dataset something that is not
             ## really an input dataset (for PrivateMC or user input files). So the only case
@@ -406,7 +448,7 @@ class RESTUserWorkflow(RESTEntity):
             validate_strlist("runs", param, safe, RX_RUNS)
             validate_strlist("lumis", param, safe, RX_LUMIRANGE)
             if len(safe.kwargs["runs"]) != len(safe.kwargs["lumis"]):
-                raise InvalidParameter("The number of runs and the number of lumis lists are different")
+                raise AssertionError("The number of runs and the number of lumis lists are different")
             validate_strlist("adduserfiles", param, safe, RX_ADDFILE)
             validate_str("scriptexe", param, safe, RX_ADDFILE, optional=True)
             validate_strlist("scriptargs", param, safe, RX_SCRIPTARGS)
@@ -417,6 +459,13 @@ class RESTUserWorkflow(RESTEntity):
             validate_num("ignoreglobalblacklist", param, safe, optional=True)
             validate_num("partialdataset", param, safe, optional=True)
             validate_num("requireaccelerator", param, safe, optional=True)
+            if safe.kwargs.get("requireaccelerator", None):
+                validate_str("acceleratorparams", param, safe, RX_ANYTHING, optional=True)
+                safe.kwargs["acceleratorparams"] = self._parseAcceleratorParams(safe.kwargs["acceleratorparams"])
+            else:
+                raise InvalidParameter("There are accelerator parameters but requireAccelerator is False")
+
+
 
         elif method in ['POST']:
             validate_str("workflow", param, safe, RX_TASKNAME, optional=False)
@@ -471,9 +520,9 @@ class RESTUserWorkflow(RESTEntity):
 
             ## validation parameters
             if not safe.kwargs['workflow'] and safe.kwargs['subresource']:
-                raise InvalidParameter("Invalid input parameters")
+                raise AssertionError("Invalid input parameters")
             if safe.kwargs['subresource'] in ['data', 'logs'] and not safe.kwargs['limit'] and not safe.kwargs['jobids']:
-                raise InvalidParameter("You need to specify the number of jobs to retrieve or their ids.")
+                raise AssertionError("You need to specify the number of jobs to retrieve or their ids.")
 
         elif method in ['DELETE']:
             validate_str("workflow", param, safe, RX_TASKNAME, optional=False)
@@ -488,7 +537,7 @@ class RESTUserWorkflow(RESTEntity):
             tfileoutfiles, edmoutfiles, runs, lumis,
             totalunits, adduserfiles, oneEventMode, maxjobruntime, numcores, maxmemory, priority, blacklistT1, nonprodsw, lfn, saveoutput,
             faillimit, ignorelocality, userfiles, scriptexe, scriptargs, scheddname, extrajdl, collector, dryrun, ignoreglobalblacklist,
-            partialdataset, requireaccelerator):
+            partialdataset, requireaccelerator, acceleratorparams):
         """Perform the workflow injection
 
            :arg str workflow: request name defined by the user;
@@ -546,7 +595,8 @@ class RESTUserWorkflow(RESTEntity):
 
         user_config = {
             'partialdataset': True if partialdataset else False,
-            'requireaccelerator': True if requireaccelerator else False
+            'requireaccelerator': True if requireaccelerator else False,
+            'acceleratorparams': acceleratorparams,
         }
 
         return self.userworkflowmgr.submit(workflow=workflow, activity=activity, jobtype=jobtype, jobsw=jobsw, jobarch=jobarch,
