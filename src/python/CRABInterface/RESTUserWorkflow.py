@@ -9,7 +9,7 @@ import json
 import copy
 import cherrypy
 # WMCore dependecies here
-from WMCore.REST.Server import RESTEntity, restcall
+from WMCore.REST.Server import RESTEntity, restcall, RESTArgs
 from WMCore.REST.Error import ExecutionError, InvalidParameter
 from WMCore.REST.Validation import validate_str, validate_strlist, validate_num, validate_real
 from WMCore.Services.TagCollector.TagCollector import TagCollector
@@ -289,8 +289,8 @@ class RESTUserWorkflow(RESTEntity):
 
             # validate params
             # GPUMemoryMB validation
-            param = {'kwargs': copy.deepcopy(data)}
-            safe = {'kwargs': {}}
+            param = RESTArgs([], data)
+            safe =  RESTArgs([], {})
             validate_num("GPUMemoryMB", param, safe, optional=False, minval=0)
             if not isinstance(data["GPUMemoryMB"], int) or not data["GPUMemoryMB"] > 0:
                 raise AssertionError("GPUMemoryMB must be an integer and greater than 0")
