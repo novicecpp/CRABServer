@@ -417,18 +417,15 @@ class RESTUserWorkflow(RESTEntity):
             validate_num("dryrun", param, safe, optional=True)
             validate_num("ignoreglobalblacklist", param, safe, optional=True)
             validate_num("partialdataset", param, safe, optional=True)
+            # accelerator
             validate_num("requireaccelerator", param, safe, optional=True)
-            if safe.kwargs.get("requireaccelerator", None):
-                validate_str("acceleratorparams", param, safe, RX_ANYTHING, optional=True)
-                acceleratorArgs = set(["GPUMemoryMB", "CUDARuntime", "CUDACapabilities"])
-                accParams, accSafe = parseJSONParamToRESTArgs(safe.kwargs["acceleratorparams"], acceleratorArgs)
-                validate_num("GPUMemoryMB", accParams, accSafe, optional=True, minval=0)
-                validate_strlist("CUDACapabilities", accParams, accSafe, RX_CUDA_VERSION)
-                validate_str("CUDARuntime", accParams, accSafe, RX_CUDA_VERSION, optional=True)
-                self.logger.debug('accParams: %s', accParams)
-                self.logger.debug('accSafe: %s', accSafe)
-                safe.kwargs["acceleratorparams"] = dict(accSafe.kwargs)
-            else:
+            validate_str("accelerator_gpumemorymb", param, safe, RX_ANYTHING, optional=True)
+            validate_strlist("accelerator_cudacapabilities", param, safe, RX_CUDA_VERSION)
+            validate_str("accelerator_cudaruntime", param, safe, RX_CUDA_VERSION, optional=True)
+            if not safe.kwargs["requireaccelerator"] and (
+                    safe.kwargs["accelerator_gpumemorymb"] or
+                    safe.kwargs["accelerator_cudacapabilities"] or
+                    safe.kwargs["accelerator_cudaruntime"]):
                 raise InvalidParameter("There are accelerator parameters but requireAccelerator is False")
 
 
@@ -502,7 +499,7 @@ class RESTUserWorkflow(RESTEntity):
             tfileoutfiles, edmoutfiles, runs, lumis,
             totalunits, adduserfiles, oneEventMode, maxjobruntime, numcores, maxmemory, priority, blacklistT1, nonprodsw, lfn, saveoutput,
             faillimit, ignorelocality, userfiles, scriptexe, scriptargs, scheddname, extrajdl, collector, dryrun, ignoreglobalblacklist,
-            partialdataset, requireaccelerator, acceleratorparams):
+            partialdataset, requireaccelerator, accelerator_gpumemorymb, accelerator_cudacapabilities, accelerator_cudaruntime):
         """Perform the workflow injection
 
            :arg str workflow: request name defined by the user;
@@ -561,9 +558,9 @@ class RESTUserWorkflow(RESTEntity):
         user_config = {
             'partialdataset': True if partialdataset else False,
             'requireaccelerator': True if requireaccelerator else False,
-            'acccelerator_gpumemorymb': acceleratorparams['GPUMemoryMB'],
-            'acccelerator_cudacapabilities': acceleratorparams['CUDACapabilities'],
-            'acccelerator_cudaruntime': acceleratorparams['CUDARuntime'],
+            'accelerator_gpumemorymb': accelerator_gpumemorymb,
+            'accelerator_cudacapabilities': accelerator_cudacapabilities,
+            'accelerator_cudaruntime': accelerator_cudaruntime,
         }
 
 
