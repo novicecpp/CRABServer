@@ -434,7 +434,6 @@ class RESTUserWorkflow(RESTEntity):
                 raise InvalidParameter("There are accelerator parameters but requireAccelerator is False")
 
 
-
         elif method in ['POST']:
             validate_str("workflow", param, safe, RX_TASKNAME, optional=False)
             validate_str("subresource", param, safe, RX_SUBRESTAT, optional=True)
