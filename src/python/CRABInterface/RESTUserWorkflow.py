@@ -5,15 +5,13 @@
 import re
 import random
 import logging
-import json
-import copy
 import cherrypy
 # WMCore dependecies here
 from WMCore.REST.Server import RESTEntity, restcall
 from WMCore.REST.Error import ExecutionError, InvalidParameter
 from WMCore.REST.Validation import validate_str, validate_strlist, validate_num, validate_real
 from WMCore.Services.TagCollector.TagCollector import TagCollector
-from WMCore.Lexicon import userprocdataset, userProcDSParts, primdataset, check
+from WMCore.Lexicon import userprocdataset, userProcDSParts, primdataset
 
 # CRABServer dependecies here
 from CRABInterface.DataUserWorkflow import DataUserWorkflow
@@ -297,7 +295,7 @@ class RESTUserWorkflow(RESTEntity):
             validate_num("algoargs", param, safe, optional=False)
             try:
                 validate_num("totalunits", param, safe, optional=True)
-            except AssertionError:
+            except InvalidParameter:
                 validate_real("totalunits", param, safe, optional=True)
             validate_str("cachefilename", param, safe, RX_CACHENAME, optional=False)
             validate_str("debugfilename", param, safe, RX_CACHENAME, optional=True)
@@ -350,12 +348,12 @@ class RESTUserWorkflow(RESTEntity):
                     msg = "Invalid 'inputdata' parameter."
                     msg += " Job type PrivateMC does not take any input dataset."
                     msg += " If you really intend to run over an input dataset, then you must use job type Analysis."
-                    raise AssertionError(msg)
+                    raise InvalidParameter(msg)
                 if safe.kwargs['userfiles']:
                     msg = "Invalid 'userfiles' parameter."
                     msg += " Job type PrivateMC does not take any input files."
                     msg += " If you really intend to run over input files, then you must use job type Analysis."
-                    raise AssertionError(msg)
+                    raise InvalidParameter(msg)
 
             ## Client versions < 3.3.1511 may put in the input dataset something that is not
             ## really an input dataset (for PrivateMC or user input files). So the only case
@@ -409,7 +407,7 @@ class RESTUserWorkflow(RESTEntity):
             validate_strlist("runs", param, safe, RX_RUNS)
             validate_strlist("lumis", param, safe, RX_LUMIRANGE)
             if len(safe.kwargs["runs"]) != len(safe.kwargs["lumis"]):
-                raise AssertionError("The number of runs and the number of lumis lists are different")
+                raise InvalidParameter("The number of runs and the number of lumis lists are different")
             validate_strlist("adduserfiles", param, safe, RX_ADDFILE)
             validate_str("scriptexe", param, safe, RX_ADDFILE, optional=True)
             validate_strlist("scriptargs", param, safe, RX_SCRIPTARGS)
@@ -442,7 +440,7 @@ class RESTUserWorkflow(RESTEntity):
             ## differently than in an initial task submission. If there is no site black-
             ## or whitelist, set it to None and DataWorkflow will use the corresponding
             ## list defined in the initial task submission. If the site black- or whitelist
-            ## is equal to the string 'empty', set it to an empty list and donS't call
+            ## is equal to the string 'empty', set it to an empty list and don't call
             ## validate_strlist as it would fail.
             if 'siteblacklist' not in param.kwargs:
                 safe.kwargs['siteblacklist'] = None
@@ -487,9 +485,9 @@ class RESTUserWorkflow(RESTEntity):
 
             ## validation parameters
             if not safe.kwargs['workflow'] and safe.kwargs['subresource']:
-                raise AssertionError("Invalid input parameters")
+                raise InvalidParameter("Invalid input parameters")
             if safe.kwargs['subresource'] in ['data', 'logs'] and not safe.kwargs['limit'] and not safe.kwargs['jobids']:
-                raise AssertionError("You need to specify the number of jobs to retrieve or their ids.")
+                raise InvalidParameter("You need to specify the number of jobs to retrieve or their ids.")
 
         elif method in ['DELETE']:
             validate_str("workflow", param, safe, RX_TASKNAME, optional=False)
