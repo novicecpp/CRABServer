@@ -175,9 +175,11 @@ def conn_handler(services):
         return wrapped_func
     return wrap
 
-def parseJSONParamToRESTArgs(candidate, keys):
+def parseJSONParamToRESTArgs(candidate, keys, maxsize=1024):
     """Some docs
     """
+    if len(candidate) > maxsize:
+        raise InvalidParameter("Params is larger than %s", maxsize)
     try:
         data = json.loads(candidate)
     except Exception as e:

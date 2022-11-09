@@ -266,18 +266,6 @@ class RESTUserWorkflow(RESTEntity):
             #Need to log the message in the db for the users
             self.logger.warning(msg)
 
-    def _parseAcceleratorParams(self, candidate):
-        """
-        """
-        acceleratorArgs = set(["GPUMemoryMB", "CUDARuntime", "CUDACapabilities"])
-
-        accParams, accSafe = parseJSONParamToRESTArgs(candidate, acceleratorArgs)
-        validate_num("GPUMemoryMB", accParams, accSafe, optional=True, minval=0)
-        validate_strlist("CUDACapabilities", accParams, accSafe, RX_CUDA_VERSION, optional=True)
-        validate_str("CUDARuntime", accParams, accSafe, RX_CUDA_VERSION)
-        self.logger.debug('accParams: %s', accParams)
-        self.logger.debug('accSafe: %s', accSafe)
-        return accSafe.kwargs
 
     @conn_handler(services=['cric', 'centralconfig'])
     def validate(self, apiobj, method, api, param, safe): #pylint: disable=unused-argument
@@ -434,7 +422,14 @@ class RESTUserWorkflow(RESTEntity):
             validate_num("requireaccelerator", param, safe, optional=True)
             if safe.kwargs.get("requireaccelerator", None):
                 validate_str("acceleratorparams", param, safe, RX_ANYTHING, optional=True)
-                safe.kwargs["acceleratorparams"] = self._parseAcceleratorParams(safe.kwargs["acceleratorparams"])
+                acceleratorArgs = set(["GPUMemoryMB", "CUDARuntime", "CUDACapabilities"])
+                accParams, accSafe = parseJSONParamToRESTArgs(safe.kwargs["acceleratorparams"], acceleratorArgs)
+                validate_num("GPUMemoryMB", accParams, accSafe, optional=True, minval=0)
+                validate_strlist("CUDACapabilities", accParams, accSafe, RX_CUDA_VERSION, optional=True)
+                validate_str("CUDARuntime", accParams, accSafe, RX_CUDA_VERSION)
+                self.logger.debug('accParams: %s', accParams)
+                self.logger.debug('accSafe: %s', accSafe)
+                safe.kwargs["acceleratorparams"] = dict(accSafe.kwargs)
             else:
                 raise InvalidParameter("There are accelerator parameters but requireAccelerator is False")
 
@@ -448,7 +443,7 @@ class RESTUserWorkflow(RESTEntity):
             ## differently than in an initial task submission. If there is no site black-
             ## or whitelist, set it to None and DataWorkflow will use the corresponding
             ## list defined in the initial task submission. If the site black- or whitelist
-            ## is equal to the string 'empty', set it to an empty list and don't call
+            ## is equal to the string 'empty', set it to an empty list and donS't call
             ## validate_strlist as it would fail.
             if 'siteblacklist' not in param.kwargs:
                 safe.kwargs['siteblacklist'] = None
