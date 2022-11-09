@@ -288,18 +288,18 @@ class RESTUserWorkflow(RESTEntity):
 
             # validate params
             # GPUMemoryMB validation
-            if not isinstance(candidate["GPUMemoryMB"], int) or not candidate["GPUMemoryMB"] > 0:
+            if not isinstance(data["GPUMemoryMB"], int) or not data["GPUMemoryMB"] > 0:
                 raise AssertionError("GPUMemoryMB must be an integer and greater than 0")
             # CUDACapabilities validation
-            if not isinstance(candidate["CUDACapabilities"], list) or not candidate["CUDACapabilities"]:
+            if not isinstance(data["CUDACapabilities"], list) or not data["CUDACapabilities"]:
                 raise AssertionError("CUDACapabilities must be a non-empty list")
-            for cudaCapabItem in candidate["CUDACapabilities"]:
+            for cudaCapabItem in data["CUDACapabilities"]:
                 if not isinstance(cudaCapabItem, str):
                     raise AssertionError("CUDACapabilities must be a list of strings")
                 check(CUDA_VERSION_REGEX["re"], cudaCapabItem, CUDA_VERSION_REGEX["maxLength"])
             # CUDARuntime validation
-            if not isinstance(candidate["CUDARuntime"], str) or\
-                    not check(CUDA_VERSION_REGEX["re"], candidate["CUDARuntime"], CUDA_VERSION_REGEX["maxLength"]):
+            if not isinstance(data["CUDARuntime"], str) or\
+                    not check(CUDA_VERSION_REGEX["re"], data["CUDARuntime"], CUDA_VERSION_REGEX["maxLength"]):
                 raise AssertionError("CUDARuntime must be a string and shorter than 100 chars")
             return data
         except AssertionError as e:
