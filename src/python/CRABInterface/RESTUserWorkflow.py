@@ -6,6 +6,7 @@ import re
 import random
 import logging
 import json
+import copy
 import cherrypy
 # WMCore dependecies here
 from WMCore.REST.Server import RESTEntity, restcall
@@ -288,6 +289,9 @@ class RESTUserWorkflow(RESTEntity):
 
             # validate params
             # GPUMemoryMB validation
+            param = copy.deepcopy(data)
+            safe = {}
+            validate_num("GPUMemoryMB", param, safe, optional=False, minval=0)
             if not isinstance(data["GPUMemoryMB"], int) or not data["GPUMemoryMB"] > 0:
                 raise AssertionError("GPUMemoryMB must be an integer and greater than 0")
             # CUDACapabilities validation
@@ -301,6 +305,8 @@ class RESTUserWorkflow(RESTEntity):
             if not isinstance(data["CUDARuntime"], str) or\
                     not check(CUDA_VERSION_REGEX["re"], data["CUDARuntime"], CUDA_VERSION_REGEX["maxLength"]):
                 raise AssertionError("CUDARuntime must be a string and shorter than 100 chars")
+            self.logger.debug('param: %s', param)
+            self.logger.debug('safe: %s', safe)
             return data
         except AssertionError as e:
             raise InvalidParameter(str(e))
