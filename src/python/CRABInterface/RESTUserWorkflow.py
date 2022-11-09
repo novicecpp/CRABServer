@@ -9,7 +9,7 @@ import json
 import copy
 import cherrypy
 # WMCore dependecies here
-from WMCore.REST.Server import RESTEntity, restcall, RESTArgs
+from WMCore.REST.Server import RESTEntity, restcall
 from WMCore.REST.Error import ExecutionError, InvalidParameter
 from WMCore.REST.Validation import validate_str, validate_strlist, validate_num, validate_real
 from WMCore.Services.TagCollector.TagCollector import TagCollector
@@ -21,8 +21,8 @@ from CRABInterface.RESTExtensions import authz_owner_match
 from CRABInterface.Regexps import (RX_TASKNAME, RX_ACTIVITY, RX_JOBTYPE, RX_GENERATOR, RX_LUMIEVENTS, RX_CMSSW, RX_ARCH, RX_DATASET,
     RX_CMSSITE, RX_SPLIT, RX_CACHENAME, RX_CACHEURL, RX_LFN, RX_USERFILE, RX_VOPARAMS, RX_DBSURL, RX_LFNPRIMDS, RX_OUTFILES,
     RX_RUNS, RX_LUMIRANGE, RX_SCRIPTARGS, RX_SCHEDD_NAME, RX_COLLECTOR, RX_SUBRESTAT, RX_JOBID, RX_ADDFILE,
-    RX_ANYTHING, RX_USERNAME, RX_DATE, RX_MANYLINES_SHORT)
-from CRABInterface.Utilities import CMSSitesCache, conn_handler, getDBinstance
+    RX_ANYTHING, RX_USERNAME, RX_DATE, RX_MANYLINES_SHORT, RX_CUDA_VERSION)
+from CRABInterface.Utilities import CMSSitesCache, conn_handler, getDBinstance, parseJSONParamToRESTArgs
 from ServerUtilities import checkOutLFN, generateTaskName
 
 
@@ -269,48 +269,15 @@ class RESTUserWorkflow(RESTEntity):
     def _parseAcceleratorParams(self, candidate):
         """
         """
-        CUDA_VERSION_REGEX = {"re": r"^\d+\.\d+(\.\d+)?$", "maxLength": 100}
         acceleratorArgs = set(["GPUMemoryMB", "CUDARuntime", "CUDACapabilities"])
 
-        try:
-            try:
-                data = json.loads(candidate)
-            except Exception:
-                raise AssertionError("Params is not valid JSON object")
-            if data is None:
-                raise AssertionError("Params is not defined")
-            if not isinstance(data, dict):
-                raise AssertionError("Params is not a dictionary encoded as JSON object")
-            paramSet = set(data.keys())
-            unknownArgs = paramSet - acceleratorArgs
-            if unknownArgs:
-                msg = "Params contains arguments that are not supported. Args provided: {}, ".format(paramSet)
-                raise AssertionError(msg)
-
-            # validate params
-            # GPUMemoryMB validation
-            param = RESTArgs([], data)
-            safe =  RESTArgs([], {})
-            validate_num("GPUMemoryMB", param, safe, optional=False, minval=0)
-            if not isinstance(data["GPUMemoryMB"], int) or not data["GPUMemoryMB"] > 0:
-                raise AssertionError("GPUMemoryMB must be an integer and greater than 0")
-            # CUDACapabilities validation
-            if not isinstance(data["CUDACapabilities"], list) or not data["CUDACapabilities"]:
-                raise AssertionError("CUDACapabilities must be a non-empty list")
-            for cudaCapabItem in data["CUDACapabilities"]:
-                if not isinstance(cudaCapabItem, str):
-                    raise AssertionError("CUDACapabilities must be a list of strings")
-                check(CUDA_VERSION_REGEX["re"], cudaCapabItem, CUDA_VERSION_REGEX["maxLength"])
-            # CUDARuntime validation
-            if not isinstance(data["CUDARuntime"], str) or\
-                    not check(CUDA_VERSION_REGEX["re"], data["CUDARuntime"], CUDA_VERSION_REGEX["maxLength"]):
-                raise AssertionError("CUDARuntime must be a string and shorter than 100 chars")
-            self.logger.debug('param: %s', param)
-            self.logger.debug('safe: %s', safe)
-            return data
-        except AssertionError as e:
-            raise InvalidParameter(str(e))
-
+        accParams, accSafe = parseJSONParamToRESTArgs(candidate, acceleratorArgs)
+        validate_num("GPUMemoryMB", accParams, accSafe, optional=True, minval=0)
+        validate_strlist("CUDACapabilities", accParams, accSafe, RX_CUDA_VERSION, optional=True)
+        validate_str("CUDARuntime", accParams, accSafe, RX_CUDA_VERSION)
+        self.logger.debug('accParams: %s', accParams)
+        self.logger.debug('accSafe: %s', accSafe)
+        return accSafe.kwargs
 
     @conn_handler(services=['cric', 'centralconfig'])
     def validate(self, apiobj, method, api, param, safe): #pylint: disable=unused-argument

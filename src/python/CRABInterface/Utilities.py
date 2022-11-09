@@ -15,6 +15,7 @@ from WMCore.WMFactory import WMFactory
 from WMCore.REST.Error import ExecutionError, InvalidParameter
 from WMCore.Services.CRIC.CRIC import CRIC
 from WMCore.Services.pycurl_manager import ResponseHeader
+from WMCore.REST.Server import RESTArgs
 
 from Utils.Utilities import encodeUnicodeToBytes
 
@@ -113,9 +114,9 @@ def getCentralConfig(extconfigurl, mode):
                 return centralCfgFallback
             else:
                 cherrypy.log(msg)
-                raise ExecutionError("Internal issue when retrieving external configuration from %s" % externalLink)        
-        jsonConfig = bbuf.getvalue() 
-        
+                raise ExecutionError("Internal issue when retrieving external configuration from %s" % externalLink)
+        jsonConfig = bbuf.getvalue()
+
         return jsonConfig
 
     extConfCommon = json.loads(retrieveConfig(extconfigurl))
@@ -151,7 +152,7 @@ def getCentralConfig(extconfigurl, mode):
     else:
         extConfCommon["backend-urls"]["htcondorSchedds"] = extConfSchedds
     centralCfgFallback = extConfCommon
-        
+
     return centralCfgFallback
 
 
@@ -174,3 +175,20 @@ def conn_handler(services):
         return wrapped_func
     return wrap
 
+def parseJSONParamToRESTArgs(candidate, keys):
+    """Some docs
+    """
+    try:
+        data = json.loads(candidate)
+    except Exception as e:
+        raise InvalidParameter("Params is not valid JSON-like dict object") from e
+    if data is None:
+        raise InvalidParameter("Params is not defined")
+    if not isinstance(data, dict):
+        raise InvalidParameter("Params is not a dictionary encoded as JSON object")
+    paramSet = set(keys)
+    unknownArgs = paramSet - paramSet
+    if unknownArgs:
+        msg = f"Params contains arguments that are not supported. Args provided: {paramSet}"
+        raise InvalidParameter(msg)
+    return RESTArgs([], data), RESTArgs([], {})
