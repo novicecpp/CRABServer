@@ -466,7 +466,6 @@ class RESTUserWorkflow(RESTEntity):
             validate_num("partialdataset", param, safe, optional=True)
             validate_num("requireaccelerator", param, safe, optional=True)
             if safe.kwargs.get("requireaccelerator", None):
-                import pdb; pdb.set_trace()
                 validate_str("acceleratorparams", param, safe, RX_ANYTHING, optional=True)
                 safe.kwargs["acceleratorparams"] = self._parseAcceleratorParams(safe.kwargs["acceleratorparams"])
             else:
