@@ -424,7 +424,7 @@ class RESTUserWorkflow(RESTEntity):
                 accParams, accSafe = parseJSONParamToRESTArgs(safe.kwargs["acceleratorparams"], acceleratorArgs)
                 validate_num("GPUMemoryMB", accParams, accSafe, optional=True, minval=0)
                 validate_strlist("CUDACapabilities", accParams, accSafe, RX_CUDA_VERSION)
-                validate_str("CUDARuntime", accParams, accSafe, RX_CUDA_VERSION)
+                validate_str("CUDARuntime", accParams, accSafe, RX_CUDA_VERSION, optional=True)
                 self.logger.debug('accParams: %s', accParams)
                 self.logger.debug('accSafe: %s', accSafe)
                 safe.kwargs["acceleratorparams"] = dict(accSafe.kwargs)
@@ -561,8 +561,11 @@ class RESTUserWorkflow(RESTEntity):
         user_config = {
             'partialdataset': True if partialdataset else False,
             'requireaccelerator': True if requireaccelerator else False,
-            'acceleratorparams': acceleratorparams,
+            'acccelerator_gpumemorymb': acceleratorparams['GPUMemoryMB'],
+            'acccelerator_cudacapabilities': acceleratorparams['CUDACapabilities'],
+            'acccelerator_cudaruntime': acceleratorparams['CUDARuntime'],
         }
+
 
         return self.userworkflowmgr.submit(workflow=workflow, activity=activity, jobtype=jobtype, jobsw=jobsw, jobarch=jobarch,
                                            inputdata=inputdata, primarydataset=primarydataset, nonvaliddata=nonvaliddata, use_parent=useparent,
