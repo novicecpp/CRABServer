@@ -174,23 +174,3 @@ def conn_handler(services):
             return func(*args, **kwargs)
         return wrapped_func
     return wrap
-
-def parseJSONParamToRESTArgs(candidate, keys, maxsize=1024):
-    """Some docs
-    """
-    if len(candidate) > maxsize:
-        raise InvalidParameter("Params is larger than %s", maxsize)
-    try:
-        data = json.loads(candidate)
-    except Exception as e:
-        raise InvalidParameter("Params is not valid JSON-like dict object") from e
-    if data is None:
-        raise InvalidParameter("Params is not defined")
-    if not isinstance(data, dict):
-        raise InvalidParameter("Params is not a dictionary encoded as JSON object")
-    paramSet = set(keys)
-    unknownArgs = paramSet - paramSet
-    if unknownArgs:
-        msg = f"Params contains arguments that are not supported. Args provided: {paramSet}"
-        raise InvalidParameter(msg)
-    return RESTArgs([], data), RESTArgs([], {})
