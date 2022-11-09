@@ -421,6 +421,7 @@ class RESTUserWorkflow(RESTEntity):
             # accelerator
             validate_num("requireaccelerator", param, safe, optional=True)
             validate_str("accelerator_gpumemorymb", param, safe, RX_ANYTHING, optional=True)
+            import pdb; pdb.set_trace()
             validate_strlist("accelerator_cudacapabilities", param, safe, RX_CUDA_VERSION)
             validate_str("accelerator_cudaruntime", param, safe, RX_CUDA_VERSION, optional=True)
             if not safe.kwargs["requireaccelerator"] and (
