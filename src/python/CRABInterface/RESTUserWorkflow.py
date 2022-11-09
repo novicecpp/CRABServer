@@ -413,6 +413,7 @@ class RESTUserWorkflow(RESTEntity):
             validate_strlist("scriptargs", param, safe, RX_SCRIPTARGS)
             validate_str("scheddname", param, safe, RX_SCHEDD_NAME, optional=True)
             validate_str("collector", param, safe, RX_COLLECTOR, optional=True)
+            import pdb; pdb.set_trace()
             validate_strlist("extrajdl", param, safe, RX_SCRIPTARGS)
             validate_num("dryrun", param, safe, optional=True)
             validate_num("ignoreglobalblacklist", param, safe, optional=True)
@@ -420,7 +421,6 @@ class RESTUserWorkflow(RESTEntity):
             # accelerator
             validate_num("requireaccelerator", param, safe, optional=True)
             validate_str("accelerator_gpumemorymb", param, safe, RX_ANYTHING, optional=True)
-            import pdb; pdb.set_trace()
             validate_strlist("accelerator_cudacapabilities", param, safe, RX_CUDA_VERSION)
             validate_str("accelerator_cudaruntime", param, safe, RX_CUDA_VERSION, optional=True)
             if not safe.kwargs["requireaccelerator"] and (
