@@ -303,7 +303,7 @@ class RESTUserWorkflow(RESTEntity):
                 raise AssertionError("CUDARuntime must be a string and shorter than 100 chars")
             return data
         except AssertionError as e:
-            raise InvalidParameter from e
+            raise InvalidParameter('nananananana')
 
 
     @conn_handler(services=['cric', 'centralconfig'])
