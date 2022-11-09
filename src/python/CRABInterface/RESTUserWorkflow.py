@@ -291,6 +291,7 @@ class RESTUserWorkflow(RESTEntity):
             # GPUMemoryMB validation
             param = {'kwargs': copy.deepcopy(data)}
             safe = {'kwargs': {}}
+            import pdb; pdb.set_trace()
             validate_num("GPUMemoryMB", param, safe, optional=False, minval=0)
             if not isinstance(data["GPUMemoryMB"], int) or not data["GPUMemoryMB"] > 0:
                 raise AssertionError("GPUMemoryMB must be an integer and greater than 0")
