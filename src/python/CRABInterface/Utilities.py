@@ -201,5 +201,5 @@ def validate_dict(argname, param, safe, keys, optional=False, maxsize=1024):
         msg = f"Params contains arguments that are not supported. Args provided: {paramSet}"
         raise InvalidParameter(msg)
     yield (RESTArgs([], data), RESTArgs([], {}))
-    safe.kwargs[argname] = data
+    safe.kwargs[argname] = dict(data)
     del param.kwargs[argname]
