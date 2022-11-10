@@ -418,8 +418,8 @@ class RESTUserWorkflow(RESTEntity):
             validate_num("ignoreglobalblacklist", param, safe, optional=True)
             validate_num("partialdataset", param, safe, optional=True)
             validate_num("requireaccelerator", param, safe, optional=True)
-            if safe.kwargs["acceleratorparams"]:
-                if not param.kwargs["requireaccelerator"]:
+            if param.kwargs["acceleratorparams"]:
+                if not safe.kwargs["requireaccelerator"]:
                     raise InvalidParameter("There are accelerator parameters but requireAccelerator is False")
                 acceleratorArgs = ["GPUMemoryMB", "CUDARuntime", "CUDACapabilities"]
                 with validate_dict("acceleratorparams", param, safe, keys=acceleratorArgs, optional=True) as (accParams, accSafe):
