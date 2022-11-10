@@ -202,3 +202,4 @@ def validate_dict(argname, param, safe, keys, optional=False, maxsize=1024):
         raise InvalidParameter(msg)
     yield (RESTArgs([], data), RESTArgs([], {}))
     safe.kwargs[argname] = data
+    del param.kwargs[argname]
