@@ -423,7 +423,6 @@ class RESTUserWorkflow(RESTEntity):
                     raise InvalidParameter("There are accelerator parameters but requireAccelerator is False")
                 acceleratorArgs = ["GPUMemoryMB", "CUDARuntime", "CUDACapabilities"]
                 with validate_dict("acceleratorparams", param, safe, keys=acceleratorArgs, optional=True) as (accParams, accSafe):
-                    import pdb; pdb.set_trace()
                     validate_num("GPUMemoryMB", accParams, accSafe, optional=True, minval=0)
                     validate_strlist("CUDACapabilities", accParams, accSafe, RX_CUDA_VERSION)
                     validate_str("CUDARuntime", accParams, accSafe, RX_CUDA_VERSION, optional=True)
@@ -555,6 +554,7 @@ class RESTUserWorkflow(RESTEntity):
            :arg int dryrun: enable dry run mode (initialize but do not submit request).
            :returns: a dict which contaians details of the request"""
 
+        import pdb; pdb.set_trace()
         user_config = {
             'partialdataset': True if partialdataset else False,
             'requireaccelerator': True if requireaccelerator else False,
