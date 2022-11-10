@@ -20,7 +20,7 @@ from CRABInterface.Regexps import (RX_TASKNAME, RX_ACTIVITY, RX_JOBTYPE, RX_GENE
     RX_CMSSITE, RX_SPLIT, RX_CACHENAME, RX_CACHEURL, RX_LFN, RX_USERFILE, RX_VOPARAMS, RX_DBSURL, RX_LFNPRIMDS, RX_OUTFILES,
     RX_RUNS, RX_LUMIRANGE, RX_SCRIPTARGS, RX_SCHEDD_NAME, RX_COLLECTOR, RX_SUBRESTAT, RX_JOBID, RX_ADDFILE,
     RX_ANYTHING, RX_USERNAME, RX_DATE, RX_MANYLINES_SHORT, RX_CUDA_VERSION)
-from CRABInterface.Utilities import CMSSitesCache, conn_handler, getDBinstance, parseJSONParamToRESTArgs
+from CRABInterface.Utilities import CMSSitesCache, conn_handler, getDBinstance, parseJSONParamToRESTArgs, validate_dict
 from ServerUtilities import checkOutLFN, generateTaskName
 
 
@@ -418,18 +418,14 @@ class RESTUserWorkflow(RESTEntity):
             validate_num("ignoreglobalblacklist", param, safe, optional=True)
             validate_num("partialdataset", param, safe, optional=True)
             validate_num("requireaccelerator", param, safe, optional=True)
-            if safe.kwargs.get("requireaccelerator", None):
-                validate_str("acceleratorparams", param, safe, RX_ANYTHING, optional=True)
-                acceleratorArgs = set(["GPUMemoryMB", "CUDARuntime", "CUDACapabilities"])
-                accParams, accSafe = parseJSONParamToRESTArgs(safe.kwargs["acceleratorparams"], acceleratorArgs)
-                validate_num("GPUMemoryMB", accParams, accSafe, optional=True, minval=0)
-                validate_strlist("CUDACapabilities", accParams, accSafe, RX_CUDA_VERSION)
-                validate_str("CUDARuntime", accParams, accSafe, RX_CUDA_VERSION, optional=True)
-                self.logger.debug('accParams: %s', accParams)
-                self.logger.debug('accSafe: %s', accSafe)
-                safe.kwargs["acceleratorparams"] = dict(accSafe.kwargs)
-            else:
-                raise InvalidParameter("There are accelerator parameters but requireAccelerator is False")
+            if safe.kwargs["acceleratorparams"]:
+                if not param.kwargs["requireaccelerator"]:
+                    raise InvalidParameter("There are accelerator parameters but requireAccelerator is False")
+                acceleratorArgs = ["GPUMemoryMB", "CUDARuntime", "CUDACapabilities"]
+                with validate_dict("acceleratorparams", param, safe, keys=acceleratorArgs, optional=True) as (accParams, accSafe):
+                    validate_num("GPUMemoryMB", accParams, accSafe, optional=True, minval=0)
+                    validate_strlist("CUDACapabilities", accParams, accSafe, RX_CUDA_VERSION)
+                    validate_str("CUDARuntime", accParams, accSafe, RX_CUDA_VERSION, optional=True)
 
 
         elif method in ['POST']:

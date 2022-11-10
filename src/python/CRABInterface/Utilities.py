@@ -2,6 +2,7 @@ from __future__ import division
 from __future__ import print_function
 import logging
 import os
+from contextlib import contextmanager
 from collections import namedtuple
 from time import mktime, gmtime
 import re
@@ -175,13 +176,19 @@ def conn_handler(services):
         return wrapped_func
     return wrap
 
-def parseJSONParamToRESTArgs(candidate, keys, maxsize=1024):
+
+@contextmanager
+def validate_dict(argname, param, safe, keys, optional=False, maxsize=1024):
     """Some docs
     """
-    if len(candidate) > maxsize:
+    val = param.kwargs.get(argname, None)
+    if optional and val == None:
+        safe.kwargs[argname] = None
+        return
+    if len(val) > maxsize:
         raise InvalidParameter("Params is larger than %s", maxsize)
     try:
-        data = json.loads(candidate)
+        data = json.loads(val)
     except Exception as e:
         raise InvalidParameter("Params is not valid JSON-like dict object") from e
     if data is None:
@@ -193,4 +200,5 @@ def parseJSONParamToRESTArgs(candidate, keys, maxsize=1024):
     if unknownArgs:
         msg = f"Params contains arguments that are not supported. Args provided: {paramSet}"
         raise InvalidParameter(msg)
-    return RESTArgs([], data), RESTArgs([], {})
+    yield (RESTArgs([], data), RESTArgs([], {}))
+    safe.kwargs[argname] = data

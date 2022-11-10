@@ -501,20 +501,23 @@ class DagmanCreator(TaskAction):
         # hardcoding accelerator to GPU (SI currently only have nvidia GPU)
         if task['tm_user_config']['requireaccelerator']:
             info['accelerator_jdl'] = '+RequiresGPU=1\nrequest_GPUs=1'
-            if task['tm_user_config']['acccelerator_gpumemorymb']:
+            gpuMemoryMB = task['tm_user_config']['accceleratorparams'].get('GPUMemoryMB', None)
+            cudaCapabilities = task['tm_user_config']['accceleratorparams'].get('CUDACapabilities', None)
+            cudaRuntime = task['tm_user_config']['accceleratorparams'].get('CUDARuntime', None)
+            if gpuMemoryMB:
                 info['accelerator_jdl'] += '\n'
-                info['accelerator_jdl'] += f"+GPUMemoryMB={task['tm_user_config']['acccelerator_gpumemorymb']}"
-            if task['tm_user_config']['acccelerator_cudacapabilities']:
-                cudaCapabilities = ','.join(sorted(task['tm_user_config']['acccelerator_cudacapabilities']))
+                info['accelerator_jdl'] += f"+GPUMemoryMB={gpuMemoryMB}"
+            if cudaCapabilities:
+                cudaCapabilities = ','.join(sorted(cudaCapabilities))
                 info['accelerator_jdl'] += '\n'
                 info['accelerator_jdl'] += f"+CUDACapability={classad.quote(cudaCapabilities)}"
-            if task['tm_user_config']['acccelerator_cudaruntime']:
+            if cudaRuntime:
                 info['accelerator_jdl'] += '\n'
-                info['accelerator_jdl'] += f"+CUDARuntime={classad.quote(task['tm_user_config']['acccelerator_cudaruntime'])}"
+                info['accelerator_jdl'] += f"+CUDARuntime={classad.quote(cudaRuntime)}"
         else:
             info['accelerator_jdl'] = ''
-        info['extra_jdl'] = '\n'.join(literal_eval(task['tm_extrajdl']))
 
+        info['extra_jdl'] = '\n'.join(literal_eval(task['tm_extrajdl']))
         # info['jobarch_flatten'].split("_")[0]: extracts "slc7" from "slc7_amd64_gcc10"
         required_os_list = ARCH_TO_OS.get(info['jobarch_flatten'].split("_")[0])
         # ARCH_TO_OS.get("slc7") gives a list with one item only: ['rhel7']
