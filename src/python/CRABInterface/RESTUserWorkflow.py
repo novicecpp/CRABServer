@@ -557,9 +557,7 @@ class RESTUserWorkflow(RESTEntity):
         user_config = {
             'partialdataset': True if partialdataset else False,
             'requireaccelerator': True if requireaccelerator else False,
-            'acccelerator_gpumemorymb': acceleratorparams['GPUMemoryMB'],
-            'acccelerator_cudacapabilities': acceleratorparams['CUDACapabilities'],
-            'acccelerator_cudaruntime': acceleratorparams['CUDARuntime'],
+            'accceleratorparams': acceleratorparams if acceleratorparams else {},
         }
 
 
