@@ -187,7 +187,7 @@ def validate_dict(argname, param, safe, keys, optional=False, maxsize=1024):
         safe.kwargs[argname] = None
         return
     if len(val) > maxsize:
-        raise InvalidParameter("Params is larger than %s", maxsize)
+        raise InvalidParameter("Params is larger than %s bytes (ASCII)", maxsize)
     try:
         data = json.loads(val)
     except Exception as e:
