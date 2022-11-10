@@ -11,6 +11,7 @@ import cherrypy
 import pycurl
 import io
 import json
+import copy
 
 from WMCore.WMFactory import WMFactory
 from WMCore.REST.Error import ExecutionError, InvalidParameter
@@ -200,6 +201,6 @@ def validate_dict(argname, param, safe, keys, optional=False, maxsize=1024):
     if unknownArgs:
         msg = f"Params contains arguments that are not supported. Args provided: {paramSet}"
         raise InvalidParameter(msg)
-    yield (RESTArgs([], data), RESTArgs([], {}))
-    safe.kwargs[argname] = dict(data)
+    yield (RESTArgs([], copy.deepcopy(data)), RESTArgs([], {}))
+    safe.kwargs[argname] = data
     del param.kwargs[argname]
