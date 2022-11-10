@@ -423,6 +423,7 @@ class RESTUserWorkflow(RESTEntity):
                     raise InvalidParameter("There are accelerator parameters but requireAccelerator is False")
                 acceleratorArgs = ["GPUMemoryMB", "CUDARuntime", "CUDACapabilities"]
                 with validate_dict("acceleratorparams", param, safe, keys=acceleratorArgs, optional=True) as (accParams, accSafe):
+                    import pdb; pdb.set_trace()
                     validate_num("GPUMemoryMB", accParams, accSafe, optional=True, minval=0)
                     validate_strlist("CUDACapabilities", accParams, accSafe, RX_CUDA_VERSION)
                     validate_str("CUDARuntime", accParams, accSafe, RX_CUDA_VERSION, optional=True)
