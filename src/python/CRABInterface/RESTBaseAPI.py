@@ -183,9 +183,12 @@ class TraceIDFilter(logging.Filter):
     Add trace_id to log record and use it in formatter.
     """
     def filter(self, record):
-        trace = cherrypy.request.db['handle'].get('trace', None)
-        record.trace_id = cherrypy.request.db['handle']['trace'].replace('RESTSQL:','') if trace else ""
+        try:
+            record.trace_id = cherrypy.request.db['handle']['trace'].replace('RESTSQL:','')
+        except KeyError:
+            record.trace_id = ""
         return True
+
 
 class _FakeLOB:
     """Simplest way to mock LOB object inside tuple return by DatabaseRESTApi.query(),
