@@ -164,7 +164,7 @@ class RESTBaseAPI(DatabaseRESTApi):
             if logfile:
                 hdlr = logging.handlers.TimedRotatingFileHandler(logfile, when='D', interval=1, backupCount=keptDays)
             else:
-                hdlr = logging.handlers.StreamHandler()
+                hdlr = logging.StreamHandler()
             # add two space and logtype's string for use with grep
             formatter = logging.Formatter('%(asctime)s:%(trace_id)s:%(levelname)s:%(module)s:%(message)s  Type=crablog')
             hdlr.setFormatter(formatter)
