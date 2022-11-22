@@ -161,8 +161,12 @@ class RESTBaseAPI(DatabaseRESTApi):
         import logging.handlers
         logger = logging.getLogger('CRABLogger')
         if loglevel:
-            hdlr = logging.handlers.TimedRotatingFileHandler(logfile, when='D', interval=1, backupCount=keptDays)
-            formatter = logging.Formatter('%(asctime)s:%(trace_id)s:%(levelname)s:%(module)s:%(message)s')
+            if logfile:
+                hdlr = logging.handlers.TimedRotatingFileHandler(logfile, when='D', interval=1, backupCount=keptDays)
+            else:
+                hdlr = logging.handlers.StreamHandler()
+            # add two space and logtype's string for use with grep
+            formatter = logging.Formatter('%(asctime)s:%(trace_id)s:%(levelname)s:%(module)s:%(message)s  Type=crablog')
             hdlr.setFormatter(formatter)
             # add trace_id to log with filter class
             f = TraceIDFilter()
@@ -179,11 +183,8 @@ class TraceIDFilter(logging.Filter):
     Add trace_id to log record and use it in formatter.
     """
     def filter(self, record):
-        try:
-            record.trace_id = cherrypy.request.db['handle']['trace'].replace('RESTSQL:','')
-        except Exception:  # pylint: disable=broad-except
-            traceback.print_exc()
-            record.trace_id = ""
+        trace = cherrypy.request.db['handle'].get('trace', None)
+        record.trace_id = cherrypy.request.db['handle']['trace'].replace('RESTSQL:','') if trace else ""
         return True
 
 class _FakeLOB:
