@@ -1,0 +1,21 @@
+--- run.sh	2022-10-27 17:58:19.000000000 +0200
++++ run.sh.new	2022-11-17 17:50:44.386521500 +0100
+@@ -66,6 +66,8 @@
+
+ # start the service
+ export CRYPTOGRAPHY_ALLOW_OPENSSL_102=true
++
++mkfifo /data/srv/state/crabserver/crabserver-fifo
+ /data/srv/current/config/$srv/manage start 'I did read documentation'
+
+ # run monitoring script
+@@ -74,4 +76,8 @@
+ fi
+
+ # start cron daemon
+-sudo /usr/sbin/crond -n
++#sudo /usr/sbin/crond -n
++while true;
++do
++    cat /data/srv/state/crabserver/crabserver-fifo
++done
