@@ -418,7 +418,7 @@ class RESTUserWorkflow(RESTEntity):
             validate_num("partialdataset", param, safe, optional=True)
             validate_num("requireaccelerator", param, safe, optional=True)
             # validate optional acceleratorparams
-            validate_str("acceleartorparams", param, safe, RX_ANYTHING, optional=True)
+            validate_str("acceleratorparams", param, safe, RX_ANYTHING, optional=True)
             if safe.kwargs["acceleratorparams"]:
                 if not safe.kwargs["requireaccelerator"] and safe.kwargs["acceleratorparams"]:
                     raise InvalidParameter("There are accelerator parameters but requireAccelerator is False")
