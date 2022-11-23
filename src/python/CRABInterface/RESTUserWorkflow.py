@@ -421,7 +421,7 @@ class RESTUserWorkflow(RESTEntity):
             #optionalAcceleratorKeys = ["GPUMemoryMB", "CUDARuntime", "CUDACapabilities"]
             #with validate_dict("acceleratorparams", param, safe, optional=True, optionalkeys=optionalAcceleratorKeys) as (accParams, accSafe):
             #    validate_num("GPUMemoryMB", accParams, accSafe, optional=True, minval=0)
-            if param.kwargs.get("acceleratorparams"):
+            if param.kwargs.get("acceleratorparams", None):
                 cm = validate_dict("acceleratorparams", param, safe)
             else:
                 validate_str("acceleratorparams", param, safe, RX_ANYTHING, optional=True)
