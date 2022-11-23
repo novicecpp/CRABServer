@@ -422,15 +422,12 @@ class RESTUserWorkflow(RESTEntity):
             #with validate_dict("acceleratorparams", param, safe, optional=True, optionalkeys=optionalAcceleratorKeys) as (accParams, accSafe):
             #    validate_num("GPUMemoryMB", accParams, accSafe, optional=True, minval=0)
             if param.kwargs.get("acceleratorparams", None):
-                cm = validate_dict("acceleratorparams", param, safe)
+                with validate_dict("acceleratorparams", param, safe) as (accParams, accSafe):
+                    validate_num("GPUMemoryMB", accParams, accSafe, minval=0)
+                    validate_strlist("CUDACapabilities", accParams, accSafe, RX_CUDA_VERSION)
+                    validate_str("CUDARuntime", accParams, accSafe, RX_CUDA_VERSION, optional=True)
             else:
                 validate_str("acceleratorparams", param, safe, RX_ANYTHING, optional=True)
-                import contextlib
-                cm = contextlib.nullcontext((None, None))
-            with cm as (accParams, accSafe):
-                validate_num("GPUMemoryMB", accParams, accSafe, minval=0)
-                validate_strlist("CUDACapabilities", accParams, accSafe, RX_CUDA_VERSION)
-                validate_str("CUDARuntime", accParams, accSafe, RX_CUDA_VERSION, optional=True)
             # check if requireaccelerator false but acceleratorparams exist
             if not safe.kwargs["requireaccelerator"] and safe.kwargs["acceleratorparams"]:
                 raise InvalidParameter("There are accelerator parameters but requireAccelerator is False")

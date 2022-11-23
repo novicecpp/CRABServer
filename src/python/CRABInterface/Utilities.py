@@ -179,7 +179,7 @@ def conn_handler(services):
 
 
 @contextmanager
-def validate_dict(argname, param, safe, optional=False, mandatorykeys=[], optionalkeys=[], maxjsonsize=1024):
+def validate_dict(argname, param, safe, mandatorykeys=[], optionalkeys=[], maxjsonsize=1024):
     """
     Provide context manager to validate kv of DictType argument.
 
@@ -216,10 +216,9 @@ def validate_dict(argname, param, safe, optional=False, mandatorykeys=[], option
     """
 
     val = param.kwargs.get(argname, None)
-    if optional and val is None:
-        safe.kwargs[argname] = None
-        nullcontext()
-        return
+    #if optional and val is None:
+    #    safe.kwargs[argname] = None
+    #    return
     if len(val) > maxjsonsize:
         raise InvalidParameter(f"Params is larger than {maxjsonsize} bytes")
     try:
@@ -230,19 +229,19 @@ def validate_dict(argname, param, safe, optional=False, mandatorykeys=[], option
         raise InvalidParameter("Params is not defined")
     if not isinstance(data, dict):
         raise InvalidParameter("Params is not a dictionary encoded as JSON object")
-    paramKeys = set(data.keys())
-    mandatoryKeys = set(mandatorykeys) if mandatorykeys else set()
-    optionalKeys = set(optionalkeys) if optionalkeys else set()
-    # is every mandatory argument also in the provided args?
-    if not mandatoryKeys <= paramKeys:
-        msg =  "Keys does not contain all the mandatory arguments. "
-        msg += f"Mandatory keys: {mandatoryKeys}, while keys provided are: {paramKeys}"
-        raise InvalidParameter(msg)
-    # are there unknown arguments in the data provided?
-    unknownKeys = paramKeys - mandatoryKeys - optionalKeys
-    if unknownKeys:
-        msg = f"Keys contains arguments that are not supported. Keys provided: {paramKeys}"
-        raise InvalidParameter(msg)
+    #paramKeys = set(data.keys())
+    #mandatoryKeys = set(mandatorykeys) if mandatorykeys else set()
+    #optionalKeys = set(optionalkeys) if optionalkeys else set()
+    ## is every mandatory argument also in the provided args?
+    #if not mandatoryKeys <= paramKeys:
+    #    msg =  "Keys does not contain all the mandatory arguments. "
+    #    msg += f"Mandatory keys: {mandatoryKeys}, while keys provided are: {paramKeys}"
+    #    raise InvalidParameter(msg)
+    ## are there unknown arguments in the data provided?
+    #unknownKeys = paramKeys - mandatoryKeys - optionalKeys
+    #if unknownKeys:
+    #    msg = f"Keys contains arguments that are not supported. Keys provided: {paramKeys}"
+    #    raise InvalidParameter(msg)
     dictParam = RESTArgs([], copy.deepcopy(data))
     dictSafe = RESTArgs([], {})
     yield (dictParam, dictSafe)
