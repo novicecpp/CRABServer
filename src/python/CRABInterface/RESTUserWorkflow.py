@@ -426,7 +426,7 @@ class RESTUserWorkflow(RESTEntity):
             else:
                 validate_str("acceleratorparams", param, safe, RX_ANYTHING, optional=True)
                 import contextlib
-                cm = contextlib.nullcontext()
+                cm = contextlib.nullcontext((None, None))
             with cm as (accParams, accSafe):
                 validate_num("GPUMemoryMB", accParams, accSafe, minval=0)
                 validate_strlist("CUDACapabilities", accParams, accSafe, RX_CUDA_VERSION)
