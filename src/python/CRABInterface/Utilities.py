@@ -2,7 +2,7 @@ from __future__ import division
 from __future__ import print_function
 import logging
 import os
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from collections import namedtuple
 from time import mktime, gmtime
 import re
@@ -218,7 +218,7 @@ def validate_dict(argname, param, safe, optional=False, mandatorykeys=[], option
     val = param.kwargs.get(argname, None)
     if optional and val is None:
         safe.kwargs[argname] = None
-        yield (RESTArgs([], {}), RESTArgs([], {}))
+        nullcontext()
         return
     if len(val) > maxjsonsize:
         raise InvalidParameter(f"Params is larger than {maxjsonsize} bytes")
