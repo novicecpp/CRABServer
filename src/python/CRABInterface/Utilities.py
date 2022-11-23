@@ -179,20 +179,21 @@ def conn_handler(services):
 
 
 @contextmanager
-def validate_dict(argname, param, safe, optional=False, mandatoryargs=[], optionalargs=[], maxjsonsize=1024):
+def validate_dict(argname, param, safe, optional=False, mandatorykeys=[], optionalkeys=[], maxjsonsize=1024):
     """
     Provide context manager to validate kv of DictType argument.
 
     validate_dict first checks that if an argument named `argname` is
     JSON-like dict object, check if json-string exceeds `maxjsonsize`
     before deserialize with json.loads(), check if all mandatory key
-    `mandatoryargs` exist, and if there is any unknown key beside
-    `mandatoryargs` and `optionalargs`.
+    `mandatorykeys` exist, and if there is any unknown key beside
+    `mandatorykeys` and `optionalkeys`.
 
     Then, validate_dict yield a tuple of RESTArgs (dictParam, dictSafe) and
     execute the block nested in "with" statement, which expected
     `validate_*` to validate all keys inside json, in the same way as
-    `param`/`safe` do in DatabaseRESETApi.validate().
+    `param`/`safe` do in DatabaseRESETApi.validate(), but against
+    dictParam/dictSafe instead.
 
     If all keys pass validation, the dict object (not the string) is copied
     into `safe.kwargs` and the original string value is removed from
@@ -208,7 +209,7 @@ def validate_dict(argname, param, safe, optional=False, mandatoryargs=[], option
     mandatoryArgs = ["CUDARuntime", "CUDACapabilities"]
     optionalArgs = ["GPUMemoryMB"]
     with validate_dict("acceleratorparams", param, safe, optional=True,
-        mandatoryargs=mandatoryArgs, optionalargs=optionalArgs) as (accParams, accSafe):
+        mandatorykeys=mandatoryArgs, optionalkeys=optionalArgs) as (accParams, accSafe):
         validate_num("GPUMemoryMB", accParams, accSafe, optional=True, minval=0)
         validate_strlist("CUDACapabilities", accParams, accSafe, RX_CUDA_VERSION)
         validate_str("CUDARuntime", accParams, accSafe, RX_CUDA_VERSION, optional=True)
@@ -228,18 +229,18 @@ def validate_dict(argname, param, safe, optional=False, mandatoryargs=[], option
         raise InvalidParameter("Params is not defined")
     if not isinstance(data, dict):
         raise InvalidParameter("Params is not a dictionary encoded as JSON object")
-    paramSet = set(data.keys())
-    mandatoryParams = set(mandatoryargs) if mandatoryargs else set()
-    optionalParams = set(optionalargs) if optionalargs else set()
+    paramKeys = set(data.keys())
+    mandatoryKeys = set(mandatorykeys) if mandatorykeys else set()
+    optionalKeys = set(optionalkeys) if optionalkeys else set()
     # is every mandatory argument also in the provided args?
-    if not mandatoryParams <= paramSet:
-        msg =  "Params does not contain all the mandatory arguments. "
-        msg += f"Mandatory args: {mandatoryParams}, while args provided are: {paramSet}"
+    if not mandatoryKeys <= paramKeys:
+        msg =  "Keys does not contain all the mandatory arguments. "
+        msg += f"Mandatory keys: {mandatoryKeys}, while keys provided are: {paramKeys}"
         raise InvalidParameter(msg)
     # are there unknown arguments in the data provided?
-    unknownParams = paramSet - mandatoryParams - optionalParams
-    if unknownParams:
-        msg = f"Params contains arguments that are not supported. Args provided: {paramSet}"
+    unknownKeys = paramKeys - mandatoryKeys - optionalKeys
+    if unknownKeys:
+        msg = f"Keys contains arguments that are not supported. Keys provided: {paramKeys}"
         raise InvalidParameter(msg)
     dictParam = RESTArgs([], copy.deepcopy(data))
     dictSafe = RESTArgs([], {})
