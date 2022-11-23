@@ -219,19 +219,6 @@ def validate_dict(argname, param, safe, maxjsonsize=1024):
         raise InvalidParameter("Params is not defined")
     if not isinstance(data, dict):
         raise InvalidParameter("Params is not a dictionary encoded as JSON object")
-    #paramKeys = set(data.keys())
-    #mandatoryKeys = set(mandatorykeys) if mandatorykeys else set()
-    #optionalKeys = set(optionalkeys) if optionalkeys else set()
-    ## is every mandatory argument also in the provided args?
-    #if not mandatoryKeys <= paramKeys:
-    #    msg =  "Keys does not contain all the mandatory arguments. "
-    #    msg += f"Mandatory keys: {mandatoryKeys}, while keys provided are: {paramKeys}"
-    #    raise InvalidParameter(msg)
-    ## are there unknown arguments in the data provided?
-    #unknownKeys = paramKeys - mandatoryKeys - optionalKeys
-    #if unknownKeys:
-    #    msg = f"Keys contains arguments that are not supported. Keys provided: {paramKeys}"
-    #    raise InvalidParameter(msg)
     dictParam = RESTArgs([], copy.deepcopy(data))
     dictSafe = RESTArgs([], {})
     yield (dictParam, dictSafe)
