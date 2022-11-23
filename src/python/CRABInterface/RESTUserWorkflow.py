@@ -20,7 +20,7 @@ from CRABInterface.Regexps import (RX_TASKNAME, RX_ACTIVITY, RX_JOBTYPE, RX_GENE
     RX_CMSSITE, RX_SPLIT, RX_CACHENAME, RX_CACHEURL, RX_LFN, RX_USERFILE, RX_VOPARAMS, RX_DBSURL, RX_LFNPRIMDS, RX_OUTFILES,
     RX_RUNS, RX_LUMIRANGE, RX_SCRIPTARGS, RX_SCHEDD_NAME, RX_COLLECTOR, RX_SUBRESTAT, RX_JOBID, RX_ADDFILE,
     RX_ANYTHING, RX_USERNAME, RX_DATE, RX_MANYLINES_SHORT, RX_CUDA_VERSION)
-from CRABInterface.Utilities import CMSSitesCache, conn_handler, getDBinstance, validate_dict, mark_optional_karg
+from CRABInterface.Utilities import CMSSitesCache, conn_handler, getDBinstance, validate_dict
 from ServerUtilities import checkOutLFN, generateTaskName
 
 
@@ -426,9 +426,7 @@ class RESTUserWorkflow(RESTEntity):
                     validate_strlist("CUDACapabilities", accParams, accSafe, RX_CUDA_VERSION)
                     validate_str("CUDARuntime", accParams, accSafe, RX_CUDA_VERSION, optional=True)
             else:
-                mark_optional_karg("acceleratorparams", param, safe)
-
-            # check if requireaccelerator false but acceleratorparams exist
+                safe.kwargs["acceleratorparams"] = None
 
 
         elif method in ['POST']:

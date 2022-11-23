@@ -239,11 +239,3 @@ def validate_dict(argname, param, safe, maxjsonsize=1024):
         raise InvalidParameter(f"Excess keyword arguments inside keyword argument, not validated kwargs={{'{argname}': {dictParam.kwargs}}}")
     safe.kwargs[argname] = data
     del param.kwargs[argname]
-
-
-def mark_optional_karg(argname, param, safe):
-    import pdb; pdb.set_trace()
-    if not param.kwargs.get(argname, None):
-        raise ValueError(f'Cannot make it as optional argument because param.kwargs["{argname}"] is not None')
-    safe.kwargs[argname] = None
-    del param.kwargs[argname]
