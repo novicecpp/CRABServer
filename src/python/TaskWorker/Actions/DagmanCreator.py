@@ -516,7 +516,6 @@ class DagmanCreator(TaskAction):
                 info['accelerator_jdl'] += f"+CUDARuntime={classad.quote(cudaRuntime)}"
         else:
             info['accelerator_jdl'] = ''
-
         info['extra_jdl'] = '\n'.join(literal_eval(task['tm_extrajdl']))
         # info['jobarch_flatten'].split("_")[0]: extracts "slc7" from "slc7_amd64_gcc10"
         required_os_list = ARCH_TO_OS.get(info['jobarch_flatten'].split("_")[0])

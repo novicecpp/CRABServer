@@ -179,7 +179,7 @@ def conn_handler(services):
 
 
 @contextmanager
-def validate_dict(argname, param, safe, keys, optional=False, maxsize=1024):
+def validate_dict(argname, param, safe, mandatoryargs=[], optionalargs=[], optional=False, maxsize=1024):
     """Some docs
     """
     val = param.kwargs.get(argname, None)
@@ -196,11 +196,22 @@ def validate_dict(argname, param, safe, keys, optional=False, maxsize=1024):
         raise InvalidParameter("Params is not defined")
     if not isinstance(data, dict):
         raise InvalidParameter("Params is not a dictionary encoded as JSON object")
-    paramSet = set(keys)
-    unknownArgs = paramSet - paramSet
-    if unknownArgs:
+    paramSet = set(val.keys())
+    mandatoryargs = set(mandatoryargs)
+    optionalargs = set(optionalargs)
+    # is every mandatory argument also in the provided args?
+    if not mandatoryargs <= paramSet:
+        msg = "Params does not contain all the mandatory arguments. "
+        msg +="Mandatory args: {}, while args provided are: {}".format(mandatoryargs, paramSet)
+        raise InvalidParameter(msg)
+    # are there unknown arguments in the data provided?
+    unknownargs = paramSet - mandatoryargs - optionalargs
+    if unknownargs:
         msg = f"Params contains arguments that are not supported. Args provided: {paramSet}"
         raise InvalidParameter(msg)
-    yield (RESTArgs([], copy.deepcopy(data)), RESTArgs([], {}))
+    dictParam = RESTArgs([], copy.deepcopy(data))
+    dictSafe = RESTArgs([], {})
+    yield (dictParam, dictSafe)
+    #if safe
     safe.kwargs[argname] = data
-    del param.kwargs[argname]
+    #del param.kwargs[argname]
