@@ -214,8 +214,8 @@ def validate_dict(argname, param, safe, mandatoryargs=None, optionalargs=None, o
     yield (dictParam, dictSafe)
     import pdb; pdb.set_trace()
     if dictParam.args:
-        raise InvalidParameter(f"Excess path arguments, not validated args='{param.args}'")
+        raise InvalidParameter(f"Excess path arguments, not validated ='{dictParam.args}'")
     if dictParam.kwargs:
-        raise InvalidParameter(f"Excess keyword arguments, not validated kwargs='{param.kwargs}'")
+        raise InvalidParameter(f"Excess keyword arguments, not validated kwargs='{dictParam.kwargs}'")
     safe.kwargs[argname] = data
     del param.kwargs[argname]
