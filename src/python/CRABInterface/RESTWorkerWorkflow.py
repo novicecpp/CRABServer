@@ -157,9 +157,7 @@ def fixupTask(task):
     user_config_default = {
         'partialdataset': False,
         'requireaccelerator': False,
-        'acccelerator_gpumemorymb': None,
-        'acccelerator_cudacapabilities': None,
-        'acccelerator_cudaruntime': None,
+        'accceleratorparams': {},
     }
     if result['tm_user_config']:
         result['tm_user_config'] = json.loads(result['tm_user_config'])
