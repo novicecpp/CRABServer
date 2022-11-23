@@ -264,7 +264,6 @@ class RESTUserWorkflow(RESTEntity):
             #Need to log the message in the db for the users
             self.logger.warning(msg)
 
-
     @conn_handler(services=['cric', 'centralconfig'])
     def validate(self, apiobj, method, api, param, safe): #pylint: disable=unused-argument
         """Validating all the input parameter as enforced by the WMCore.REST module"""
