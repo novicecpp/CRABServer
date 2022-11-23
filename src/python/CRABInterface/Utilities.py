@@ -242,6 +242,7 @@ def validate_dict(argname, param, safe, maxjsonsize=1024):
 
 
 def mark_optional_karg(argname, param, safe):
+    import pdb; pdb.set_trace()
     if not param.kwargs.get(argname, None):
         raise ValueError(f'Cannot make it as optional argument because param.kwargs["{argname}"] is not None')
     safe.kwargs[argname] = None
