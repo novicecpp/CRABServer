@@ -510,7 +510,7 @@ class DagmanCreator(TaskAction):
             if cudaCapabilities:
                 cudaCapability = ','.join(sorted(cudaCapabilities))
                 info['accelerator_jdl'] += '\n'
-                info['accelerator_jdl'] += f"+CUDACapability={classad.quote(cudaCapabilities)}"
+                info['accelerator_jdl'] += f"+CUDACapability={classad.quote(cudaCapability)}"
             if cudaRuntime:
                 info['accelerator_jdl'] += '\n'
                 info['accelerator_jdl'] += f"+CUDARuntime={cudaRuntime}"
