@@ -200,13 +200,13 @@ def validate_dict(argname, param, safe, mandatoryargs=None, optionalargs=None, o
     mandatoryParams = set(mandatoryargs) if mandatoryargs else set()
     optionalParams = set(optionalargs) if optionalargs else set()
     # is every mandatory argument also in the provided args?
-    if not mandatoryargs <= paramSet:
+    if not mandatoryParams <= paramSet:
         msg =  "Params does not contain all the mandatory arguments. "
         msg += f"Mandatory args: {mandatoryParams}, while args provided are: {paramSet}"
         raise InvalidParameter(msg)
     # are there unknown arguments in the data provided?
-    unknownargs = paramSet - mandatoryParams - optionalParams
-    if unknownargs:
+    unknownParams = paramSet - mandatoryParams - optionalParams
+    if unknow:
         msg = f"Params contains arguments that are not supported. Args provided: {paramSet}"
         raise InvalidParameter(msg)
     dictParam = RESTArgs([], copy.deepcopy(data))
