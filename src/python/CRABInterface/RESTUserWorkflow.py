@@ -424,7 +424,7 @@ class RESTUserWorkflow(RESTEntity):
             if param.kwargs.get("acceleratorparams"):
                 cm = validate_dict("acceleratorparams", param, safe)
             else:
-                validate_str("acceleratorparams", param, safe, optional=True)
+                validate_str("acceleratorparams", param, safe, RX_ANYTHING, optional=True)
                 import contextlib
                 cm = contextlib.nullcontext()
             with cm as (accParams, accSafe):
