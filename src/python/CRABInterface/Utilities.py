@@ -210,15 +210,15 @@ def validate_dict(argname, param, safe, maxjsonsize=1024):
 
     val = param.kwargs.get(argname, None)
     if len(val) > maxjsonsize:
-        raise InvalidParameter(f"Params is larger than {maxjsonsize} bytes")
+        raise InvalidParameter(f"Param is larger than {maxjsonsize} bytes")
     try:
         data = json.loads(val)
     except Exception as e:
-        raise InvalidParameter("Params is not valid JSON-like dict object") from e
+        raise InvalidParameter("Param is not valid JSON-like dict object") from e
     if data is None:
-        raise InvalidParameter("Params is not defined")
+        raise InvalidParameter("Param is not defined")
     if not isinstance(data, dict):
-        raise InvalidParameter("Params is not a dictionary encoded as JSON object")
+        raise InvalidParameter("Param is not a dictionary encoded as JSON object")
     dictParam = RESTArgs([], copy.deepcopy(data))
     dictSafe = RESTArgs([], {})
     yield (dictParam, dictSafe)
