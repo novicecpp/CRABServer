@@ -179,7 +179,7 @@ def conn_handler(services):
 
 
 @contextmanager
-def validate_dict(argname, param, safe, mandatoryargs=[], optionalargs=[], optional=False, maxsize=1024):
+def validate_dict(argname, param, safe, mandatoryargs=None, optionalargs=None, optional=False, maxsize=1024):
     """Some docs
     """
     val = param.kwargs.get(argname, None)
@@ -187,7 +187,7 @@ def validate_dict(argname, param, safe, mandatoryargs=[], optionalargs=[], optio
         safe.kwargs[argname] = None
         return
     if len(val) > maxsize:
-        raise InvalidParameter("Params is larger than %s bytes (ASCII)", maxsize)
+        raise InvalidParameter(f"Params is larger than %{maxsize} bytes (ASCII)")
     try:
         data = json.loads(val)
     except Exception as e:
@@ -196,16 +196,16 @@ def validate_dict(argname, param, safe, mandatoryargs=[], optionalargs=[], optio
         raise InvalidParameter("Params is not defined")
     if not isinstance(data, dict):
         raise InvalidParameter("Params is not a dictionary encoded as JSON object")
-    paramSet = set(val.keys())
-    mandatoryargs = set(mandatoryargs)
-    optionalargs = set(optionalargs)
+    paramSet = set(data.keys())
+    mandatoryParams = set(mandatoryargs)
+    optionalParams = set(optionalargs)
     # is every mandatory argument also in the provided args?
     if not mandatoryargs <= paramSet:
-        msg = "Params does not contain all the mandatory arguments. "
-        msg +="Mandatory args: {}, while args provided are: {}".format(mandatoryargs, paramSet)
+        msg =  "Params does not contain all the mandatory arguments. "
+        msg += f"Mandatory args: {mandatoryParams}, while args provided are: {paramSet}"
         raise InvalidParameter(msg)
     # are there unknown arguments in the data provided?
-    unknownargs = paramSet - mandatoryargs - optionalargs
+    unknownargs = paramSet - mandatoryParams - optionalParams
     if unknownargs:
         msg = f"Params contains arguments that are not supported. Args provided: {paramSet}"
         raise InvalidParameter(msg)
