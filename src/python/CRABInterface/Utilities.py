@@ -218,6 +218,7 @@ def validate_dict(argname, param, safe, optional=False, mandatorykeys=[], option
     val = param.kwargs.get(argname, None)
     if optional and val is None:
         safe.kwargs[argname] = None
+        yield (RESTArgs([], {}), RESTArgs([], {}))
         return
     if len(val) > maxjsonsize:
         raise InvalidParameter(f"Params is larger than {maxjsonsize} bytes")
