@@ -179,17 +179,15 @@ def conn_handler(services):
 
 
 @contextmanager
-def validate_dict(argname, param, safe, mandatorykeys=[], optionalkeys=[], maxjsonsize=1024):
+def validate_dict(argname, param, safe, maxjsonsize=1024):
     """
     Provide context manager to validate kv of DictType argument.
 
     validate_dict first checks that if an argument named `argname` is
     JSON-like dict object, check if json-string exceeds `maxjsonsize`
-    before deserialize with json.loads(), check if all mandatory key
-    `mandatorykeys` exist, and if there is any unknown key beside
-    `mandatorykeys` and `optionalkeys`.
+    before deserialize with json.loads()
 
-    Then, validate_dict yield a tuple of RESTArgs (dictParam, dictSafe) and
+    Then, as contextmanager, validate_dict yield a tuple of RESTArgs (dictParam, dictSafe) and
     execute the block nested in "with" statement, which expected
     `validate_*` to validate all keys inside json, in the same way as
     `param`/`safe` do in DatabaseRESETApi.validate(), but against
@@ -200,25 +198,17 @@ def validate_dict(argname, param, safe, mandatorykeys=[], optionalkeys=[], maxjs
     `param.kwargs`. If not all keys are validated, it will raise an
     exception.
 
-    If `optional` is True, the argument is not required to exist in
-    `param.kwargs`; None is then inserted into `safe.kwargs`. Otherwise,
-    a missing value raises an exception.
+    Note that validate_dict itself does not support optional argument.
 
     Usage example in DatabaseRESTApi.validate():
 
-    mandatoryArgs = ["CUDARuntime", "CUDACapabilities"]
-    optionalArgs = ["GPUMemoryMB"]
-    with validate_dict("acceleratorparams", param, safe, optional=True,
-        mandatorykeys=mandatoryArgs, optionalkeys=optionalArgs) as (accParams, accSafe):
+    with validate_dict("acceleratorparams", param, safe) as (accParams, accSafe):
         validate_num("GPUMemoryMB", accParams, accSafe, optional=True, minval=0)
         validate_strlist("CUDACapabilities", accParams, accSafe, RX_CUDA_VERSION)
         validate_str("CUDARuntime", accParams, accSafe, RX_CUDA_VERSION, optional=True)
     """
 
     val = param.kwargs.get(argname, None)
-    #if optional and val is None:
-    #    safe.kwargs[argname] = None
-    #    return
     if len(val) > maxjsonsize:
         raise InvalidParameter(f"Params is larger than {maxjsonsize} bytes")
     try:
@@ -248,4 +238,11 @@ def validate_dict(argname, param, safe, mandatorykeys=[], optionalkeys=[], maxjs
     if dictParam.kwargs:
         raise InvalidParameter(f"Excess keyword arguments inside keyword argument, not validated kwargs={{'{argname}': {dictParam.kwargs}}}")
     safe.kwargs[argname] = data
+    del param.kwargs[argname]
+
+
+def mark_optional_karg(argname, param, safe):
+    if not param.kwargs.get(argname, None):
+        raise ValueError(f'Cannot make it as optional argument because param.kwargs["{argname}"] is not None')
+    safe.kwargs[argname] = None
     del param.kwargs[argname]
