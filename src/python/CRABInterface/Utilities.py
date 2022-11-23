@@ -216,6 +216,7 @@ def validate_dict(argname, param, safe, mandatoryargs=None, optionalargs=None, o
     #if dictParam.args:
     #    raise InvalidParameter(f"Excess path arguments, not validated kwargs='{param.args}'")
     if dictParam.kwargs:
-        raise InvalidParameter(f"Excess keyword arguments, not validated kwargs={{'{argname}'}}:{dictParam.kwargs}")
+        raise InvalidParameter(f"Excess keyword arguments inside keyword argument, \
+        not validated kwargs={{'{argname}':{dictParam.kwargs}}}")
     safe.kwargs[argname] = data
     del param.kwargs[argname]
