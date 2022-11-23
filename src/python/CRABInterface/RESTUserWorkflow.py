@@ -418,15 +418,15 @@ class RESTUserWorkflow(RESTEntity):
             validate_num("partialdataset", param, safe, optional=True)
             validate_num("requireaccelerator", param, safe, optional=True)
             # validate optional acceleratorparams
-            validate_str("acceleratorparams", param, safe, RX_ANYTHING, optional=True)
-            if safe.kwargs["acceleratorparams"]:
+            if param.kwargs.get("acceleratorparams", None):
                 if not safe.kwargs["requireaccelerator"] and safe.kwargs["acceleratorparams"]:
                     raise InvalidParameter("There are accelerator parameters but requireAccelerator is False")
                 with validate_dict("acceleratorparams", param, safe, optional=True) as (accParams, accSafe):
                     validate_num("GPUMemoryMB", accParams, accSafe, minval=0)
                     validate_strlist("CUDACapabilities", accParams, accSafe, RX_CUDA_VERSION)
                     validate_str("CUDARuntime", accParams, accSafe, RX_CUDA_VERSION, optional=True)
-
+            else:
+                safe.kwargs["acceleratorparams"] = None
 
         elif method in ['POST']:
             validate_str("workflow", param, safe, RX_TASKNAME, optional=False)
