@@ -179,15 +179,47 @@ def conn_handler(services):
 
 
 @contextmanager
-def validate_dict(argname, param, safe, mandatoryargs=None, optionalargs=None, optional=False, maxsize=1024):
-    """Some docs
+def validate_dict(argname, param, safe, optional=False, mandatoryargs=[], optionalargs=[], maxjsonsize=1024):
     """
+    Provide context manager to validate kv of DictType argument.
+
+    validate_dict first checks that if an argument named `argname` is
+    JSON-like dict object, check if json-string exceeds `maxjsonsize`
+    before deserialize with json.loads(), check if all mandatory key
+    `mandatoryargs` exist, and if there is any unknown key beside
+    `mandatoryargs` and `optionalargs`.
+
+    Then, validate_dict yield a tuple of RESTArgs (dictParam, dictSafe) and
+    execute the block nested in "with" statement, which expected
+    `validate_*` to validate all keys inside json, in the same way as
+    `param`/`safe` do in DatabaseRESETApi.validate().
+
+    If all keys pass validation, the dict object (not the string) is copied
+    into `safe.kwargs` and the original string value is removed from
+    `param.kwargs`. If not all keys are validated, it will raise an
+    exception.
+
+    If `optional` is True, the argument is not required to exist in
+    `param.kwargs`; None is then inserted into `safe.kwargs`. Otherwise,
+    a missing value raises an exception.
+
+    Usage example in DatabaseRESTApi.validate():
+
+    mandatoryArgs = ["CUDARuntime", "CUDACapabilities"]
+    optionalArgs = ["GPUMemoryMB"]
+    with validate_dict("acceleratorparams", param, safe, optional=True,
+        mandatoryargs=mandatoryArgs, optionalargs=optionalArgs) as (accParams, accSafe):
+        validate_num("GPUMemoryMB", accParams, accSafe, optional=True, minval=0)
+        validate_strlist("CUDACapabilities", accParams, accSafe, RX_CUDA_VERSION)
+        validate_str("CUDARuntime", accParams, accSafe, RX_CUDA_VERSION, optional=True)
+    """
+
     val = param.kwargs.get(argname, None)
-    if optional and val == None:
+    if optional and val is None:
         safe.kwargs[argname] = None
         return
-    if len(val) > maxsize:
-        raise InvalidParameter(f"Params is larger than %{maxsize} bytes (ASCII)")
+    if len(val) > maxjsonsize:
+        raise InvalidParameter(f"Params is larger than {maxjsonsize} bytes")
     try:
         data = json.loads(val)
     except Exception as e:
@@ -212,11 +244,7 @@ def validate_dict(argname, param, safe, mandatoryargs=None, optionalargs=None, o
     dictParam = RESTArgs([], copy.deepcopy(data))
     dictSafe = RESTArgs([], {})
     yield (dictParam, dictSafe)
-    import pdb; pdb.set_trace()
-    #if dictParam.args:
-    #    raise InvalidParameter(f"Excess path arguments, not validated kwargs='{param.args}'")
     if dictParam.kwargs:
-        raise InvalidParameter(f"Excess keyword arguments inside keyword argument, \
-        not validated kwargs={{'{argname}':{dictParam.kwargs}}}")
+        raise InvalidParameter(f"Excess keyword arguments inside keyword argument, not validated kwargs={{'{argname}': {dictParam.kwargs}}}")
     safe.kwargs[argname] = data
     del param.kwargs[argname]
