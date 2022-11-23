@@ -212,6 +212,9 @@ def validate_dict(argname, param, safe, mandatoryargs=None, optionalargs=None, o
     dictParam = RESTArgs([], copy.deepcopy(data))
     dictSafe = RESTArgs([], {})
     yield (dictParam, dictSafe)
-    #if safe
+    if dictParam.args:
+        raise InvalidParameter(f"Excess path arguments, not validated args='{param.args}'")
+    if dictParam.kwargs:
+        raise InvalidParameter(f"Excess keyword arguments, not validated kwargs='{param.kwargs}'")
     safe.kwargs[argname] = data
-    #del param.kwargs[argname]
+    del param.kwargs[argname]
