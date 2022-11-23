@@ -1,5 +1,6 @@
-FROM registry.cern.ch/cmsweb/crabserver:v3.221027
-USER 0
+ARG BASEIMAGE=registry.cern.ch/cmsweb/crabserver:v3.221027
+FROM $BASEIMAGE
+USER 0/config/crabserver/
 RUN mkdir /tmp/hotpatch
 COPY manage.diff run.sh.diff Main.py.diff /tmp/hotpatch/
 RUN cd /tmp/hotpatch \
