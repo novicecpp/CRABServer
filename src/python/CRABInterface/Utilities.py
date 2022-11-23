@@ -197,8 +197,8 @@ def validate_dict(argname, param, safe, mandatoryargs=None, optionalargs=None, o
     if not isinstance(data, dict):
         raise InvalidParameter("Params is not a dictionary encoded as JSON object")
     paramSet = set(data.keys())
-    mandatoryParams = set(mandatoryargs)
-    optionalParams = set(optionalargs)
+    mandatoryParams = set(mandatoryargs) if mandatoryargs else set()
+    optionalParams = set(optionalargs) if optionalargs else set()
     # is every mandatory argument also in the provided args?
     if not mandatoryargs <= paramSet:
         msg =  "Params does not contain all the mandatory arguments. "
