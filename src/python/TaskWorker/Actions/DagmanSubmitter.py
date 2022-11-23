@@ -110,7 +110,7 @@ def addCRABInfoToClassAd(ad, info):
     if 'accelerator_jdl' in info and info['accelerator_jdl']:
         for jdl in info['accelerator_jdl'].split('\n'):
             adName, adVal = jdl.lstrip('+').split('=', 1)
-            ad[adName] = classad.quote(adVal)
+            ad[adName] = adVal
 
 
 class ScheddStats(dict):

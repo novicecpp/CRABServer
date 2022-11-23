@@ -508,12 +508,12 @@ class DagmanCreator(TaskAction):
                 info['accelerator_jdl'] += '\n'
                 info['accelerator_jdl'] += f"+GPUMemoryMB={gpuMemoryMB}"
             if cudaCapabilities:
-                cudaCapabilities = ','.join(sorted(cudaCapabilities))
+                cudaCapability = ','.join(sorted(cudaCapabilities))
                 info['accelerator_jdl'] += '\n'
                 info['accelerator_jdl'] += f"+CUDACapability={classad.quote(cudaCapabilities)}"
             if cudaRuntime:
                 info['accelerator_jdl'] += '\n'
-                info['accelerator_jdl'] += f"+CUDARuntime={classad.quote(cudaRuntime)}"
+                info['accelerator_jdl'] += f"+CUDARuntime={cudaRuntime}"
         else:
             info['accelerator_jdl'] = ''
         info['extra_jdl'] = '\n'.join(literal_eval(task['tm_extrajdl']))
