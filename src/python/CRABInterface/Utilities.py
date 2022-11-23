@@ -206,7 +206,7 @@ def validate_dict(argname, param, safe, mandatoryargs=None, optionalargs=None, o
         raise InvalidParameter(msg)
     # are there unknown arguments in the data provided?
     unknownParams = paramSet - mandatoryParams - optionalParams
-    if unknow:
+    if unknownParams:
         msg = f"Params contains arguments that are not supported. Args provided: {paramSet}"
         raise InvalidParameter(msg)
     dictParam = RESTArgs([], copy.deepcopy(data))
