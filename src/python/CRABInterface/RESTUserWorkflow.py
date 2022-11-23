@@ -420,7 +420,7 @@ class RESTUserWorkflow(RESTEntity):
             # validate acceleratorparams
             optionalAcceleratorKeys = ["GPUMemoryMB", "CUDARuntime", "CUDACapabilities"]
             with validate_dict("acceleratorparams", param, safe, optional=True, optionalkeys=optionalAcceleratorKeys) as (accParams, accSafe):
-                validate_num("GPUMemoryMB", accParams, accSafe, optional=True, minval=0)
+                validate_num("GPUMemoryMB", accParams, accSafe, minval=0)
                 validate_strlist("CUDACapabilities", accParams, accSafe, RX_CUDA_VERSION)
                 validate_str("CUDARuntime", accParams, accSafe, RX_CUDA_VERSION, optional=True)
             # check if requireaccelerator false but acceleratorparams exist
