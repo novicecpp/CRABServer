@@ -557,7 +557,7 @@ class RESTUserWorkflow(RESTEntity):
         user_config = {
             'partialdataset': True if partialdataset else False,
             'requireaccelerator': True if requireaccelerator else False,
-            'accceleratorparams': acceleratorparams if acceleratorparams else None,
+            'acceleratorparams': acceleratorparams if acceleratorparams else None,
         }
 
 
