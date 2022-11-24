@@ -501,19 +501,17 @@ class DagmanCreator(TaskAction):
         if task['tm_user_config']['requireaccelerator']:
             # hardcoding accelerator to GPU (SI currently only have nvidia GPU)
             info['accelerator_jdl'] = '+RequiresGPU=1\nRequestGPUs=1'
-            gpuMemoryMB = task['tm_user_config']['accceleratorparams'].get('GPUMemoryMB', None)
-            cudaCapabilities = task['tm_user_config']['accceleratorparams'].get('CUDACapabilities', None)
-            cudaRuntime = task['tm_user_config']['accceleratorparams'].get('CUDARuntime', None)
-            if gpuMemoryMB:
-                info['accelerator_jdl'] += '\n'
-                info['accelerator_jdl'] += f"+GPUMemoryMB={gpuMemoryMB}"
-            if cudaCapabilities:
-                cudaCapability = ','.join(sorted(cudaCapabilities))
-                info['accelerator_jdl'] += '\n'
-                info['accelerator_jdl'] += f"+CUDACapability={classad.quote(cudaCapability)}"
-            if cudaRuntime:
-                info['accelerator_jdl'] += '\n'
-                info['accelerator_jdl'] += f"+CUDARuntime={classad.quote(cudaRuntime)}"
+            if task['tm_user_config']['acceleratorparams']:
+                gpuMemoryMB = task['tm_user_config']['accceleratorparams'].get('GPUMemoryMB', None)
+                cudaCapabilities = task['tm_user_config']['accceleratorparams'].get('CUDACapabilities', None)
+                cudaRuntime = task['tm_user_config']['accceleratorparams'].get('CUDARuntime', None)
+                if gpuMemoryMB:
+                    info['accelerator_jdl'] += f"\n+GPUMemoryMB={gpuMemoryMB}"
+                if cudaCapabilities:
+                    cudaCapability = ','.join(sorted(cudaCapabilities))
+                    info['accelerator_jdl'] += f"\n+CUDACapability={classad.quote(cudaCapability)}"
+                if cudaRuntime:
+                    info['accelerator_jdl'] += f"\n+CUDARuntime={classad.quote(cudaRuntime)}"
         else:
             info['accelerator_jdl'] = ''
         info['extra_jdl'] = '\n'.join(literal_eval(task['tm_extrajdl']))
