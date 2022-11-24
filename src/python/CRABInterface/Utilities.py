@@ -187,9 +187,10 @@ def validate_dict(argname, param, safe, maxjsonsize=1024):
     JSON-like dict object, check if json-string exceeds `maxjsonsize`
     before deserialize with json.loads()
 
-    Then, as contextmanager, validate_dict yield a tuple of RESTArgs (dictParam, dictSafe) and
-    execute the block nested in "with" statement, which expected
-    `validate_*` to validate all keys inside json, in the same way as
+    Then, as contextmanager, validate_dict yield a tuple of RESTArgs
+    (dictParam, dictSafe) and execute the block nested in "with" statement,
+    which expected `validate_*` to validate all keys inside json, in the
+ same way as
     `param`/`safe` do in DatabaseRESETApi.validate(), but against
     dictParam/dictSafe instead.
 
@@ -200,12 +201,17 @@ def validate_dict(argname, param, safe, maxjsonsize=1024):
 
     Note that validate_dict itself does not support optional argument.
 
-    Usage example in DatabaseRESTApi.validate():
+    Example in DatabaseRESTApi.validate() to validate "acceleratorparams"
+    optional dict parameter with 1 mandatory and 2 optional key
 
-    with validate_dict("acceleratorparams", param, safe) as (accParams, accSafe):
-        validate_num("GPUMemoryMB", accParams, accSafe, optional=True, minval=0)
-        validate_strlist("CUDACapabilities", accParams, accSafe, RX_CUDA_VERSION)
-        validate_str("CUDARuntime", accParams, accSafe, RX_CUDA_VERSION, optional=True)
+    if param.kwargs.get("acceleratorparams", None):
+        with validate_dict("acceleratorparams", param, safe) as (accParams, accSafe):
+            custom_err = "Incorrect '{}' parameter. Parameter is also required when Site.requireAccelerator is True"
+            validate_num("GPUMemoryMB", accParams, accSafe, minval=0, custom_err=custom_err.format("GPUMemoryMB"))
+            validate_strlist("CUDACapabilities", accParams, accSafe, RX_CUDA_VERSION)
+            validate_str("CUDARuntime", accParams, accSafe, RX_CUDA_VERSION, optional=True)
+    else:
+        safe.kwargs["acceleratorparams"] = None
     """
 
     val = param.kwargs.get(argname, None)
