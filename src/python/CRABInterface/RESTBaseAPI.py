@@ -69,9 +69,9 @@ class RESTBaseAPI(DatabaseRESTApi):
 
         import pdb; pdb.set_trace()
         logfmt = logging.Formatter('%(message)s Type=cherrypylog')
-        h = cherrypy.log.error_log._get_builtin_handler()
+        h = cherrypy.log._get_builtin_handler(cherrypy.log.access_log, 'screen')
         h.setFormatter(logfmt)
-        h = cherrypy.log.access_log._get_builtin_handler()
+        h = cherrypy.log._get_builtin_handler(cherrypy.log.error_log, 'screen')
         h.setFormatter(logfmt)
         pdb.set_trace()
         self.logger = logging.getLogger("CRABLogger.RESTBaseAPI")
