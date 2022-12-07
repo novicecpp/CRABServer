@@ -157,6 +157,10 @@ class RESTBaseAPI(DatabaseRESTApi):
         RESTEntities and other parts of the code can retrieve it by calling: logging.getLogger('CRABLogger.ChildName')
         ChildName is the specific name of the logger (child of CRABLogger). Using childs in that way we can configure
         the logging in a flexible way (a module logs at DEBUG level to a file, another module logs at INFO level to stdout, etc)
+
+        In case `logfile=None`, we setup logger to stream to stdout/stderr
+        instead. Cherrypy and CRAB log message will have "Type=cherrypylog"
+        and "Type=crablog" suffix respectively.
         """
         import logging.handlers
         logger = logging.getLogger('CRABLogger')
@@ -165,9 +169,10 @@ class RESTBaseAPI(DatabaseRESTApi):
                 hdlr = logging.handlers.TimedRotatingFileHandler(logfile, when='D', interval=1, backupCount=keptDays)
                 formatter = logging.Formatter('%(asctime)s:%(trace_id)s:%(levelname)s:%(module)s:%(message)s')
             else:
+
                 hdlr = logging.StreamHandler()
                 formatter = logging.Formatter('%(asctime)s:%(trace_id)s:%(levelname)s:%(module)s:%(message)s Type=crablog')
-                # change log format of cherry to append logtype string
+                # change log format of cherry to append "Type=cherrypylog"
                 logfmt = logging.Formatter('%(message)s Type=cherrypylog')
                 h = cherrypy.log._get_builtin_handler(cherrypy.log.access_log, 'screen')
                 h.setFormatter(logfmt)
@@ -177,11 +182,11 @@ class RESTBaseAPI(DatabaseRESTApi):
             # add trace_id to log with filter class
             f = TraceIDFilter()
             hdlr.addFilter(f)
-
             logger.addHandler(hdlr)
             logger.setLevel(loglevel)
         else:
             logger.addHandler( NullHandler() )
+
 
 class TraceIDFilter(logging.Filter):
     """
