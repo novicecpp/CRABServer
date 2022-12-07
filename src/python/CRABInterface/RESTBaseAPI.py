@@ -66,9 +66,14 @@ class RESTBaseAPI(DatabaseRESTApi):
 
         self._initLogger( getattr(config, 'loggingFile', None), getattr(config, 'loggingLevel', None),
                           getattr(config, 'keptLogDays', 0))
-        #cherrypy.log._get_builtin_handler()
+
         import pdb; pdb.set_trace()
-        self._config = config
+        logfmt = logging.Formatter('%(message)s Type=cherrypylog')
+        h = cherrypy.log.error_log._get_builtin_handler()
+        h.setFormatter(logfmt)
+        h = cherrypy.log.access_log._get_builtin_handler()
+        h.setFormatter(logfmt)
+        pdb.set_trace()
         self.logger = logging.getLogger("CRABLogger.RESTBaseAPI")
 
     def modifynocheck(self, sql, *binds, **kwbinds):
