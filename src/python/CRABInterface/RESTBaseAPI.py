@@ -66,6 +66,8 @@ class RESTBaseAPI(DatabaseRESTApi):
 
         self._initLogger( getattr(config, 'loggingFile', None), getattr(config, 'loggingLevel', None),
                           getattr(config, 'keptLogDays', 0))
+        #cherrypy.log._get_builtin_handler()
+        import pdb; pdb.set_trace()
         self._config = config
         self.logger = logging.getLogger("CRABLogger.RESTBaseAPI")
 
