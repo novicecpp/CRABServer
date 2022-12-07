@@ -66,14 +66,7 @@ class RESTBaseAPI(DatabaseRESTApi):
 
         self._initLogger( getattr(config, 'loggingFile', None), getattr(config, 'loggingLevel', None),
                           getattr(config, 'keptLogDays', 0))
-
-        import pdb; pdb.set_trace()
-        logfmt = logging.Formatter('%(message)s Type=cherrypylog')
-        h = cherrypy.log._get_builtin_handler(cherrypy.log.access_log, 'screen')
-        h.setFormatter(logfmt)
-        h = cherrypy.log._get_builtin_handler(cherrypy.log.error_log, 'screen')
-        h.setFormatter(logfmt)
-        pdb.set_trace()
+        self._config = config
         self.logger = logging.getLogger("CRABLogger.RESTBaseAPI")
 
     def modifynocheck(self, sql, *binds, **kwbinds):
@@ -170,10 +163,16 @@ class RESTBaseAPI(DatabaseRESTApi):
         if loglevel:
             if logfile:
                 hdlr = logging.handlers.TimedRotatingFileHandler(logfile, when='D', interval=1, backupCount=keptDays)
+                formatter = logging.Formatter('%(asctime)s:%(trace_id)s:%(levelname)s:%(module)s:%(message)s')
             else:
                 hdlr = logging.StreamHandler()
-            # add two space and logtype's string for use with grep
-            formatter = logging.Formatter('%(asctime)s:%(trace_id)s:%(levelname)s:%(module)s:%(message)s  Type=crablog')
+                formatter = logging.Formatter('%(asctime)s:%(trace_id)s:%(levelname)s:%(module)s:%(message)s Type=crablog')
+                # change log format of cherry to append logtype string
+                logfmt = logging.Formatter('%(message)s Type=cherrypylog')
+                h = cherrypy.log._get_builtin_handler(cherrypy.log.access_log, 'screen')
+                h.setFormatter(logfmt)
+                h = cherrypy.log._get_builtin_handler(cherrypy.log.error_log, 'screen')
+                h.setFormatter(logfmt)
             hdlr.setFormatter(formatter)
             # add trace_id to log with filter class
             f = TraceIDFilter()
@@ -183,7 +182,6 @@ class RESTBaseAPI(DatabaseRESTApi):
             logger.setLevel(loglevel)
         else:
             logger.addHandler( NullHandler() )
-
 
 class TraceIDFilter(logging.Filter):
     """
