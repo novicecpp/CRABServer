@@ -266,6 +266,8 @@ class PreDAG(object):
             for g in split_result.result[0]:
                 msg = "Created jobgroup with length {0}".format(len(g.getJobs()))
                 self.logger.info(msg)
+            if self.stage == 'tail':
+                raise TaskWorkerException("fake raise exception when tail stage kick-in")
         except TaskWorkerException as e:
             retmsg = "Splitting failed with:\n{0}".format(e)
             self.logger.error(retmsg)
