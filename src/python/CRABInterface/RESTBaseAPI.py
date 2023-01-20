@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 import logging
 import traceback
+import socket
 
 import cherrypy
 from subprocess import getstatusoutput
@@ -169,11 +170,12 @@ class RESTBaseAPI(DatabaseRESTApi):
                 hdlr = logging.handlers.TimedRotatingFileHandler(logfile, when='D', interval=1, backupCount=keptDays)
                 formatter = logging.Formatter('%(asctime)s:%(trace_id)s:%(levelname)s:%(module)s:%(message)s')
             else:
-
+                # We use hostname as pod name, which is same value.
+                podname = socket.gethostname()
                 hdlr = logging.StreamHandler()
-                formatter = logging.Formatter('%(asctime)s:%(trace_id)s:%(levelname)s:%(module)s:%(message)s Type=crablog')
+                formatter = logging.Formatter(f'%(asctime)s:%(trace_id)s:%(levelname)s:%(module)s:%(message)s - Podname={podname} Type=crablog')
                 # change log format of cherry to append "Type=cherrypylog"
-                logfmt = logging.Formatter('%(message)s Type=cherrypylog')
+                logfmt = logging.Formatter(f'%(message)s - Podname={podname} Type=cherrypylog')
                 h = cherrypy.log._get_builtin_handler(cherrypy.log.access_log, 'screen')
                 h.setFormatter(logfmt)
                 h = cherrypy.log._get_builtin_handler(cherrypy.log.error_log, 'screen')
