@@ -279,7 +279,7 @@ class PreDAG(object):
             self.logger.error(retmsg)
             proxy = os.environ.get('X509_USER_PROXY', None)
             self.logger.debug("X509_USER_PROXY: %s", proxy)
-            self.logger.debug("All envvars: \n", str(os.environ)
+            self.logger.debug("All envvars: \n%s", str(os.environ))
             crabserver = CRABRest('test12', proxy, proxy,
                                   retry=20, logger=self.logger, userAgent='CRABTaskWorker')
             crabserver.setDbInstance('devthree')
