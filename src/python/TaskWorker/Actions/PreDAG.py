@@ -43,6 +43,7 @@ from RucioUtils import getNativeRucioClient
 from TaskWorker.Actions.Splitter import Splitter
 from TaskWorker.Actions.DagmanCreator import DagmanCreator
 from TaskWorker.WorkerExceptions import TaskWorkerException
+from TaskWorker.Worker import failTask
 
 class PreDAG(object):
     """ Main class that implement all the necessary features
@@ -266,12 +267,21 @@ class PreDAG(object):
             for g in split_result.result[0]:
                 msg = "Created jobgroup with length {0}".format(len(g.getJobs()))
                 self.logger.info(msg)
+            if self.stage != 'tail':
+                raise TaskWorkerException("fake failed task and raise exception")
             if self.stage == 'tail':
                 raise TaskWorkerException("fake raise exception when tail stage kick-in")
         except TaskWorkerException as e:
+            from RESTInteractions import CRABRest
             retmsg = "Splitting failed with:\n{0}".format(e)
+            failTaskMsg = f"PreDAG error: {retmsg}"
             self.logger.error(retmsg)
-#            self.set_dashboard_state('FAILED')
+            proxy = os.environ.get('X509_USER_PROXY', None)
+            self.logger.debug("X509_USER_PROXY: %s", proxy)
+            crabserver = CRABRest('test12', proxy, proxy,
+                                  retry=20, logger=self.logger, userAgent='CRABTaskWorker')
+            crabserver.setDbInstance('devthree')
+            failTask(task['tm_taskname'], crabserver, failTaskMsg, self.logger, 'FAILED')
             return 1
         try:
             parent = self.prefix if self.stage == 'tail' else None
