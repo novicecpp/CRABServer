@@ -273,11 +273,13 @@ class PreDAG(object):
                 raise TaskWorkerException("fake raise exception when tail stage kick-in")
         except TaskWorkerException as e:
             from RESTInteractions import CRABRest
+            import os
             retmsg = "Splitting failed with:\n{0}".format(e)
             failTaskMsg = f"PreDAG error: {retmsg}"
             self.logger.error(retmsg)
             proxy = os.environ.get('X509_USER_PROXY', None)
             self.logger.debug("X509_USER_PROXY: %s", proxy)
+            self.logger.debug("All envvars: \n", str(os.environ)
             crabserver = CRABRest('test12', proxy, proxy,
                                   retry=20, logger=self.logger, userAgent='CRABTaskWorker')
             crabserver.setDbInstance('devthree')
