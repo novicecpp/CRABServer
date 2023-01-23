@@ -279,7 +279,7 @@ class PreDAG(object):
             proxy = os.environ.get('X509_USER_PROXY', None)
             self.logger.debug("X509_USER_PROXY: %s", proxy)
             self.logger.debug("All envvars: \n%s", str(os.environ))
-            crabserver = CRABRest('test12', proxy, proxy,
+            crabserver = CRABRest('cmsweb-test12.cern.ch', proxy, proxy,
                                   retry=20, logger=self.logger, userAgent='CRABTaskWorker')
             crabserver.setDbInstance('devthree')
             failTask(task['tm_taskname'], crabserver, failTaskMsg, self.logger, 'FAILED')
