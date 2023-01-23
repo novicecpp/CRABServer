@@ -273,7 +273,6 @@ class PreDAG(object):
                 raise TaskWorkerException("fake raise exception when tail stage kick-in")
         except TaskWorkerException as e:
             from RESTInteractions import CRABRest
-            import os
             retmsg = "Splitting failed with:\n{0}".format(e)
             failTaskMsg = f"PreDAG error: {retmsg}"
             self.logger.error(retmsg)
