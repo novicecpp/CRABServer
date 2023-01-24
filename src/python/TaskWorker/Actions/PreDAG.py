@@ -66,32 +66,29 @@ class PreDAG(object):
         self.logger.addHandler(handler)
         self.logger.setLevel(logging.DEBUG)
         self.logger.propagate = False
-        self.getRESTInfoFromJobAd()
-        self.getUserProxy()
 
-    def getRESTInfoFromJobAd(self):
+    def setupCRABRest(self):
+        """
+        Setup CRABRest object and add it to self.crabserver.
+        rest_host and db_instance are come from parsing job ad
+        (copy some code from PostJob.py). Get user proxy from
+        X509_USER_PROXY environment variable.
+        """
         job_ad_file_name = os.environ.get("_CONDOR_JOB_AD", ".job.ad")
         if not os.path.exists(job_ad_file_name) or not os.stat(job_ad_file_name).st_size:
             self.logger.error("Missing job ad!")
             sys.exit(1)
         try:
             job_ad = parseJobAd(job_ad_file_name)
-        except Exception as ex:  # pylint: disable=broad-exception
+        except Exception as ex:
             self.logger.exception("Error parsing job ad: %s", str(ex))
             sys.exit(1)
-        try:
-            self.rest_host = str(job_ad['CRAB_RestHost'])
-            self.db_instance = str(job_ad['CRAB_DbInstance'])
-        except KeyError as ex:
-            self.logger.exception("Could not find attribute in job ad: %s", str(ex))
-            sys.exit(1)
-
-    def getUserProxy(self):
-        if 'X509_USER_PROXY' not in os.environ:
-            errmsg = "X509_USER_PROXY is not present in environment."
-            self.logger.error(errmsg)
-            sys.exit(1)
-        self.proxy = os.environ['X509_USER_PROXY']
+        rest_host = str(job_ad['CRAB_RestHost'])
+        db_instance = str(job_ad['CRAB_DbInstance'])
+        proxy = os.environ['X509_USER_PROXY']
+        self.crabserver = CRABRest(rest_host, proxy, proxy, retry=20,
+                                   logger=self.logger, userAgent='CRABSchedd')
+        self.crabserver.setDbInstance(db_instance)
 
     def readJobStatus(self):
         """Read the job status(es) from the cache_status file and save the relevant info into self.statusCacheInfo"""
@@ -184,6 +181,9 @@ class PreDAG(object):
         completed = set(self.completedJobs(stage=self.stage))
         if len(completed) < self.completion:
             return 4
+
+        # init CRABRest self.crabserver
+        self.setupCRABRest()
 
         self.readProcessedJobs()
         unprocessed = completed - self.processedJobs
@@ -295,18 +295,13 @@ class PreDAG(object):
             for g in split_result.result[0]:
                 msg = "Created jobgroup with length {0}".format(len(g.getJobs()))
                 self.logger.info(msg)
-            if self.stage != 'tail':
-                raise TaskWorkerException("fake failed task and raise exception")
-            if self.stage == 'tail':
-                raise TaskWorkerException("fake raise exception when tail stage kick-in")
+            if 'force_failed_autosplit' in task['tm_taskname']:
+                raise TaskWorkerException("force raise exception on automatic splitting task")
         except TaskWorkerException as e:
             retmsg = "Splitting failed with:\n{0}".format(e)
             failTaskMsg = f"PreDAG error: {retmsg}"
             self.logger.error(retmsg)
-            crabserver = CRABRest(self.rest_host, self.proxy, self.proxy,
-                                  retry=20, logger=self.logger, userAgent='CRABSchedd')
-            crabserver.setDbInstance(self.db_instance)
-            failTask(task['tm_taskname'], crabserver, failTaskMsg, self.logger, 'FAILED')
+            failTask(task['tm_taskname'], self.crabserver, failTaskMsg, self.logger, 'FAILED')
             return 1
         try:
             parent = self.prefix if self.stage == 'tail' else None
@@ -388,7 +383,6 @@ class PreDAG(object):
         task['tm_split_args']['lumis'] = lumis
 
         return True
-
 
 if __name__ == '__main__':
     sys.exit(PreDAG().execute(sys.argv[1:]))
