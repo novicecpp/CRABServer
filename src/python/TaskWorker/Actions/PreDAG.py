@@ -69,30 +69,28 @@ class PreDAG(object):
         self.getRESTInfoFromJobAd()
         self.getUserProxy()
 
-
     def getRESTInfoFromJobAd(self):
         job_ad_file_name = os.environ.get("_CONDOR_JOB_AD", ".job.ad")
         if not os.path.exists(job_ad_file_name) or not os.stat(job_ad_file_name).st_size:
             self.logger.error("Missing job ad!")
-            return 1
+            sys.exit(1)
         try:
             job_ad = parseJobAd(job_ad_file_name)
-        except Exception as ex:
-            msg = "Error parsing job ad: %s" % (str(ex))
-            self.logger.exception(msg)
-            return 1
+        except Exception as ex:  # pylint: disable=broad-exception
+            self.logger.exception("Error parsing job ad: %s", str(ex))
+            sys.exit(1)
         try:
             self.rest_host = str(job_ad['CRAB_RestHost'])
             self.db_instance = str(job_ad['CRAB_DbInstance'])
         except KeyError as ex:
             self.logger.exception("Could not find attribute in job ad: %s", str(ex))
-            return 1
+            sys.exit(1)
 
     def getUserProxy(self):
         if 'X509_USER_PROXY' not in os.environ:
             errmsg = "X509_USER_PROXY is not present in environment."
             self.logger.error(errmsg)
-            return 1
+            sys.exit(1)
         self.proxy = os.environ['X509_USER_PROXY']
 
     def readJobStatus(self):
