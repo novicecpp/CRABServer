@@ -38,10 +38,12 @@ import classad
 
 from WMCore.DataStructs.LumiList import LumiList
 
-from ServerUtilities import getLock, newX509env, MAX_IDLE_JOBS, MAX_POST_JOBS
+from ServerUtilities import getLock, newX509env, MAX_IDLE_JOBS, MAX_POST_JOBS, parseJobAd
+from RESTInteractions import CRABRest
 from RucioUtils import getNativeRucioClient
 from TaskWorker.Actions.Splitter import Splitter
 from TaskWorker.Actions.DagmanCreator import DagmanCreator
+from TaskWorker.Actions.PostJob import PostJob
 from TaskWorker.WorkerExceptions import TaskWorkerException
 from TaskWorker.Worker import failTask
 
@@ -64,6 +66,34 @@ class PreDAG(object):
         self.logger.addHandler(handler)
         self.logger.setLevel(logging.DEBUG)
         self.logger.propagate = False
+        self.getRESTInfoFromJobAd()
+        self.getUserProxy()
+
+
+    def getRESTInfoFromJobAd(self):
+        job_ad_file_name = os.environ.get("_CONDOR_JOB_AD", ".job.ad")
+        if not os.path.exists(job_ad_file_name) or not os.stat(job_ad_file_name).st_size:
+            self.logger.error("Missing job ad!")
+            return 1
+        try:
+            job_ad = parseJobAd(job_ad_file_name)
+        except Exception as ex:
+            msg = "Error parsing job ad: %s" % (str(ex))
+            self.logger.exception(msg)
+            return 1
+        try:
+            self.rest_host = str(job_ad['CRAB_RestHost'])
+            self.db_instance = str(job_ad['CRAB_DbInstance'])
+        except KeyError as ex:
+            self.logger.exception("Could not find attribute in job ad: %s", str(ex))
+            return 1
+
+    def getUserProxy(self):
+        if 'X509_USER_PROXY' not in os.environ:
+            errmsg = "X509_USER_PROXY is not present in environment."
+            self.logger.error(errmsg)
+            return 1
+        self.proxy = os.environ['X509_USER_PROXY']
 
     def readJobStatus(self):
         """Read the job status(es) from the cache_status file and save the relevant info into self.statusCacheInfo"""
@@ -272,16 +302,12 @@ class PreDAG(object):
             if self.stage == 'tail':
                 raise TaskWorkerException("fake raise exception when tail stage kick-in")
         except TaskWorkerException as e:
-            from RESTInteractions import CRABRest
             retmsg = "Splitting failed with:\n{0}".format(e)
             failTaskMsg = f"PreDAG error: {retmsg}"
             self.logger.error(retmsg)
-            proxy = os.environ.get('X509_USER_PROXY', None)
-            self.logger.debug("X509_USER_PROXY: %s", proxy)
-            self.logger.debug("All envvars: \n%s", str(os.environ))
-            crabserver = CRABRest('cmsweb-test12.cern.ch', proxy, proxy,
-                                  retry=20, logger=self.logger, userAgent='CRABTaskWorker')
-            crabserver.setDbInstance('devthree')
+            crabserver = CRABRest(self.rest_host, self.proxy, self.proxy,
+                                  retry=20, logger=self.logger, userAgent='CRABSchedd')
+            crabserver.setDbInstance(self.db_instance)
             failTask(task['tm_taskname'], crabserver, failTaskMsg, self.logger, 'FAILED')
             return 1
         try:
