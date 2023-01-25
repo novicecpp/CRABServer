@@ -316,7 +316,9 @@ class PreDAG(object):
         except TaskWorkerException as e:
             retmsg = "DAG creation failed with:\n{0}".format(e)
             self.logger.error(retmsg)
-#            self.set_dashboard_state('FAILED')
+            failTaskMsg = f"PreDAG error: {retmsg}"
+            self.logger.error(retmsg)
+            failTask(task['tm_taskname'], self.crabserver, failTaskMsg, self.logger, 'FAILED')
             return 1
         self.saveProcessedJobs(unprocessed)
         return 0
