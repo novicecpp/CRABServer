@@ -312,7 +312,7 @@ class DBSDataDiscovery(DataDiscovery):
             blocks = self.dbs.listFileBlocks(inputDataset)
             self.logger.debug("Dataset's block from DBS: %s ", blocks)
             if inputBlocks:
-                blocks = [x for x in blocks if blocks in inputBlocks]
+                blocks = [x for x in blocks if x in inputBlocks]
                 self.logger.debug("Matched inputBlocks: %s ", blocks)
             if secondaryDataset:
                 secondaryBlocks = self.dbs.listFileBlocks(secondaryDataset)
