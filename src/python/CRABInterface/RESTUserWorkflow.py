@@ -19,7 +19,7 @@ from CRABInterface.RESTExtensions import authz_owner_match
 from CRABInterface.Regexps import (RX_TASKNAME, RX_ACTIVITY, RX_JOBTYPE, RX_GENERATOR, RX_LUMIEVENTS, RX_CMSSW, RX_ARCH, RX_DATASET,
     RX_CMSSITE, RX_SPLIT, RX_CACHENAME, RX_CACHEURL, RX_LFN, RX_USERFILE, RX_VOPARAMS, RX_DBSURL, RX_LFNPRIMDS, RX_OUTFILES,
     RX_RUNS, RX_LUMIRANGE, RX_SCRIPTARGS, RX_SCHEDD_NAME, RX_COLLECTOR, RX_SUBRESTAT, RX_JOBID, RX_ADDFILE,
-    RX_ANYTHING, RX_USERNAME, RX_DATE, RX_MANYLINES_SHORT, RX_CUDA_VERSION, RX_BLOCK_UUID)
+    RX_ANYTHING, RX_USERNAME, RX_DATE, RX_MANYLINES_SHORT, RX_CUDA_VERSION, RX_BLOCK)
 from CRABInterface.Utilities import CMSSitesCache, conn_handler, getDBinstance, validate_dict
 from ServerUtilities import checkOutLFN, generateTaskName
 
@@ -355,7 +355,7 @@ class RESTUserWorkflow(RESTEntity):
                     raise InvalidParameter(msg)
 
             validate_str("inputdata", param, safe, RX_DATASET, optional=True)
-            validate_strlist("inputblocks", param, safe, RX_BLOCK_UUID)
+            validate_strlist("inputblocks", param, safe, RX_BLOCK)
 
             ## The client is not forced to define the primary dataset. So make sure to have
             ## defaults or take it from the input dataset. The primary dataset is needed for
