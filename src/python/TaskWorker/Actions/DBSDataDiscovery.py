@@ -296,7 +296,7 @@ class DBSDataDiscovery(DataDiscovery):
         self.logger.debug("Data discovery through %s for %s", self.dbs, self.taskName)
 
         inputDataset = kwargs['task']['tm_input_dataset']
-        inputBlocks = kwargs['task']['user_config']['inputblocks']
+        inputBlocks = kwargs['task']['tm_user_config']['inputblocks']
         secondaryDataset = kwargs['task'].get('tm_secondary_input_dataset', None)
 
         # the isUserDataset flag is used to look for data location in DBS instead of Rucio
