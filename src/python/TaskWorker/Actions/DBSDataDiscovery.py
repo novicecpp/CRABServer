@@ -489,7 +489,7 @@ class DBSDataDiscovery(DataDiscovery):
         try:
             filedetails = self.dbs.listDatasetFileDetails(inputDataset, getParents=True, getLumis=needLumiInfo, validFileOnly=0)
             if inputBlocks:
-                for key, infos in filedetails.items():
+                for key, infos in filedetails.copy().items():
                     if not infos['BlockName'] in inputBlocks:
                         del filedetails[key]
             if secondaryDataset:
