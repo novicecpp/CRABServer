@@ -298,7 +298,7 @@ class DBSDataDiscovery(DataDiscovery):
         inputDataset = kwargs['task']['tm_input_dataset']
         inputBlocks = kwargs['task']['tm_user_config']['inputblocks']
         if inputBlocks:
-            msg = f'Only {len(inputBlocks)} blocks from "Data.inputBlocks" will be processed.'
+            msg = f'"Only blocks in "Data.inputBlocks" will be processed ({len(inputBlocks)} blocks).'
             self.uploadWarning(msg, self.userproxy, self.taskName)
             self.logger.info(msg)
         secondaryDataset = kwargs['task'].get('tm_secondary_input_dataset', None)
