@@ -19,7 +19,7 @@ from CRABInterface.RESTExtensions import authz_owner_match
 from CRABInterface.Regexps import (RX_TASKNAME, RX_ACTIVITY, RX_JOBTYPE, RX_GENERATOR, RX_LUMIEVENTS, RX_CMSSW, RX_ARCH, RX_DATASET,
     RX_CMSSITE, RX_SPLIT, RX_CACHENAME, RX_CACHEURL, RX_LFN, RX_USERFILE, RX_VOPARAMS, RX_DBSURL, RX_LFNPRIMDS, RX_OUTFILES,
     RX_RUNS, RX_LUMIRANGE, RX_SCRIPTARGS, RX_SCHEDD_NAME, RX_COLLECTOR, RX_SUBRESTAT, RX_JOBID, RX_ADDFILE,
-    RX_ANYTHING, RX_USERNAME, RX_DATE, RX_MANYLINES_SHORT, RX_CUDA_VERSION)
+    RX_ANYTHING, RX_USERNAME, RX_DATE, RX_MANYLINES_SHORT, RX_CUDA_VERSION, RX_BLOCK_UUID)
 from CRABInterface.Utilities import CMSSitesCache, conn_handler, getDBinstance, validate_dict
 from ServerUtilities import checkOutLFN, generateTaskName
 
@@ -343,7 +343,7 @@ class RESTUserWorkflow(RESTEntity):
             validate_str("publishname2", param, safe, RX_ANYTHING, optional=True)
 
             if safe.kwargs['jobtype'] == 'PrivateMC':
-                if param.kwargs['inputdata']:
+                if param.kwargs['inputdata'] or param.kwargs['inputblocks']:
                     msg = "Invalid 'inputdata' parameter."
                     msg += " Job type PrivateMC does not take any input dataset."
                     msg += " If you really intend to run over an input dataset, then you must use job type Analysis."
@@ -354,18 +354,8 @@ class RESTUserWorkflow(RESTEntity):
                     msg += " If you really intend to run over input files, then you must use job type Analysis."
                     raise InvalidParameter(msg)
 
-            ## Client versions < 3.3.1511 may put in the input dataset something that is not
-            ## really an input dataset (for PrivateMC or user input files). So the only case
-            ## in which we are sure that we have to validate the input dataset is when the
-            ## workflow type is Analysis, the workflow does not run on user input files and
-            ## an input dataset is defined (scriptExe may not define an input).
-            ## Once we don't care anymore about backward compatibility with client < 3.3.1511,
-            ## we can uncomment the 1st line below and delete the next 4 lines.
-            #validate_str("inputdata", param, safe, RX_DATASET, optional=True)
-            if safe.kwargs['jobtype'] == 'Analysis' and not safe.kwargs['userfiles'] and 'inputdata' in param.kwargs:
-                validate_str("inputdata", param, safe, RX_DATASET, optional=True)
-            else:
-                validate_str("inputdata", param, safe, RX_ANYTHING, optional=True)
+            validate_str("inputdata", param, safe, RX_DATASET, optional=True)
+            validate_strlist("inputblocks", param, safe, RX_BLOCK_UUID)
 
             ## The client is not forced to define the primary dataset. So make sure to have
             ## defaults or take it from the input dataset. The primary dataset is needed for
@@ -498,7 +488,7 @@ class RESTUserWorkflow(RESTEntity):
             tfileoutfiles, edmoutfiles, runs, lumis,
             totalunits, adduserfiles, oneEventMode, maxjobruntime, numcores, maxmemory, priority, blacklistT1, nonprodsw, lfn, saveoutput,
             faillimit, ignorelocality, userfiles, scriptexe, scriptargs, scheddname, extrajdl, collector, dryrun, ignoreglobalblacklist,
-            partialdataset, requireaccelerator, acceleratorparams):
+            partialdataset, requireaccelerator, acceleratorparams, inputblocks):
         """Perform the workflow injection
 
            :arg str workflow: request name defined by the user;
@@ -557,6 +547,7 @@ class RESTUserWorkflow(RESTEntity):
             'partialdataset': True if partialdataset else False,
             'requireaccelerator': True if requireaccelerator else False,
             'acceleratorparams': acceleratorparams if acceleratorparams else None,
+            'inputblocks': [],
         }
 
 
