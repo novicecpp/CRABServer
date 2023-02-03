@@ -488,6 +488,10 @@ class DBSDataDiscovery(DataDiscovery):
                 self.checkBlocksSize(secondaryBlocksWithLocation)
         try:
             filedetails = self.dbs.listDatasetFileDetails(inputDataset, getParents=True, getLumis=needLumiInfo, validFileOnly=0)
+            if inputBlocks:
+                for key, infos in filedetails.items():
+                    if not infos['blockName'] in inputBlocks:
+                        del filedetails[key]
             if secondaryDataset:
                 moredetails = self.dbs.listDatasetFileDetails(secondaryDataset, getParents=False, getLumis=needLumiInfo, validFileOnly=0)
 
