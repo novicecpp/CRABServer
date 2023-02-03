@@ -547,9 +547,8 @@ class RESTUserWorkflow(RESTEntity):
             'partialdataset': True if partialdataset else False,
             'requireaccelerator': True if requireaccelerator else False,
             'acceleratorparams': acceleratorparams if acceleratorparams else None,
-            'inputblocks': [],
+            'inputblocks': inputblocks if inputblocks else [],
         }
-
 
         return self.userworkflowmgr.submit(workflow=workflow, activity=activity, jobtype=jobtype, jobsw=jobsw, jobarch=jobarch,
                                            inputdata=inputdata, primarydataset=primarydataset, nonvaliddata=nonvaliddata, use_parent=useparent,

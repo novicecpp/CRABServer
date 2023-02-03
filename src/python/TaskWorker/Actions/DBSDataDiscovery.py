@@ -296,6 +296,7 @@ class DBSDataDiscovery(DataDiscovery):
         self.logger.debug("Data discovery through %s for %s", self.dbs, self.taskName)
 
         inputDataset = kwargs['task']['tm_input_dataset']
+        inputBlocks = kwargs['task']['user_config']['inputblocks']
         secondaryDataset = kwargs['task'].get('tm_secondary_input_dataset', None)
 
         # the isUserDataset flag is used to look for data location in DBS instead of Rucio
@@ -309,6 +310,10 @@ class DBSDataDiscovery(DataDiscovery):
         try:
             # Get the list of blocks for the locations.
             blocks = self.dbs.listFileBlocks(inputDataset)
+            self.logger.debug("Dataset's block from DBS: %s ", blocks)
+            if inputBlocks:
+                blocks = [x for x in blocks if blocks in inputBlocks]
+                self.logger.debug("Matched inputBlocks: %s ", blocks)
             if secondaryDataset:
                 secondaryBlocks = self.dbs.listFileBlocks(secondaryDataset)
         except DBSReaderError as dbsexc:
