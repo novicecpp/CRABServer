@@ -343,7 +343,7 @@ class RESTUserWorkflow(RESTEntity):
             validate_str("publishname2", param, safe, RX_ANYTHING, optional=True)
 
             if safe.kwargs['jobtype'] == 'PrivateMC':
-                if param.kwargs['inputdata'] or param.kwargs['inputblocks']:
+                if param.kwargs['inputdata'] or param.kwargs.get('inputblocks', None):
                     msg = "Invalid 'inputdata' parameter."
                     msg += " Job type PrivateMC does not take any input dataset."
                     msg += " If you really intend to run over an input dataset, then you must use job type Analysis."
@@ -418,7 +418,8 @@ class RESTUserWorkflow(RESTEntity):
                 safe.kwargs["acceleratorparams"] = None
             # Reject the task if inputblock is provided for USER dataset.
             dbsInstance = parseDBSInstance(safe.kwargs['dbsurl'])
-            if param.kwargs['inputblocks'] and isDatasetUserDataset(safe.kwargs['inputdata'], dbsInstance):
+            if param.kwargs.get('inputblocks', None) and \
+               isDatasetUserDataset(safe.kwargs['inputdata'], dbsInstance):
                 msg = "'inputblocks' for USER dataset is not supported."
                 raise InvalidParameter(msg)
             validate_strlist("inputblocks", param, safe, RX_BLOCK)
