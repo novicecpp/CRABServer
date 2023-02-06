@@ -971,5 +971,5 @@ def isDatasetUserDataset(inputDataset, dbsInstance):
     >>> isDatasetUserDataset(dataset, dbs)
     True
     """
-    return (dbsInstance.split('/')[2] != 'global') and \
+    return (dbsInstance.split('/')[1] != 'global') and \
                 (inputDataset.split('/')[-1] == 'USER')
