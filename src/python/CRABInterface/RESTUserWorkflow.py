@@ -354,7 +354,19 @@ class RESTUserWorkflow(RESTEntity):
                     msg += " If you really intend to run over input files, then you must use job type Analysis."
                     raise InvalidParameter(msg)
 
-            validate_str("inputdata", param, safe, RX_DATASET, optional=True)
+            ## Client versions < 3.3.1511 may put in the input dataset something that is not
+            ## really an input dataset (for PrivateMC or user input files). So the only case
+            ## in which we are sure that we have to validate the input dataset is when the
+            ## workflow type is Analysis, the workflow does not run on user input files and
+            ## an input dataset is defined (scriptExe may not define an input).
+            ## Once we don't care anymore about backward compatibility with client < 3.3.1511,
+            ## we can uncomment the 1st line below and delete the next 4 lines.
+            #validate_str("inputdata", param, safe, RX_DATASET, optional=True)
+            if safe.kwargs['jobtype'] == 'Analysis' and not safe.kwargs['userfiles'] and 'inputdata' in param.kwargs:
+                validate_str("inputdata", param, safe, RX_DATASET, optional=True)
+            else:
+                validate_str("inputdata", param, safe, RX_ANYTHING, optional=True)
+
 
             ## The client is not forced to define the primary dataset. So make sure to have
             ## defaults or take it from the input dataset. The primary dataset is needed for
@@ -418,7 +430,6 @@ class RESTUserWorkflow(RESTEntity):
                 safe.kwargs["acceleratorparams"] = None
             # Reject the task if inputblock is provided for USER dataset.
             dbsInstance = parseDBSInstance(safe.kwargs['dbsurl'])
-            import pdb; pdb.set_trace()
             if param.kwargs.get('inputblocks', None) and \
                isDatasetUserDataset(safe.kwargs['inputdata'], dbsInstance):
                 msg = "'inputblocks' for USER dataset is not supported."
