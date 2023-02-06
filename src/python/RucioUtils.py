@@ -14,14 +14,14 @@ def getNativeRucioClient(config=None, logger=None):
     logger.info("Initializing native Rucio client")
     from rucio.client import Client
 
+    logger.debug("rucio cert: %s\nrucio key: %s", rucio_cert, rucio_key)
+    rucio_cert = getattr(config.Services, "Rucio_cert", config.TaskWorker.cmscert)
+    rucio_key = getattr(config.Services, "Rucio_key", config.TaskWorker.cmskey)
     nativeClient = Client(
         rucio_host=config.Services.Rucio_host,
         auth_host=config.Services.Rucio_authUrl,
         ca_cert=config.Services.Rucio_caPath,
         account=config.Services.Rucio_account,
-        rucio_cert = getattr(config.Services, "Rucio_cert", config.TaskWorker.cmscert)
-        rucio_key = getattr(config.Services, "Rucio_key", config.TaskWorker.cmskey)
-        logger.debug("rucio cert: %s\nrucio key: %s", rucio_cert, rucio_key)
         creds={"client_cert": rucio_cert, "client_key": rucio_key},
         auth_type='x509'
     )
