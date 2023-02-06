@@ -418,6 +418,7 @@ class RESTUserWorkflow(RESTEntity):
                 safe.kwargs["acceleratorparams"] = None
             # Reject the task if inputblock is provided for USER dataset.
             dbsInstance = parseDBSInstance(safe.kwargs['dbsurl'])
+            import pdb; pdb.set_trace()
             if param.kwargs.get('inputblocks', None) and \
                isDatasetUserDataset(safe.kwargs['inputdata'], dbsInstance):
                 msg = "'inputblocks' for USER dataset is not supported."
