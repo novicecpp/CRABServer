@@ -14,7 +14,7 @@ from WMCore.Services.DBS.DBSErrors import DBSReaderError
 
 from TaskWorker.WorkerExceptions import TaskWorkerException, TapeDatasetException
 from TaskWorker.Actions.DataDiscovery import DataDiscovery
-from ServerUtilities import FEEDBACKMAIL
+from ServerUtilities import FEEDBACKMAIL, parseDBSInstance, isDatasetUserDataset
 from RucioUtils import getNativeRucioClient
 
 from rucio.common.exception import (DuplicateRule, DataIdentifierAlreadyExists, DuplicateContent,
@@ -288,7 +288,7 @@ class DBSDataDiscovery(DataDiscovery):
         # instead, we parse it from the URL
         # if url is 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
         # then self.dbsInstance needs to be 'prod/global'
-        self.dbsInstance = "{}/{}".format(dbsurl.split("//")[1].split("/")[2], dbsurl.split("//")[1].split("/")[3])
+        self.dbsInstance = parseDBSInstance(dbsurl)
 
         self.taskName = kwargs['task']['tm_taskname']           # pylint: disable=W0201
         self.username = kwargs['task']['tm_username']           # pylint: disable=W0201
@@ -304,8 +304,7 @@ class DBSDataDiscovery(DataDiscovery):
         secondaryDataset = kwargs['task'].get('tm_secondary_input_dataset', None)
 
         # the isUserDataset flag is used to look for data location in DBS instead of Rucio
-        isUserDataset = (self.dbsInstance.split('/')[1] != 'global') and \
-                        (inputDataset.split('/')[-1] == 'USER')
+        isUserDataset = isDatasetUserDataset(inputDataset, self.dbsInstance)
 
         self.checkDatasetStatus(inputDataset, kwargs)
         if secondaryDataset:
@@ -315,6 +314,9 @@ class DBSDataDiscovery(DataDiscovery):
             # Get the list of blocks for the locations.
             blocks = self.dbs.listFileBlocks(inputDataset)
             self.logger.debug("Datablock from DBS: %s ", blocks)
+            # In case somehow there is inputBlocks with USER data
+            if inputBlocks and isUserDataset:
+                raise TaskWorkerException("Running on specific datablock(s) is not support for USER dataset.")
             if inputBlocks:
                 blocks = [x for x in blocks if x in inputBlocks]
                 self.logger.debug("Matched inputBlocks: %s ", blocks)

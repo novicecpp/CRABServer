@@ -21,7 +21,7 @@ from CRABInterface.Regexps import (RX_TASKNAME, RX_ACTIVITY, RX_JOBTYPE, RX_GENE
     RX_RUNS, RX_LUMIRANGE, RX_SCRIPTARGS, RX_SCHEDD_NAME, RX_COLLECTOR, RX_SUBRESTAT, RX_JOBID, RX_ADDFILE,
     RX_ANYTHING, RX_USERNAME, RX_DATE, RX_MANYLINES_SHORT, RX_CUDA_VERSION, RX_BLOCK)
 from CRABInterface.Utilities import CMSSitesCache, conn_handler, getDBinstance, validate_dict
-from ServerUtilities import checkOutLFN, generateTaskName
+from ServerUtilities import checkOutLFN, generateTaskName, isDatasetUserDataset, parseDBSInstance
 
 
 
@@ -355,7 +355,6 @@ class RESTUserWorkflow(RESTEntity):
                     raise InvalidParameter(msg)
 
             validate_str("inputdata", param, safe, RX_DATASET, optional=True)
-            validate_strlist("inputblocks", param, safe, RX_BLOCK)
 
             ## The client is not forced to define the primary dataset. So make sure to have
             ## defaults or take it from the input dataset. The primary dataset is needed for
@@ -417,6 +416,13 @@ class RESTUserWorkflow(RESTEntity):
                     validate_str("CUDARuntime", accParams, accSafe, RX_CUDA_VERSION, optional=True)
             else:
                 safe.kwargs["acceleratorparams"] = None
+            # Reject the task if inputblock is provided for USER dataset.
+            dbsInstance = parseDBSInstance(safe.kwargs['dbsurl']):
+            if param.kwargs['inputblocks'] and isDatasetUserDataset(safe.kwargs['inputdata'], dbsInstance):
+                msg = "'inputblocks' for USER dataset is not supported."
+                raise InvalidParameter(msg)
+            validate_strlist("inputblocks", param, safe, RX_BLOCK)
+
 
         elif method in ['POST']:
             validate_str("workflow", param, safe, RX_TASKNAME, optional=False)
