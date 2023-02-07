@@ -314,9 +314,6 @@ class DBSDataDiscovery(DataDiscovery):
             # Get the list of blocks for the locations.
             blocks = self.dbs.listFileBlocks(inputDataset)
             self.logger.debug("Datablock from DBS: %s ", blocks)
-            # In case somehow there is inputBlocks with USER data
-            if inputBlocks and isUserDataset:
-                raise TaskWorkerException("Running on specific datablock(s) is not support for USER dataset.")
             if inputBlocks:
                 blocks = [x for x in blocks if x in inputBlocks]
                 self.logger.debug("Matched inputBlocks: %s ", blocks)
