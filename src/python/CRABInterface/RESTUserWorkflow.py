@@ -343,7 +343,7 @@ class RESTUserWorkflow(RESTEntity):
             validate_str("publishname2", param, safe, RX_ANYTHING, optional=True)
 
             if safe.kwargs['jobtype'] == 'PrivateMC':
-                if param.kwargs['inputdata'] or param.kwargs.get('inputblocks', None):
+                if param.kwargs['inputdata'] or 'inputblocks' in param.kwargs:
                     msg = "Invalid 'inputdata' parameter."
                     msg += " Job type PrivateMC does not take any input dataset."
                     msg += " If you really intend to run over an input dataset, then you must use job type Analysis."
@@ -366,7 +366,6 @@ class RESTUserWorkflow(RESTEntity):
                 validate_str("inputdata", param, safe, RX_DATASET, optional=True)
             else:
                 validate_str("inputdata", param, safe, RX_ANYTHING, optional=True)
-
 
             ## The client is not forced to define the primary dataset. So make sure to have
             ## defaults or take it from the input dataset. The primary dataset is needed for
