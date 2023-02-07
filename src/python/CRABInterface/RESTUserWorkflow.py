@@ -434,10 +434,6 @@ class RESTUserWorkflow(RESTEntity):
                                     parseDBSInstance(safe.kwargs['dbsurl'])):
                 msg = "'inputblocks' for USER dataset is not supported."
                 raise InvalidParameter(msg)
-            # Reject it if inputblocks is provided but inputdata is not.
-            if param.kwargs.get('inputblocks') and not safe.kwargs['inputdata']:
-                msg = "inputdata must be provide when inputblocks are specified."
-                raise InvalidParameter(msg)
             validate_strlist("inputblocks", param, safe, RX_BLOCK)
             #  Reject it if the blocks are not from its dataset.
             if safe.kwargs["inputblocks"]:
