@@ -42,12 +42,13 @@ class globals:
     last_line: int = 0
 
     # RUCIO/Task variables
-    rucio_scope: str = "user."
+    rucio_scope: str = "user."  # the username will be added in the code
     current_dataset: str = None
     logs_dataset: str = None
     publishname: str = None
     destination: str = None
-    replicas: dict = {}
+    replicas: dict = {}  # will be {'tempRse':[rd,...,rd]} rd is dict. with keys: adler32w, bytes, name, pfn, scope}
+                         # name is the final LFN. scope is not needed since is the same for all files
 
     # Mapping variables
     id2lfn_map: dict = {}
