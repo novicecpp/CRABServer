@@ -141,7 +141,3 @@ RX_SUBPOSTUSERTRANSFER = re.compile(r"^(killTransfers|retryPublication|retryTran
 
 # CUDAVersion style,  i.e. 11.4, 515.43.04
 RX_CUDA_VERSION = re.compile(r"^\d+\.\d+(\.\d+)?$")
-
-# UUID format of block name
-# 3517e1b6-76e3-11e7-a0c8-02163e00d7b3
-RX_BLOCK_UUID = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
