@@ -691,6 +691,8 @@ def monitor_locks_status():
 def make_filedoc_for_db(
         ids: list,
         states: list,
+        dbsBlocknames: list = None,
+        blockCompletes: list = None,
         reasons: list = None,
         rule_ids: list = None
 ):
@@ -706,6 +708,8 @@ def make_filedoc_for_db(
     fileDoc['subresource'] = 'updateTransfers'
     fileDoc['list_of_ids'] = ids
     fileDoc['list_of_transfer_state'] = states
+    fileDoc['list_of_dbs_blockname'] = dbsBlocknames
+    fileDoc['list_of_block_complete'] = blockCompletes
     fileDoc['list_of_fts_instance'] = [
         'https://fts3-cms.cern.ch:8446/' for _ in ids]
     if reasons:
@@ -737,6 +741,17 @@ def update_db(fileDocs: list):
         except Exception as ex:
             updatedb_logger.exception("Error updating documents")
             raise ex
+
+        if fileDoc['list_of_dbs_blockname'] or fileDoc['list_of_block_complete']:
+            fileDoc['subresource'] = 'updateRucioInfo'
+            try:
+                glob.crabserver.post(
+                    api='filetransfers',
+                    data=encodeRequest(fileDoc)
+                )
+            except Exception as ex:
+                updatedb_logger.exception("Error updating documents")
+                raise ex
 
     return True
 
