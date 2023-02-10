@@ -470,11 +470,6 @@ class DBSDataDiscovery(DataDiscovery):
                 msg += "\nWill try to request a full disk copy for you. See"
                 msg += "\n https://twiki.cern.ch/twiki/bin/view/CMSPublic/CRAB3FAQ#crab_submit_fails_with_Task_coul"
                 self.requestTapeRecall(blockList=blocksWithLocation, system='Rucio', msgHead=msg)
-            elif isUserDataset:
-                msg = "msg for"
-                msg += "\nUSER dataset"
-                self.logger.warning(msg)
-                self.uploadWarning(msg, self.userproxy, self.taskName)
             else:
                 msg = "Some blocks are on TAPE only and will not be processed."
                 msg += "\nThere is no automatic recall from tape for data tier %s" % dataTier
