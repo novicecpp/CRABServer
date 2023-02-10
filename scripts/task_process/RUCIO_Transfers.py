@@ -31,7 +31,7 @@ from rucio.common.exception import DataIdentifierAlreadyExists, InvalidObject, F
 import cProfile
 
 
-class globals:
+class globs:
     # RUCIO and CRABRest clients
     crabserver: CRABRest = None
     rucio_client: Client = None
@@ -55,8 +55,8 @@ class globals:
     lfn2id_map: dict = {}
 
 
-# Initialize global dataclass
-g = globals()
+# Initialize glob dataclass
+glob = globs()
 
 
 # TODO: review info level logging information
@@ -69,9 +69,9 @@ logging.basicConfig(
 
 try:
     with open("task_process/transfers/last_transfer.txt", "r") as _last:
-        g.last_line = int(_last.readline())
+        glob.last_line = int(_last.readline())
 except Exception as ex:
-    logging.info(
+    logginglob.info(
         "task_process/transfers/last_transfer.txt does not exists. Starting from the first ever file to transfer")
     logging.exception("")
 
@@ -103,13 +103,13 @@ def init_crabrest_client():
 
     crabrest_logger.info("Loading crab rest client")
     try:
-        g.crabserver = CRABRest(
+        glob.crabserver = CRABRest(
             restInfo['host'],
             localcert=proxy,
             localkey=proxy,
             userAgent='CRABSchedd'
         )
-        g.crabserver.setDbInstance(restInfo['dbInstance'])
+        glob.crabserver.setDbInstance(restInfo['dbInstance'])
     except Exception:
         crabrest_logger.exception("Failed to set connection to crabserver")
         return
@@ -131,16 +131,16 @@ def init_rucio_client():
         with open("task_process/transfers.txt") as _list:
             doc = json.loads(_list.readlines()[0])
             user = doc['username']
-            if not g.destination:
-                g.destination = doc["destination"]
-            if not g.publishname:
-                g.publishname = doc["outputdataset"]
+            if not glob.destination:
+                glob.destination = doc["destination"]
+            if not glob.publishname:
+                glob.publishname = doc["outputdataset"]
     except Exception as ex:
         rucio_logger.exception(
             "task_process/transfers.txt does not exist. Probably no completed jobs in the task yet.", ex)
         return
-    
-    g.logs_dataset = g.publishname + "#LOGS"
+
+    glob.logs_dataset = glob.publishname + "#LOGS"
 
     rucio_logger.info(
         "Checking if task_process/RestInfoForFileTransfers.json exists")
@@ -155,14 +155,14 @@ def init_rucio_client():
             "task_process/RestInfoForFileTransfers.json can't be read. Probably no completed jobs in the task yet.", ex)
         return
 
-    if not g.rucio_client:
+    if not glob.rucio_client:
         rucio_logger.warning(
             "Rucio client not configured, I'm initiating it right now")
         rucio_logger.info("I'm going to configure Rucio client for %s", user)
 
-        g.rucio_scope += user
+        glob.rucio_scope += user
         rucio_logger.debug("Account %s scope: %s with creds %s" %
-                           (user, g.rucio_scope, proxy))
+                           (user, glob.rucio_scope, proxy))
 
         try:
             rc = Client(
@@ -170,8 +170,8 @@ def init_rucio_client():
                 auth_type="x509_proxy",
                 logger=rucio_logger
             )
-            g.rucio_client = rc
-            g.rucio_client.whoami()
+            glob.rucio_client = rc
+            glob.rucio_client.whoami()
         except Exception as ex:
             rucio_logger.error(
                 "Something went wrong when initializing rucio client: %s", ex)
@@ -187,12 +187,12 @@ def check_or_create_container():
     container_exists = False
 
     try:
-        g.rucio_client.add_container(g.rucio_scope, g.publishname)
+        glob.rucio_client.add_container(g.rucio_scope, glob.publishname)
         container_exists = True
-        logging.info("%s container created" % g.publishname)
+        logging.info("%s container created" % glob.publishname)
     except DataIdentifierAlreadyExists:
         logging.info(
-            "%s container already exists, doing nothing", g.publishname)
+            "%s container already exists, doing nothing", glob.publishname)
         container_exists = True
     except Exception as ex:
         logging.error(ex)
@@ -215,8 +215,8 @@ def check_or_create_current_dataset(force_create: bool = False):
 
     if not force_create:
         try:
-            datasets = g.rucio_client.list_content(
-                g.rucio_scope, g.publishname)
+            datasets = glob.rucio_client.list_content(
+                glob.rucio_scope, glob.publishname)
         except Exception as ex:
             checkds_logger.error("Failed to list container content", ex)
             return dataset_exists
@@ -229,32 +229,32 @@ def check_or_create_current_dataset(force_create: bool = False):
         logs_ds_exists = False
 
         for d in datasets:
-            if d['name'] == g.logs_dataset:
+            if d['name'] == glob.logs_dataset:
                 logs_ds_exists = True
             dids.append(d)
 
         # If a ds for logs does not exists, create one
-        if not logs_ds_exists :
+        if not logs_ds_exists:
             try:
-                g.rucio_client.add_dataset(g.rucio_scope, g.logs_dataset)
-                ds_did = {'scope': g.rucio_scope, 'type': "DATASET", 'name': g.logs_dataset}
-                g.rucio_client.add_replication_rule([ds_did], 1, g.destination)
+                glob.rucio_client.add_dataset(g.rucio_scope, glob.logs_dataset)
+                ds_did = {'scope': glob.rucio_scope, 'type': "DATASET", 'name': glob.logs_dataset}
+                glob.rucio_client.add_replication_rule([ds_did], 1, glob.destination)
                 # attach dataset to the container
-                g.rucio_client.attach_dids(g.rucio_scope, g.logs_dataset, [ds_did])
+                glob.rucio_client.attach_dids(g.rucio_scope, glob.logs_dataset, [ds_did])
             except Exception as ex:
                 checkds_logger.exception("Failed to create and attach a logs RUCIO dataset %s" % ex)
 
 
         if len(dids) > 0:
             try:
-                metadata = g.rucio_client.get_metadata_bulk(dids)
+                metadata = glob.rucio_client.get_metadata_bulk(dids)
             except InvalidObject:
                 # Cover the case for which the dataset has been created but has 0 files
                 # FIX: probably a bug on get_metadata_bulk that crash if any of the did has size 0
                 metadata = []
                 for did in dids:
                     metadata.append(g.rucio_client.get_metadata(
-                        g.rucio_scope, did["name"]))
+                        glob.rucio_scope, did["name"]))
             except Exception as ex:
                 checkds_logger.exception(
                     "Failed to get metadata in bulk for dids: ", ex)
@@ -266,16 +266,16 @@ def check_or_create_current_dataset(force_create: bool = False):
 
         if len(open_ds) == 0:
             checkds_logger.warning("No dataset available yet, creating one")
-            g.current_dataset = g.publishname+"#%s" % uuid.uuid4()
+            glob.current_dataset = glob.publishname+"#%s" % uuid.uuid4()
             # create a new dataset
             try:
-                g.rucio_client.add_dataset(g.rucio_scope, g.current_dataset)
-                ds_did = {'scope': g.rucio_scope,
-                          'type': "DATASET", 'name': g.current_dataset}
-                g.rucio_client.add_replication_rule([ds_did], 1, g.destination)
+                glob.rucio_client.add_dataset(g.rucio_scope, glob.current_dataset)
+                ds_did = {'scope': glob.rucio_scope,
+                          'type': "DATASET", 'name': glob.current_dataset}
+                glob.rucio_client.add_replication_rule([ds_did], 1, glob.destination)
                 # attach dataset to the container
-                g.rucio_client.attach_dids(
-                    g.rucio_scope, g.publishname, [ds_did])
+                glob.rucio_client.attach_dids(
+                    glob.rucio_scope, glob.publishname, [ds_did])
                 dataset_exists = True
             except Exception as ex:
                 checkds_logger.exception(
@@ -285,26 +285,26 @@ def check_or_create_current_dataset(force_create: bool = False):
                 "Found more than one open dataset, closing the one with more files and using the other as the current one")
             # TODO: close the most occupied and take the other as the current one -
             # so far we take the first and then let the Publisher close the dataset when task completed
-            g.current_dataset = open_ds[0]
+            glob.current_dataset = open_ds[0]
             dataset_exists = True
         elif len(open_ds) == 1:
             checkds_logger.info(
                 "Found exactly one open dataset, setting it as the current dataset: %s", open_ds[0])
-            g.current_dataset = open_ds[0]
+            glob.current_dataset = open_ds[0]
 
             dataset_exists = True
 
     else:
         checkds_logger.info("Forced creation of a new dataset.")
-        g.current_dataset = g.publishname+"#%s" % uuid.uuid4()
+        glob.current_dataset = glob.publishname+"#%s" % uuid.uuid4()
         # create a new dataset
         try:
-            g.rucio_client.add_dataset(g.rucio_scope, g.current_dataset)
-            ds_did = {'scope': g.rucio_scope,
-                      'type': "DATASET", 'name': g.current_dataset}
-            g.rucio_client.add_replication_rule([ds_did], 1, g.destination)
+            glob.rucio_client.add_dataset(g.rucio_scope, glob.current_dataset)
+            ds_did = {'scope': glob.rucio_scope,
+                      'type': "DATASET", 'name': glob.current_dataset}
+            glob.rucio_client.add_replication_rule([ds_did], 1, glob.destination)
             # attach dataset to the container
-            g.rucio_client.attach_dids(g.rucio_scope, g.publishname, [ds_did])
+            glob.rucio_client.attach_dids(g.rucio_scope, glob.publishname, [ds_did])
             dataset_exists = True
         except Exception as ex:
             checkds_logger.error(
@@ -331,7 +331,7 @@ def create_transfer_dict(input_dict: dict = {}):
         "destination": input_dict["destination"],
         "checksum": input_dict["checksums"]["adler32"].rjust(8, '0'),
         "filesize": input_dict["filesize"],
-        "publishname":     g.publishname
+        "publishname":     glob.publishname
     }
 
     #print(input_dict["source_lfn"], input_dict["checksums"]["adler32"].rjust(8,'0'))
@@ -392,15 +392,15 @@ def get_pfns(rse: str, lfns: list):
 
     pfns = []
     # print(rse)
-    #pfn_0 = g.rucio_client.lfns2pfns(rse.split("_Temp")[0], [g.rucio_scope + ":" + lfns[0]], operation="read")
+    #pfn_0 = glob.rucio_client.lfns2pfns(rse.split("_Temp")[0], [g.rucio_scope + ":" + lfns[0]], operation="read")
 
     map_dict = {}
     try:
-        rgx = g.rucio_client.get_protocols(
+        rgx = glob.rucio_client.get_protocols(
             rse.split("_Temp")[0], protocol_domain='ALL', operation="read")[0]
 
         if not rgx['extended_attributes'] or 'tfc' not in rgx['extended_attributes']:
-            pfn_0 = g.rucio_client.lfns2pfns(
+            pfn_0 = glob.rucio_client.lfns2pfns(
                 rse.split("_Temp")[0], [g.rucio_scope + ":" + lfns[0]], operation="read")
             pfns.append(pfn_0[g.rucio_scope + ":" + lfns[0]])
             prefix = pfn_0[g.rucio_scope + ":" + lfns[0]].split(lfns[0])[0]
@@ -418,7 +418,7 @@ def get_pfns(rse: str, lfns: list):
 
     except TypeError:
         raise TypeError('Cannot determine PFN for LFN %s:%s at %s with proto %s'
-                        % g.rucio_scope, lfn, rse, rgx)
+                        % glob.rucio_scope, lfn, rse, rgx)
 
     pfn_map = {rse: map_dict}
     return pfn_map
@@ -428,7 +428,7 @@ def prepare_replicas(transfer_dicts: list):
     """
     Generate a RUCIO replica list of dict starting from the files in temp RSEs
 
-    Store it in global class at g.replicas
+    Store it in glob class at glob.replicas
 
     """
 
@@ -447,7 +447,7 @@ def prepare_replicas(transfer_dicts: list):
 
     rses_remote = list(dict.fromkeys(rses_remote))
     for rse in rses_remote:
-        g.replicas.update({rse: []})
+        glob.replicas.update({rse: []})
         # collect info for bulk pfn extraction
         # pfn_map = {"rse":{"lfn":"pfn"}}
         lfns = []
@@ -470,9 +470,9 @@ def prepare_replicas(transfer_dicts: list):
         destination_lfn = xdict["destination_lfn"]
         size = xdict["filesize"]
         checksum = xdict["checksum"]
-        replica = {'scope': g.rucio_scope, 'pfn': pfn_map[rse][source_lfn],
+        replica = {'scope': glob.rucio_scope, 'pfn': pfn_map[rse][source_lfn],
                    'name': destination_lfn, 'bytes': size, 'adler32': checksum}
-        g.replicas[rse].append(replica)
+        glob.replicas[rse].append(replica)
         # print(replica['adler32'])
     return
 
@@ -488,7 +488,7 @@ def map_lfns_to_oracle_ids():
                 try:
                     doc = json.loads(_data)
 
-                    g.lfn2id_map.update({doc['id']: doc['destination_lfn']})
+                    glob.lfn2id_map.update({doc['id']: doc['destination_lfn']})
                 except Exception as ex:
                     raise ex
 
@@ -498,6 +498,8 @@ def map_lfns_to_oracle_ids():
 def map_oracle_ids_to_lfns():
     """
     Generate a map from oracle ids to lfns
+    SB: THIS IS ACTUALLY A MAP FROM LFN to ID !!
+    glob.id2lfn_map{lfn:id,...,lfn:id}
     """
 
     if os.path.exists('task_process/transfers.txt'):
@@ -505,7 +507,7 @@ def map_oracle_ids_to_lfns():
             for _data in _list.readlines():
                 try:
                     doc = json.loads(_data)
-                    g.id2lfn_map.update({doc['destination_lfn']: doc['id']})
+                    glob.id2lfn_map.update({doc['destination_lfn']: doc['id']})
                 except Exception as ex:
                     raise ex
 
@@ -514,10 +516,10 @@ def map_oracle_ids_to_lfns():
 
 def register_replicas(input_replicas: dict) -> tuple:
     """
-    Take RUCIO replica dictionary and register replica in RUCIO 
-    (attaching them to the g.current_dataset)
+    Take RUCIO replica dictionary and register replica in RUCIO
+    (attaching them to the glob.current_dataset)
 
-    Eventually check if we went further the g.dataset_file_limit
+    Eventually check if we went further the glob.dataset_file_limit
     in such case close current dataset and open a new one
 
     Store the line number of the current processing
@@ -534,14 +536,14 @@ def register_replicas(input_replicas: dict) -> tuple:
 
     for rse, replicas in input_replicas.items():
 
-        for chunk in chunks(replicas, g.replicas_chunk_size):
+        for chunk in chunks(replicas, glob.replicas_chunk_size):
             # for ch in chunk:
             #    print(ch['name'], ch['pfn'],ch['adler32'])
             try:
-                if not g.rucio_client.add_replicas(rse, chunk):
+                if not glob.rucio_client.add_replicas(rse, chunk):
                     failed.append([x["name"] for x in chunk])
                 else:
-                    dids = [{'scope': g.rucio_scope, 'type': "FILE",
+                    dids = [{'scope': glob.rucio_scope, 'type': "FILE",
                              'name': x["name"]} for x in chunk]
 
                 # keep file in place at least one rule with lifetime (1m) for replicas on TEMP RSE
@@ -549,34 +551,33 @@ def register_replicas(input_replicas: dict) -> tuple:
                 #g.rucio_client.add_replicationrule(dids, 1, rse, purge_replicas=True, lifetime=2629800)
 
                 # add to _current_dataset
-                g.rucio_client.attach_dids(
-                    g.rucio_scope, g.current_dataset, dids)
+                glob.rucio_client.attach_dids(
+                    glob.rucio_scope, glob.current_dataset, dids)
 
                 # TODO: close if update comes > 4h, or is it a Publisher task?
-                success += [x["name"] for x in chunk]
+                success += [{'lfn':x["name"], 'dbsBlock':g.current_dataset, 'complete':'NO'} for x in chunk]
             except FileAlreadyExists:
                 recrep_logger.info(
                     "files were already registered, going ahead checking if attached to the dataset status update and monitor")
                 try:
-                    g.rucio_client.add_files_to_datasets(
-                        [{'scope': g.rucio_scope, 'name': g.current_dataset, 'dids': dids}], ignore_duplicate=True)
+                    glob.rucio_client.add_files_to_datasets(
+                        [{'scope': glob.rucio_scope, 'name': glob.current_dataset, 'dids': dids}], ignore_duplicate=True)
                 except:
                     recrep_logger.exception(
                         "Failing to attach replica %s to dataset" % dids)
                     failed += [x["name"] for x in chunk]
                     continue
-                recrep_logger.debug("files alread registered and attached are: %s" % [
-                                    x["name"] for x in chunk])
-                success += [x["name"] for x in chunk]
+                recrep_logger.debug("files already registered and attached are: %s" %
+                                    [x["name"] for x in chunk])
+                success += [{'lfn':x["name"], 'block':g.current_dataset, 'complete':'NO'} for x in chunk]
             except Exception as ex:
-                recrep_logger.exception("Failing managing replicas %s" % [
-                                        x["name"] for x in chunk])
+                recrep_logger.exception("Failing managing replicas %s" % [x["name"] for x in chunk])
                 failed += [x["name"] for x in chunk]
                 continue
             # check the current number of files in the dataset
-            if len(list(g.rucio_client.list_content(g.rucio_scope, g.current_dataset))) > g.dataset_file_limit:
+            if len(list(g.rucio_client.list_content(g.rucio_scope, glob.current_dataset))) > glob.dataset_file_limit:
                 # -if everything full create new one
-                g.rucio_client.close(g.rucio_scope, g.current_dataset)
+                glob.rucio_client.close(g.rucio_scope, glob.current_dataset)
                 check_or_create_current_dataset(force_create=True)
     # update last read line
     with open("task_process/transfers/last_transfer_new.txt", "w+") as _last:
@@ -609,14 +610,14 @@ def monitor_locks_status():
 
     # get container rules
     try:
-        for ds in g.rucio_client.list_content(g.rucio_scope, g.publishname):
-            rules = g.rucio_client.list_did_rules(g.rucio_scope, ds['name'])
+        for ds in glob.rucio_client.list_content(g.rucio_scope, glob.publishname):
+            rules = glob.rucio_client.list_did_rules(g.rucio_scope, ds['name'])
 
             for r in rules:
                 ruleID = r['id']
                 # print(ruleID)
                 try:
-                    locks_generator = g.rucio_client.list_replica_locks(
+                    locks_generator = glob.rucio_client.list_replica_locks(
                         r['id'])
                 except Exception:
                     monitor_logger.exception('Unable to get replica locks')
@@ -631,7 +632,7 @@ def monitor_locks_status():
                     if filename in already_processed_list:
                         continue
 
-                    if filename not in g.id2lfn_map:
+                    if filename not in glob.id2lfn_map:
                         # This is needed because in Rucio we allow user to publish 2 different tasks
                         # within the same Rucio dataset
                         monitor_logger.debug(
@@ -645,9 +646,9 @@ def monitor_locks_status():
                         list_good.append(filename)
                     # No need to retry job at this point --> DELEGATE TO RUCIO
                     # if status == "STUCK":
-                    #     did = {'scope': g.rucio_scope, 'name': filename }
+                    #     did = {'scope': glob.rucio_scope, 'name': filename }
                     #     monitor_logger.debug("Getting source RSE information for %s" % filename)
-                    #     replica_info =  g.rucio_client.list_replicas([did])
+                    #     replica_info =  glob.rucio_client.list_replicas([did])
                     #     pfns = []
                     #     sources = []
                     #     for rep in replica_info:
@@ -659,12 +660,12 @@ def monitor_locks_status():
                     #     monitor_logger.debug("Sources for %s is %s" % (filename, sources))
                     #     monitor_logger.info("Detaching stuck did %s from %s" % (did['name'], ds['name']))
                     #     try:
-                    #         g.rucio_client.detach_dids(g.rucio_scope, ds['name'], [did])
+                    #         glob.rucio_client.detach_dids(g.rucio_scope, ds['name'], [did])
                     #         for source in sources:
                     #             monitor_logger.debug("Deleting %s from %s" % (filename, source))
                     #             # TODO: not clear yet if we need to remove replicas
                     #             #g.rucio_client.delete_replicas(source, [did])
-                    #             g.rucio_client.declare_bad_file_replicas(pfns, "STUCK crab transfer for rule %s" % ruleID)
+                    #             glob.rucio_client.declare_bad_file_replicas(pfns, "STUCK crab transfer for rule %s" % ruleID)
                     #         list_failed_tmp.append((filename, "Transfer Stuck, with error: %s" % r['error'], sitename))
                     #     except Exception as ex:
                     #         monitor_logger.error("Failed to remove stuck replica: %s" % ex)
@@ -729,7 +730,7 @@ def update_db(fileDocs: list):
     for fileDoc in fileDocs:
         updatedb_logger.debug("updating doc: %s" % fileDoc)
         try:
-            g.crabserver.post(
+            glob.crabserver.post(
                 api='filetransfers',
                 data=encodeRequest(fileDoc)
             )
@@ -774,7 +775,7 @@ def main():
         print(g.last_line)
         for _data in _list.readlines()[int(g.last_line):]:
             try:
-                g.last_line += 1
+                glob.last_line += 1
                 doc = json.loads(_data)
                 transfers_dicts.append(create_transfer_dict(input_dict=doc))
             except Exception as ex:
@@ -788,7 +789,7 @@ def main():
 
     # TODO: if replica and rule exists go ahead anyway --> it means that db update was failling at the previous try
     success_from_registration, failed_from_registration = register_replicas(
-        g.replicas)
+        glob.replicas)
 
     try:
         map_lfns_to_oracle_ids()
@@ -798,8 +799,10 @@ def main():
         raise ex
 
     to_update_success_docs = make_filedoc_for_db(
-        ids=[g.id2lfn_map[x] for x in success_from_registration],
+        ids=[g.id2lfn_map[x['lfn']] for x in success_from_registration],
         states=["SUBMITTED" for x in success_from_registration],
+        dbsBlocknames=[x['dbsBlock'] for x in success_from_registration],
+        blockCompletes=[x['complete'] for x in success_from_registration],
         reasons=None
     )
 
@@ -838,7 +841,7 @@ def main():
             rule_ids=[x[1] for x in ruleid_update]
         )
         update_db([fileDocs_success_monitor,
-                  fileDocs_failed_monitor, fileDocs_ruleid_monitor])
+                   fileDocs_failed_monitor, fileDocs_ruleid_monitor])
     except Exception as ex:
         raise ex
 
