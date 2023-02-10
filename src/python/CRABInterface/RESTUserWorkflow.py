@@ -427,15 +427,9 @@ class RESTUserWorkflow(RESTEntity):
                     validate_str("CUDARuntime", accParams, accSafe, RX_CUDA_VERSION, optional=True)
             else:
                 safe.kwargs["acceleratorparams"] = None
-
-            # Reject it if inputblocks is provided for USER dataset.
-            if param.kwargs.get('inputblocks', None) and \
-               isDatasetUserDataset(safe.kwargs['inputdata'],
-                                    parseDBSInstance(safe.kwargs['dbsurl'])):
-                msg = "'inputblocks' for USER dataset is not supported."
-                raise InvalidParameter(msg)
+            # Validate Data.inputBlocks
             validate_strlist("inputblocks", param, safe, RX_BLOCK)
-            #  Reject it if the blocks are not from its dataset.
+            # Reject it if the blocks are not from its dataset.
             if safe.kwargs["inputblocks"]:
                 for block in safe.kwargs['inputblocks']:
                     if block.find(safe.kwargs['inputdata']) != 0:
