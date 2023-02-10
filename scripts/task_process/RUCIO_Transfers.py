@@ -71,7 +71,7 @@ try:
     with open("task_process/transfers/last_transfer.txt", "r") as _last:
         glob.last_line = int(_last.readline())
 except Exception as ex:
-    logginglob.info(
+    logging.info(
         "task_process/transfers/last_transfer.txt does not exists. Starting from the first ever file to transfer")
     logging.exception("")
 
@@ -187,7 +187,7 @@ def check_or_create_container():
     container_exists = False
 
     try:
-        glob.rucio_client.add_container(g.rucio_scope, glob.publishname)
+        glob.rucio_client.add_container(glob.rucio_scope, glob.publishname)
         container_exists = True
         logging.info("%s container created" % glob.publishname)
     except DataIdentifierAlreadyExists:
@@ -236,11 +236,11 @@ def check_or_create_current_dataset(force_create: bool = False):
         # If a ds for logs does not exists, create one
         if not logs_ds_exists:
             try:
-                glob.rucio_client.add_dataset(g.rucio_scope, glob.logs_dataset)
+                glob.rucio_client.add_dataset(glob.rucio_scope, glob.logs_dataset)
                 ds_did = {'scope': glob.rucio_scope, 'type': "DATASET", 'name': glob.logs_dataset}
                 glob.rucio_client.add_replication_rule([ds_did], 1, glob.destination)
                 # attach dataset to the container
-                glob.rucio_client.attach_dids(g.rucio_scope, glob.logs_dataset, [ds_did])
+                glob.rucio_client.attach_dids(glob.rucio_scope, glob.logs_dataset, [ds_did])
             except Exception as ex:
                 checkds_logger.exception("Failed to create and attach a logs RUCIO dataset %s" % ex)
 
@@ -253,7 +253,7 @@ def check_or_create_current_dataset(force_create: bool = False):
                 # FIX: probably a bug on get_metadata_bulk that crash if any of the did has size 0
                 metadata = []
                 for did in dids:
-                    metadata.append(g.rucio_client.get_metadata(
+                    metadata.append(glob.rucio_client.get_metadata(
                         glob.rucio_scope, did["name"]))
             except Exception as ex:
                 checkds_logger.exception(
@@ -269,7 +269,7 @@ def check_or_create_current_dataset(force_create: bool = False):
             glob.current_dataset = glob.publishname+"#%s" % uuid.uuid4()
             # create a new dataset
             try:
-                glob.rucio_client.add_dataset(g.rucio_scope, glob.current_dataset)
+                glob.rucio_client.add_dataset(glob.rucio_scope, glob.current_dataset)
                 ds_did = {'scope': glob.rucio_scope,
                           'type': "DATASET", 'name': glob.current_dataset}
                 glob.rucio_client.add_replication_rule([ds_did], 1, glob.destination)
@@ -299,12 +299,12 @@ def check_or_create_current_dataset(force_create: bool = False):
         glob.current_dataset = glob.publishname+"#%s" % uuid.uuid4()
         # create a new dataset
         try:
-            glob.rucio_client.add_dataset(g.rucio_scope, glob.current_dataset)
+            glob.rucio_client.add_dataset(glob.rucio_scope, glob.current_dataset)
             ds_did = {'scope': glob.rucio_scope,
                       'type': "DATASET", 'name': glob.current_dataset}
             glob.rucio_client.add_replication_rule([ds_did], 1, glob.destination)
             # attach dataset to the container
-            glob.rucio_client.attach_dids(g.rucio_scope, glob.publishname, [ds_did])
+            glob.rucio_client.attach_dids(glob.rucio_scope, glob.publishname, [ds_did])
             dataset_exists = True
         except Exception as ex:
             checkds_logger.error(
@@ -392,7 +392,7 @@ def get_pfns(rse: str, lfns: list):
 
     pfns = []
     # print(rse)
-    #pfn_0 = glob.rucio_client.lfns2pfns(rse.split("_Temp")[0], [g.rucio_scope + ":" + lfns[0]], operation="read")
+    #pfn_0 = glob.rucio_client.lfns2pfns(rse.split("_Temp")[0], [glob.rucio_scope + ":" + lfns[0]], operation="read")
 
     map_dict = {}
     try:
@@ -401,9 +401,9 @@ def get_pfns(rse: str, lfns: list):
 
         if not rgx['extended_attributes'] or 'tfc' not in rgx['extended_attributes']:
             pfn_0 = glob.rucio_client.lfns2pfns(
-                rse.split("_Temp")[0], [g.rucio_scope + ":" + lfns[0]], operation="read")
-            pfns.append(pfn_0[g.rucio_scope + ":" + lfns[0]])
-            prefix = pfn_0[g.rucio_scope + ":" + lfns[0]].split(lfns[0])[0]
+                rse.split("_Temp")[0], [glob.rucio_scope + ":" + lfns[0]], operation="read")
+            pfns.append(pfn_0[glob.rucio_scope + ":" + lfns[0]])
+            prefix = pfn_0[glob.rucio_scope + ":" + lfns[0]].split(lfns[0])[0]
             # print(pfn_0)
             for lfn in lfns:
                 map_dict.update({lfn: prefix+lfn})
@@ -548,14 +548,14 @@ def register_replicas(input_replicas: dict) -> tuple:
 
                 # keep file in place at least one rule with lifetime (1m) for replicas on TEMP RSE
                 # 2629800 seconds in a month
-                #g.rucio_client.add_replicationrule(dids, 1, rse, purge_replicas=True, lifetime=2629800)
+                #glob.rucio_client.add_replicationrule(dids, 1, rse, purge_replicas=True, lifetime=2629800)
 
                 # add to _current_dataset
                 glob.rucio_client.attach_dids(
                     glob.rucio_scope, glob.current_dataset, dids)
 
                 # TODO: close if update comes > 4h, or is it a Publisher task?
-                success += [{'lfn':x["name"], 'dbsBlock':g.current_dataset, 'complete':'NO'} for x in chunk]
+                success += [{'lfn':x["name"], 'dbsBlock':glob.current_dataset, 'complete':'NO'} for x in chunk]
             except FileAlreadyExists:
                 recrep_logger.info(
                     "files were already registered, going ahead checking if attached to the dataset status update and monitor")
@@ -569,19 +569,19 @@ def register_replicas(input_replicas: dict) -> tuple:
                     continue
                 recrep_logger.debug("files already registered and attached are: %s" %
                                     [x["name"] for x in chunk])
-                success += [{'lfn':x["name"], 'block':g.current_dataset, 'complete':'NO'} for x in chunk]
+                success += [{'lfn':x["name"], 'block':glob.current_dataset, 'complete':'NO'} for x in chunk]
             except Exception as ex:
                 recrep_logger.exception("Failing managing replicas %s" % [x["name"] for x in chunk])
                 failed += [x["name"] for x in chunk]
                 continue
             # check the current number of files in the dataset
-            if len(list(g.rucio_client.list_content(g.rucio_scope, glob.current_dataset))) > glob.dataset_file_limit:
+            if len(list(glob.rucio_client.list_content(glob.rucio_scope, glob.current_dataset))) > glob.dataset_file_limit:
                 # -if everything full create new one
-                glob.rucio_client.close(g.rucio_scope, glob.current_dataset)
+                glob.rucio_client.close(glob.rucio_scope, glob.current_dataset)
                 check_or_create_current_dataset(force_create=True)
     # update last read line
     with open("task_process/transfers/last_transfer_new.txt", "w+") as _last:
-        _last.write(str(g.last_line))
+        _last.write(str(glob.last_line))
     os.rename("task_process/transfers/last_transfer_new.txt",
               "task_process/transfers/last_transfer.txt")
 
@@ -610,8 +610,8 @@ def monitor_locks_status():
 
     # get container rules
     try:
-        for ds in glob.rucio_client.list_content(g.rucio_scope, glob.publishname):
-            rules = glob.rucio_client.list_did_rules(g.rucio_scope, ds['name'])
+        for ds in glob.rucio_client.list_content(glob.rucio_scope, glob.publishname):
+            rules = glob.rucio_client.list_did_rules(glob.rucio_scope, ds['name'])
 
             for r in rules:
                 ruleID = r['id']
@@ -660,11 +660,11 @@ def monitor_locks_status():
                     #     monitor_logger.debug("Sources for %s is %s" % (filename, sources))
                     #     monitor_logger.info("Detaching stuck did %s from %s" % (did['name'], ds['name']))
                     #     try:
-                    #         glob.rucio_client.detach_dids(g.rucio_scope, ds['name'], [did])
+                    #         glob.rucio_client.detach_dids(glob.rucio_scope, ds['name'], [did])
                     #         for source in sources:
                     #             monitor_logger.debug("Deleting %s from %s" % (filename, source))
                     #             # TODO: not clear yet if we need to remove replicas
-                    #             #g.rucio_client.delete_replicas(source, [did])
+                    #             #glob.rucio_client.delete_replicas(source, [did])
                     #             glob.rucio_client.declare_bad_file_replicas(pfns, "STUCK crab transfer for rule %s" % ruleID)
                     #         list_failed_tmp.append((filename, "Transfer Stuck, with error: %s" % r['error'], sitename))
                     #     except Exception as ex:
@@ -772,8 +772,8 @@ def main():
         raise Exception("Failed to check or create valid RUCIO dataset")
 
     with open("task_process/transfers.txt") as _list:
-        print(g.last_line)
-        for _data in _list.readlines()[int(g.last_line):]:
+        print(glob.last_line)
+        for _data in _list.readlines()[int(glob.last_line):]:
             try:
                 glob.last_line += 1
                 doc = json.loads(_data)
@@ -799,7 +799,7 @@ def main():
         raise ex
 
     to_update_success_docs = make_filedoc_for_db(
-        ids=[g.id2lfn_map[x['lfn']] for x in success_from_registration],
+        ids=[glob.id2lfn_map[x['lfn']] for x in success_from_registration],
         states=["SUBMITTED" for x in success_from_registration],
         dbsBlocknames=[x['dbsBlock'] for x in success_from_registration],
         blockCompletes=[x['complete'] for x in success_from_registration],
@@ -807,7 +807,7 @@ def main():
     )
 
     to_update_failed_docs = make_filedoc_for_db(
-        ids=[g.id2lfn_map[x] for x in failed_from_registration],
+        ids=[glob.id2lfn_map[x] for x in failed_from_registration],
         states=["FAILED" for x in failed_from_registration],
         reasons=[
             "Failed to register files within RUCIO" for x in failed_from_registration]
@@ -827,16 +827,16 @@ def main():
 
     try:
         fileDocs_success_monitor = make_filedoc_for_db(
-            ids=[g.id2lfn_map[x] for x in success_from_monitor],
+            ids=[glob.id2lfn_map[x] for x in success_from_monitor],
             states=["DONE" for x in success_from_monitor],
         )
         fileDocs_failed_monitor = make_filedoc_for_db(
-            ids=[g.id2lfn_map[x[0]] for x in failed_from_monitor],
+            ids=[glob.id2lfn_map[x[0]] for x in failed_from_monitor],
             states=["FAILED" for x in failed_from_monitor],
             reasons=[x[1] for x in failed_from_monitor],
         )
         fileDocs_ruleid_monitor = make_filedoc_for_db(
-            ids=[g.id2lfn_map[x[0]] for x in ruleid_update],
+            ids=[glob.id2lfn_map[x[0]] for x in ruleid_update],
             states=["SUBMITTED" for x in ruleid_update],
             rule_ids=[x[1] for x in ruleid_update]
         )
