@@ -378,8 +378,7 @@ class DBSDataDiscovery(DataDiscovery):
                 self.logger.info("USER dataset. Looking up data locations using origin site in DBS")
                 try:
                     locationsMap = self.dbs.listFileBlockLocation(list(blocks))
-                    import pdb; pdb.set_trace()
-                    locationsMap = [x for x in locationsMap if x in inputBlocks]
+                    locationsMap = {x for x in locationsMap if x in inputBlocks}
                 except Exception as ex:
                     raise TaskWorkerException(
                         "CRAB server could not get file locations from DBS for a USER dataset.\n"+\
