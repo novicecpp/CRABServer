@@ -20,6 +20,9 @@ from RucioUtils import getNativeRucioClient
 from rucio.common.exception import (DuplicateRule, DataIdentifierAlreadyExists, DuplicateContent,
                                     InsufficientTargetRSEs, InsufficientAccountLimit, FullStorage)
 
+from dbs.exceptions.dbsClientException import dbsClientException
+
+
 class DBSDataDiscovery(DataDiscovery):
     """Performing the data discovery through CMS DBS service.
     """
@@ -139,9 +142,15 @@ class DBSDataDiscovery(DataDiscovery):
                 blockBytes = next(replicas)['bytes']  # pick first replica for each block, they better all have same size
                 sizeToRecall += blockBytes
             TBtoRecall = sizeToRecall // 1e12
+            dataTier = blockList[0].split('/')[2].split("#")[0]
+            tiersToBlockRecall = getattr(self.config.TaskWorker, 'tiersToBlockRecall', [])
+            maxTierToBlockRecallSize = getattr(self.config.TaskWorker, 'maxTierToBlockRecallSizeGB', 1000) * 1e9
             # Sanity check
             if TBtoRecall > 1e3:
                 msg += '\nDataset size %d TB. Will not trigger autoamatic recall for >1PB. Contact DataOps' % TBtoRecall
+                raise TaskWorkerException(msg)
+            if raw-reco > 50:
+                msg += "1112"
                 raise TaskWorkerException(msg)
             if TBtoRecall > 0:
                 self.logger.info("Total size of data to recall : %d TBytes", TBtoRecall)
@@ -254,6 +263,33 @@ class DBSDataDiscovery(DataDiscovery):
         if system == 'Dynamo':
             raise NotImplementedError
 
+    def getBlocksSize(self, dataset, blocks=None):
+        """
+        [{'block_name': '/GenericTTbar/HC-CMSSW_9_2_6_91X_mcRun1_realistic_v2-v2/AODSIM#3517e1b6-76e3-11e7-a0c8-02163e00d7b3',
+          'file_size': 108723314200,
+          'num_event': 951400,
+          'num_file': 43,
+          'open_for_writing': 0},
+         {'block_name': '/GenericTTbar/HC-CMSSW_9_2_6_91X_mcRun1_realistic_v2-v2/AODSIM#35197562-76e3-11e7-a0c8-02163e00d7b3',
+          'file_size': 4801598954,
+          'num_event': 42000,
+          'num_file': 3,
+          'open_for_writing': 0}]
+        """
+        self.dbs.checkDatasetPath(dataset)
+        args = {'dataset': dataset, 'detail': True}
+        try:
+            blocksSummaries = self.dbs.dbs.listBlockSummaries(**args)
+        except dbsClientException as ex:
+            msg = "Error in DBSReader.listFileBlocks(%s)\n" % dataset
+            msg += "%s\n" % ex
+            raise DBSReaderError(msg) from None
+
+        size = 0
+        for block in blocksSummaries:
+            if not blocks or block['block_name'] in blocks:
+                size += block['file_size']
+        return size
 
     def execute(self, *args, **kwargs):
         """
@@ -313,7 +349,6 @@ class DBSDataDiscovery(DataDiscovery):
         try:
             # Get the list of blocks for the locations.
             blocks = self.dbs.listFileBlocks(inputDataset)
-            import pdb; pdb.set_trace()
             self.logger.debug("Datablock from DBS: %s ", blocks)
             if inputBlocks:
                 blocks = [x for x in blocks if x in inputBlocks]
@@ -470,6 +505,9 @@ class DBSDataDiscovery(DataDiscovery):
                 msg = "Task could not be submitted because not all blocks of dataset %s are on DISK" % inputDataset
                 msg += "\nWill try to request a full disk copy for you. See"
                 msg += "\n https://twiki.cern.ch/twiki/bin/view/CMSPublic/CRAB3FAQ#crab_submit_fails_with_Task_coul"
+                self.requestTapeRecall(blockList=blocksWithLocation, system='Rucio', msgHead=msg)
+            elif inputBlocks and dataTier in getattr(self.config.TaskWorker, 'tiersToBlockRecall', []) and self.getBlocksSize(inputDataset, inputBlocks) < getattr(self.config.TaskWorker, 'maxTierToBlockRecallSizeGB', 1099511627776):
+                msg = "allow to recall block"
                 self.requestTapeRecall(blockList=blocksWithLocation, system='Rucio', msgHead=msg)
             else:
                 msg = "Some blocks are on TAPE only and will not be processed."
