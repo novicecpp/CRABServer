@@ -313,6 +313,7 @@ class DBSDataDiscovery(DataDiscovery):
         try:
             # Get the list of blocks for the locations.
             blocks = self.dbs.listFileBlocks(inputDataset)
+            import pdb; pdb.set_trace()
             self.logger.debug("Datablock from DBS: %s ", blocks)
             if inputBlocks:
                 blocks = [x for x in blocks if x in inputBlocks]
