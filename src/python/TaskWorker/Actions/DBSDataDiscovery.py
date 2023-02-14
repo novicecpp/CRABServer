@@ -142,15 +142,9 @@ class DBSDataDiscovery(DataDiscovery):
                 blockBytes = next(replicas)['bytes']  # pick first replica for each block, they better all have same size
                 sizeToRecall += blockBytes
             TBtoRecall = sizeToRecall // 1e12
-            dataTier = blockList[0].split('/')[2].split("#")[0]
-            tiersToBlockRecall = getattr(self.config.TaskWorker, 'tiersToBlockRecall', [])
-            maxTierToBlockRecallSize = getattr(self.config.TaskWorker, 'maxTierToBlockRecallSizeGB', 1000) * 1e9
             # Sanity check
             if TBtoRecall > 1e3:
                 msg += '\nDataset size %d TB. Will not trigger autoamatic recall for >1PB. Contact DataOps' % TBtoRecall
-                raise TaskWorkerException(msg)
-            if raw-reco > 50:
-                msg += "1112"
                 raise TaskWorkerException(msg)
             if TBtoRecall > 0:
                 self.logger.info("Total size of data to recall : %d TBytes", TBtoRecall)
@@ -263,7 +257,7 @@ class DBSDataDiscovery(DataDiscovery):
         if system == 'Dynamo':
             raise NotImplementedError
 
-    def getBlocksSize(self, dataset, blocks=None):
+    def getBlocksSizeFromDBS(self, dataset, blocks=None):
         """
         [{'block_name': '/GenericTTbar/HC-CMSSW_9_2_6_91X_mcRun1_realistic_v2-v2/AODSIM#3517e1b6-76e3-11e7-a0c8-02163e00d7b3',
           'file_size': 108723314200,
@@ -506,9 +500,20 @@ class DBSDataDiscovery(DataDiscovery):
                 msg += "\nWill try to request a full disk copy for you. See"
                 msg += "\n https://twiki.cern.ch/twiki/bin/view/CMSPublic/CRAB3FAQ#crab_submit_fails_with_Task_coul"
                 self.requestTapeRecall(blockList=blocksWithLocation, system='Rucio', msgHead=msg)
-            elif inputBlocks and dataTier in getattr(self.config.TaskWorker, 'tiersToBlockRecall', []) and self.getBlocksSize(inputDataset, inputBlocks) < getattr(self.config.TaskWorker, 'maxTierToBlockRecallSizeGB', 1099511627776):
-                msg = "allow to recall block"
-                self.requestTapeRecall(blockList=blocksWithLocation, system='Rucio', msgHead=msg)
+            elif inputBlocks and dataTier in getattr(self.config.TaskWorker, 'tiersToBlockRecall', []):
+                blocksSizeToRecall = self.getBlocksSizeFromDBS(blocksWithLocation)
+                maxTierToBlockRecallSizeGB = getattr(self.config.TaskWorker, 'maxTierToBlockRecallSizeGB', 0)
+                if blocksSizeToRecall < maxTierToBlockRecallSizeGB:
+                    msg = "Task could not be submitted because blocks specified in Data.inputBlocks are not on DISK"
+                    msg += "\nWill try to request disk copy for you. See"
+                    msg += "\n https://twiki.cern.ch/twiki/bin/view/CMSPublic/CRAB3FAQ#crab_submit_fails_with_Task_coul"
+                    self.requestTapeRecall(blockList=blocksWithLocation, system='Rucio', msgHead=msg)
+                else:
+                    msg = "Some blocks are on TAPE only and will not be processed."
+                    msg += "\nThere is no automatic recall from TAPE for data tier %s that larger than %d GB" % (dataTier, maxTierToBlockRecallSizeGB)
+                    msg += '\nIf you need the full dataset, contact Data Transfer team via %s' % FEEDBACKMAIL
+                    self.logger.warning(msg)
+                    self.uploadWarning(msg, self.userproxy, self.taskName)
             else:
                 msg = "Some blocks are on TAPE only and will not be processed."
                 msg += "\nThere is no automatic recall from tape for data tier %s" % dataTier
