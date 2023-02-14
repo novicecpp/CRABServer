@@ -501,7 +501,7 @@ class DBSDataDiscovery(DataDiscovery):
                     else:
                         msg = "Some blocks are on TAPE only and will not be processed."
                         msg += "\nThere is no automatic recall from TAPE for data tier %s if Data.inputBlocks"\
-                               "not provided but recall size larger than %d GB" % (dataTier, maxTierToBlockRecallSizeGB)
+                               "is provided but recall size larger than %d GB" % (dataTier, maxTierToBlockRecallSizeGB)
                         msg += '\nIf you need the full dataset, contact Data Transfer team via %s' % FEEDBACKMAIL
                         self.logger.warning(msg)
                         self.uploadWarning(msg, self.userproxy, self.taskName)
