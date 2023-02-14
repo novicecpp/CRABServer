@@ -257,7 +257,7 @@ class DBSDataDiscovery(DataDiscovery):
         if system == 'Dynamo':
             raise NotImplementedError
 
-    def getBlocksSizeFromDBS(self, dataset, blocks=None):
+    def getBlocksSizeBytes(self, dataset, blocks=None):
         """
         [{'block_name': '/GenericTTbar/HC-CMSSW_9_2_6_91X_mcRun1_realistic_v2-v2/AODSIM#3517e1b6-76e3-11e7-a0c8-02163e00d7b3',
           'file_size': 108723314200,
@@ -501,9 +501,9 @@ class DBSDataDiscovery(DataDiscovery):
                 msg += "\n https://twiki.cern.ch/twiki/bin/view/CMSPublic/CRAB3FAQ#crab_submit_fails_with_Task_coul"
                 self.requestTapeRecall(blockList=blocksWithLocation, system='Rucio', msgHead=msg)
             elif inputBlocks and dataTier in getattr(self.config.TaskWorker, 'tiersToBlockRecall', []):
-                blocksSizeToRecall = self.getBlocksSizeFromDBS(blocksWithLocation)
-                maxTierToBlockRecallSizeGB = getattr(self.config.TaskWorker, 'maxTierToBlockRecallSizeGB', 0)
-                if blocksSizeToRecall < maxTierToBlockRecallSizeGB:
+                blocksSizeToRecall = self.getBlocksSizeBytes(blocksWithLocation)
+                maxTierToBlockRecallSize = getattr(self.config.TaskWorker, 'maxTierToBlockRecallSizeGB', 0) * 1e9
+                if blocksSizeToRecall < maxTierToBlockRecallSize:
                     msg = "Task could not be submitted because blocks specified in Data.inputBlocks are not on DISK"
                     msg += "\nWill try to request disk copy for you. See"
                     msg += "\n https://twiki.cern.ch/twiki/bin/view/CMSPublic/CRAB3FAQ#crab_submit_fails_with_Task_coul"
