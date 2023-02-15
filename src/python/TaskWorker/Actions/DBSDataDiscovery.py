@@ -279,6 +279,7 @@ class DBSDataDiscovery(DataDiscovery):
             raise DBSReaderError(msg) from None
 
         size = 0
+        import pdb; pdb.set_trace()
         for block in blocksSummaries:
             if not blocks or block['block_name'] in blocks:
                 size += block['file_size']
