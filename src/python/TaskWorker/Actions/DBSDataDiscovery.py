@@ -502,7 +502,7 @@ class DBSDataDiscovery(DataDiscovery):
                     self.requestTapeRecall(blockList=blocksWithLocation, system='Rucio', msgHead=msg)
                 else:
                     msg = "Some blocks are on TAPE only and will not be processed."
-                    msg += f"\nThere is no automatic recall from TAPE for data tier '{dataTier}' if Data.inputBlocks is provided\n"\
+                    msg += f"\nThere is no automatic recall from TAPE for data tier '{dataTier}' if Data.inputBlocks is provided\n"
                     msg += f"\nbut recall size ({blocksSizeToRecall/1e12:.3f} TB) is larger than maximum recall size ({maxTierToBlockRecallSizeTB} TB)" % (dataTier, blocksSizeToRecall / 1e12, maxTierToBlockRecallSizeTB)
                     msg += '\nIf you need the full dataset, contact Data Transfer team via %s' % FEEDBACKMAIL
                     self.logger.warning(msg)
