@@ -101,7 +101,10 @@ class DBSDataDiscovery(DataDiscovery):
             The exception message contains details and an attempt is done to upload it to TaskDB
             so that crab status can report it
         """
-
+        # debugging
+        self.logger.debug(blockList)
+        self.logger.debug(msgHead)
+        raise Exception("'DBSDataDiscovery.requestTapeRecall()' you shall not pass")
         msg = msgHead
         if system == 'Rucio':
             # need to use crab_tape_recall Rucio account to create containers and create rules
