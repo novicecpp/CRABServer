@@ -493,8 +493,8 @@ class DBSDataDiscovery(DataDiscovery):
                 self.requestTapeRecall(blockList=blocksWithLocation, system='Rucio', msgHead=msg)
             elif inputBlocks:
                 blocksSizeToRecall = self.getBlocksSizeBytes(inputDataset, blocksWithLocation)
-                maxTierToBlockRecallSizeGB = getattr(self.config.TaskWorker, 'maxTierToBlockRecallSizeGB', 0)
-                maxTierToBlockRecallSize = maxTierToBlockRecallSizeGB * 1e9
+                maxTierToBlockRecallSizeTB = getattr(self.config.TaskWorker, 'maxTierToBlockRecallSizeTB', 0)
+                maxTierToBlockRecallSize = maxTierToBlockRecallSizeTB * 1e12
                 if blocksSizeToRecall < maxTierToBlockRecallSize:
                     msg = "Task could not be submitted because blocks specified in Data.inputBlocks are not on disk."
                     msg += "\nWill try to request disk copy for you. See"
@@ -502,14 +502,14 @@ class DBSDataDiscovery(DataDiscovery):
                     self.requestTapeRecall(blockList=blocksWithLocation, system='Rucio', msgHead=msg)
                 else:
                     msg = "Some blocks are on TAPE only and will not be processed."
-                    msg += "\nThere is no automatic recall from TAPE for data tier %s if Data.inputBlocks"\
-                        "is provided but recall size larger than %d GB" % (dataTier, maxTierToBlockRecallSizeGB)
+                    msg += "\nThere is no automatic recall from TAPE for data tier '%s' if Data.inputBlocks"\
+                        "is provided but recall size (%d TB) is larger than maximum recall size (%d TB)" % (dataTier, blocksSizeToRecall // 1e12, maxTierToBlockRecallSizeTB)
                     msg += '\nIf you need the full dataset, contact Data Transfer team via %s' % FEEDBACKMAIL
                     self.logger.warning(msg)
                     self.uploadWarning(msg, self.userproxy, self.taskName)
             else:
                 msg = "Some blocks are on TAPE only and will not be processed."
-                msg += "\nThere is no automatic recall from tape for data tier %s if Data.inputBlocks is not provided." % dataTier
+                msg += "\nThere is no automatic recall from tape for data tier '%s' if Data.inputBlocks is not provided." % dataTier
                 msg += '\nIf you need the full dataset, contact Data Transfer team via %s' % FEEDBACKMAIL
                 self.logger.warning(msg)
                 self.uploadWarning(msg, self.userproxy, self.taskName)
