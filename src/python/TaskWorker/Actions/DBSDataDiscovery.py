@@ -492,7 +492,7 @@ class DBSDataDiscovery(DataDiscovery):
                 msg += "\n https://twiki.cern.ch/twiki/bin/view/CMSPublic/CRAB3FAQ#crab_submit_fails_with_Task_coul"
                 self.requestTapeRecall(blockList=blocksWithLocation, system='Rucio', msgHead=msg)
             elif inputBlocks:
-                blocksSizeToRecall = self.getBlocksSizeBytes(blocksWithLocation)
+                blocksSizeToRecall = self.getBlocksSizeBytes(inputDataset, blocksWithLocation)
                 maxTierToBlockRecallSizeGB = getattr(self.config.TaskWorker, 'maxTierToBlockRecallSizeGB', 0)
                 maxTierToBlockRecallSize = maxTierToBlockRecallSizeGB * 1e9
                 if blocksSizeToRecall < maxTierToBlockRecallSize:
