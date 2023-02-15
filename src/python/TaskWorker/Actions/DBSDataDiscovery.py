@@ -514,6 +514,8 @@ class DBSDataDiscovery(DataDiscovery):
                 self.logger.warning(msg)
                 self.uploadWarning(msg, self.userproxy, self.taskName)
 
+        raise Exception("'DBSDataDiscovery.executeInternal()' you shall not pass")
+
         # will not need lumi info if user has asked for split by file with no run/lumi mask
         splitAlgo = kwargs['task']['tm_split_algo']
         lumiMask = kwargs['task']['tm_split_args']['lumis']
