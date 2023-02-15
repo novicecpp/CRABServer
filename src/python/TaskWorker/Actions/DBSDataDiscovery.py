@@ -279,7 +279,6 @@ class DBSDataDiscovery(DataDiscovery):
             raise DBSReaderError(msg) from None
 
         size = 0
-        import pdb; pdb.set_trace()
         for block in blocksSummaries:
             if not blocks or block['block_name'] in blocks:
                 size += block['file_size']
@@ -493,7 +492,7 @@ class DBSDataDiscovery(DataDiscovery):
                 msg += "\n https://twiki.cern.ch/twiki/bin/view/CMSPublic/CRAB3FAQ#crab_submit_fails_with_Task_coul"
                 self.requestTapeRecall(blockList=blocksWithLocation, system='Rucio', msgHead=msg)
             elif inputBlocks:
-                blocksSizeToRecall = self.getBlocksSizeBytes(inputDataset, blocksWithLocation)
+                blocksSizeToRecall = self.getBlocksSizeBytes(inputDataset, list(blocksWithLocation))
                 maxTierToBlockRecallSizeTB = getattr(self.config.TaskWorker, 'maxTierToBlockRecallSizeTB', 0)
                 maxTierToBlockRecallSize = maxTierToBlockRecallSizeTB * 1e12
                 if blocksSizeToRecall < maxTierToBlockRecallSize:
@@ -503,8 +502,8 @@ class DBSDataDiscovery(DataDiscovery):
                     self.requestTapeRecall(blockList=blocksWithLocation, system='Rucio', msgHead=msg)
                 else:
                     msg = "Some blocks are on TAPE only and will not be processed."
-                    msg += "\nThere is no automatic recall from TAPE for data tier '%s' if Data.inputBlocks"\
-                        "is provided but recall size (%d TB) is larger than maximum recall size (%d TB)" % (dataTier, blocksSizeToRecall // 1e12, maxTierToBlockRecallSizeTB)
+                    msg += f"\nThere is no automatic recall from TAPE for data tier '{dataTier}' if Data.inputBlocks is provided\n"\
+                    msg += f"\nbut recall size ({blocksSizeToRecall/1e12:.3f} TB) is larger than maximum recall size ({maxTierToBlockRecallSizeTB} TB)" % (dataTier, blocksSizeToRecall / 1e12, maxTierToBlockRecallSizeTB)
                     msg += '\nIf you need the full dataset, contact Data Transfer team via %s' % FEEDBACKMAIL
                     self.logger.warning(msg)
                     self.uploadWarning(msg, self.userproxy, self.taskName)
