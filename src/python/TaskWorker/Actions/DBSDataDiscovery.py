@@ -104,6 +104,7 @@ class DBSDataDiscovery(DataDiscovery):
         # debugging
         self.logger.debug(blockList)
         self.logger.debug(msgHead)
+        self.uploadWarning(msgHead, self.userproxy, self.taskName)
         raise Exception("'DBSDataDiscovery.requestTapeRecall()' you shall not pass")
         msg = msgHead
         if system == 'Rucio':
@@ -258,16 +259,7 @@ class DBSDataDiscovery(DataDiscovery):
 
     def getBlocksSizeBytes(self, dataset, blocks=None):
         """
-        [{'block_name': '/GenericTTbar/HC-CMSSW_9_2_6_91X_mcRun1_realistic_v2-v2/AODSIM#3517e1b6-76e3-11e7-a0c8-02163e00d7b3',
-          'file_size': 108723314200,
-          'num_event': 951400,
-          'num_file': 43,
-          'open_for_writing': 0},
-         {'block_name': '/GenericTTbar/HC-CMSSW_9_2_6_91X_mcRun1_realistic_v2-v2/AODSIM#35197562-76e3-11e7-a0c8-02163e00d7b3',
-          'file_size': 4801598954,
-          'num_event': 42000,
-          'num_file': 3,
-          'open_for_writing': 0}]
+        Get block size of dataset from DBS and return the total size of all blocks or blocks in `blocks` argument.
         """
         self.dbs.checkDatasetPath(dataset)
         args = {'dataset': dataset, 'detail': True}
@@ -482,7 +474,7 @@ class DBSDataDiscovery(DataDiscovery):
         if set(locationsMap.keys()) != set(blocksWithLocation):
             dataTier = inputDataset.split('/')[3]
             if usePartialDataset:
-                msg = "Some blocks are on TAPE only and can not be reaed."
+                msg = "Some blocks are on TAPE only and can not be read."
                 msg += "\nSince you specified to accept a partial dataset, only blocks on disk will be processed"
                 self.logger.warning(msg)
                 self.uploadWarning(msg, self.userproxy, self.taskName)
