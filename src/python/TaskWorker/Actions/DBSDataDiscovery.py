@@ -20,8 +20,6 @@ from RucioUtils import getNativeRucioClient
 from rucio.common.exception import (DuplicateRule, DataIdentifierAlreadyExists, DuplicateContent,
                                     InsufficientTargetRSEs, InsufficientAccountLimit, FullStorage)
 
-from dbs.exceptions.dbsClientException import dbsClientException
-
 
 class DBSDataDiscovery(DataDiscovery):
     """Performing the data discovery through CMS DBS service.
@@ -251,25 +249,6 @@ class DBSDataDiscovery(DataDiscovery):
         if system == 'Dynamo':
             raise NotImplementedError
 
-    def getBlocksSizeBytes(self, dataset, blocks=None):
-        """
-        Get block size of dataset from DBS and return the total size of all blocks or blocks in `blocks` argument.
-        """
-        self.dbs.checkDatasetPath(dataset)
-        args = {'dataset': dataset, 'detail': True}
-        try:
-            blocksSummaries = self.dbs.dbs.listBlockSummaries(**args)
-        except dbsClientException as ex:
-            msg = "Error in DBSReader.listFileBlocks(%s)\n" % dataset
-            msg += "%s\n" % ex
-            raise DBSReaderError(msg) from None
-
-        size = 0
-        for block in blocksSummaries:
-            if not blocks or block['block_name'] in blocks:
-                size += block['file_size']
-        return size
-
     def execute(self, *args, **kwargs):
         """
         This is a convenience wrapper around the executeInternal function
@@ -392,6 +371,8 @@ class DBSDataDiscovery(DataDiscovery):
                 msg = "No locations found with Rucio for this dataset"
                 self.logger.warning(msg)
 
+        self.logger.debug("Dataset size in bytes: %s", totalSizeBytes)
+
         if not locationsFoundWithRucio:
             self.logger.info("No locations found with Rucio for %s", inputDataset)
             if isUserDataset:
@@ -470,7 +451,6 @@ class DBSDataDiscovery(DataDiscovery):
             usePartialDataset = True
 
         self.keepOnlyDiskRSEs(locationsMap)
-        self.logger.debug("totalSizeBytes: %s", totalSizeBytes)
         if set(locationsMap.keys()) != set(blocksWithLocation):
             dataTier = inputDataset.split('/')[3]
             maxTierToBlockRecallSizeTB = getattr(self.config.TaskWorker, 'maxTierToBlockRecallSizeTB', 0)
