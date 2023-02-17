@@ -356,6 +356,8 @@ class DBSDataDiscovery(DataDiscovery):
         if not useRucioForLocations:
             self.logger.info("Will not use Rucio for this dataset")
 
+        totalSizeBytes = 0
+
         if useRucioForLocations:
             scope = "cms"
             # If the dataset is a USER one, use the Rucio user scope to find it
@@ -368,14 +370,17 @@ class DBSDataDiscovery(DataDiscovery):
                 for blockName in list(blocks):
                     replicas = set()
                     response = self.rucioClient.list_dataset_replicas(scope=scope, name=blockName, deep=True)
+                    sizeBytes = 0
                     for item in response:
                         if 'T2_UA_KIPT' in item['rse']:
                             continue  # skip Ucrainan T2 until further notice
                         # same as complete='y' used for PhEDEx
                         if item['state'].upper() == 'AVAILABLE':
                             replicas.add(item['rse'])
+                            sizeBytes = item['bytes']
                     if replicas:  # only fill map for blocks which have at least one location
                         locationsMap[blockName] = replicas
+                        totalSizeBytes += sizeBytes
             except Exception as exc:
                 msg = "Rucio lookup failed with\n%s" % str(exc)
                 self.logger.warning(msg)
@@ -467,8 +472,8 @@ class DBSDataDiscovery(DataDiscovery):
         self.keepOnlyDiskRSEs(locationsMap)
         import pdb; pdb.set_trace()
         if set(locationsMap.keys()) != set(blocksWithLocation):
+            self.logger.debug("totalSizeBytes:", totalSizeBytes)
             dataTier = inputDataset.split('/')[3]
-            sizeToRecall = self.getBlocksSizeBytes(inputDataset, list(blocksWithLocation))
             maxTierToBlockRecallSizeTB = getattr(self.config.TaskWorker, 'maxTierToBlockRecallSizeTB', 0)
             maxTierToBlockRecallSize = maxTierToBlockRecallSizeTB * 1e12
             if usePartialDataset:
@@ -480,13 +485,13 @@ class DBSDataDiscovery(DataDiscovery):
                 msg = f"Task could not be submitted because not all blocks of dataset {inputDataset} are on DISK"
                 msg += "\nWill try to request a full disk copy for you. See"
                 msg += "\n https://twiki.cern.ch/twiki/bin/view/CMSPublic/CRAB3FAQ#crab_submit_fails_with_Task_coul"
-                self.requestTapeRecall(blocksWithLocation, sizeToRecall, system='Rucio', msgHead=msg)
+                self.requestTapeRecall(blocksWithLocation, totalSizeBytes, system='Rucio', msgHead=msg)
             elif inputBlocks:
-                if sizeToRecall < maxTierToBlockRecallSize:
+                if totalSizeBytes < maxTierToBlockRecallSize:
                     msg = "Task could not be submitted because blocks specified in 'Data.inputBlocks' are not on disk."
                     msg += "\nWill try to request disk copy for you. See"
                     msg += "\n https://twiki.cern.ch/twiki/bin/view/CMSPublic/CRAB3FAQ#crab_submit_fails_with_Task_coul"
-                    self.requestTapeRecall(blocksWithLocation, sizeToRecall, system='Rucio', msgHead=msg)
+                    self.requestTapeRecall(blocksWithLocation, totalSizeBytes, system='Rucio', msgHead=msg)
                 else:
                     msg = "Some blocks are on TAPE only and will not be processed."
                     msg += f"\nThere is no automatic recall from TAPE for data tier '{dataTier}' if 'Data.inputBlocks' is provided,"
