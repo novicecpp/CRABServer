@@ -99,11 +99,6 @@ class DBSDataDiscovery(DataDiscovery):
             The exception message contains details and an attempt is done to upload it to TaskDB
             so that crab status can report it
         """
-        # debugging
-        self.logger.debug(blockList)
-        self.logger.debug(msgHead)
-        self.uploadWarning(msgHead, self.userproxy, self.taskName)
-        raise Exception("'DBSDataDiscovery.requestTapeRecall()' you shall not pass")
         msg = msgHead
         if system == 'Rucio':
             # need to use crab_tape_recall Rucio account to create containers and create rules
@@ -484,8 +479,6 @@ class DBSDataDiscovery(DataDiscovery):
                 msg += f"\nIf you need the full dataset, contact Data Transfer team via {FEEDBACKMAIL}"
                 self.logger.warning(msg)
                 self.uploadWarning(msg, self.userproxy, self.taskName)
-
-        raise Exception("'DBSDataDiscovery.executeInternal()' you shall not pass")
 
         # will not need lumi info if user has asked for split by file with no run/lumi mask
         splitAlgo = kwargs['task']['tm_split_algo']
