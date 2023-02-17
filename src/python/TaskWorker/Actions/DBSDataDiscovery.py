@@ -470,9 +470,8 @@ class DBSDataDiscovery(DataDiscovery):
             usePartialDataset = True
 
         self.keepOnlyDiskRSEs(locationsMap)
-        import pdb; pdb.set_trace()
+        self.logger.debug("totalSizeBytes: %s", totalSizeBytes)
         if set(locationsMap.keys()) != set(blocksWithLocation):
-            self.logger.debug("totalSizeBytes: %s", totalSizeBytes)
             dataTier = inputDataset.split('/')[3]
             maxTierToBlockRecallSizeTB = getattr(self.config.TaskWorker, 'maxTierToBlockRecallSizeTB', 0)
             maxTierToBlockRecallSize = maxTierToBlockRecallSizeTB * 1e12
