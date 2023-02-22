@@ -283,7 +283,7 @@ class DBSDataDiscovery(DataDiscovery):
         self.logger.debug("Data discovery through %s for %s", self.dbs, self.taskName)
 
         inputDataset = kwargs['task']['tm_input_dataset']
-        inputBlocks = kwargs['task']['tm_user_config']['inputblocks']
+        inputBlocks = kwargs['task']['tm_user_config'].get('inputblocks', None)
         if inputBlocks:
             msg = f'Only blocks in "Data.inputBlocks" will be processed ({len(inputBlocks)} blocks).'
             self.uploadWarning(msg, self.userproxy, self.taskName)
