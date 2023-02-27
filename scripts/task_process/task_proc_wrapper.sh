@@ -13,10 +13,13 @@ function manage_transfers {
     log "Running transfers.py"
 
     if [[ -f task_process/transfers.txt ]]; then
-        DEST_LFN=`python3 -c 'import sys, json; print (json.loads( open("task_process/transfers.txt").readlines()[0] )["destination_lfn"])' `
+        DEST_LFN=`python3 -c 'import sys, json; print(json.loads( open("task_process/transfers.txt").readlines()[0] )["destination_lfn"])' `
 
         if [[ $DEST_LFN =~ ^/store/user/rucio/* ]]; then
-        timeout 15m env PYTHONPATH=$PYTHONPATH:$RucioPy3 python3 task_process/RUCIO_Transfers.py
+        #timeout 15m env PYTHONPATH=$PYTHONPATH:$RucioPy3 python3 task_process/RUCIO_Transfers.py
+            mkdir -p task_process/debug/
+            printenv > task_process/debug/env_$(date +"%s")
+            echo 'disabled RUCIO_Transfers.py, for debugging'
         else
         timeout 15m env PYTHONPATH=$PYTHONPATH:$RucioPy3 python3 task_process/FTS_Transfers.py
         fi

@@ -6,3 +6,5 @@ nosetests.xml
 tmp/runtime/*
 *.gz
 *.zip
+wmcore/
+testenv/

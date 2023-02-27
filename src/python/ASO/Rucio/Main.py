@@ -25,6 +25,13 @@ def main():
                      help="use provided output dataset name instead of output")
     opt.add_argument("--force-last-line", dest="force_last_line", default=None, type=int,
                      help="")
+    opt.add_argument("--force-total-files", dest="force_total_files", default=None, type=int,
+                     help="")
+    # default here must change because theses current value is too low (chunk=2/max=5)
+    opt.add_argument("--replicas-chunk-size", dest="replicas_chunk_size", default=2, type=int,
+                     help="")
+    opt.add_argument("--max-file-per-dataset", dest="max_file_per_dataset", default=5, type=int,
+                     help="")
     opt.add_argument("--last-line-path", dest="last_line_path",
                      default='task_process/transfers/last_transfer.txt',
                      help="")
@@ -55,7 +62,6 @@ def main():
     # not meet and we want to fail (fast) this process.  But if
     # Exception is raise mean something gone wrong with our code and
     # need to investigate.
-    logger.info("executing RunTransfer")
     try:
         logger.info('executing RunTransfer')
         run = RunTransfer()
