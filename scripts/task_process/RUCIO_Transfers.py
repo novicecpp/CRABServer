@@ -37,8 +37,8 @@ class globs:
     rucio_client: Client = None
 
     # Utility variables
-    dataset_file_limit: int = 100
-    replicas_chunk_size: int = 20
+    dataset_file_limit: int = 9
+    replicas_chunk_size: int = 2
     last_line: int = 0
 
     # RUCIO/Task variables
