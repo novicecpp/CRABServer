@@ -874,7 +874,7 @@ def main():
         fileDocs_success_monitor = make_filedoc_for_db(
             ids=[glob.id2lfn_map[x['filename']] for x in success_from_monitor],
             states=["DONE" for x in success_from_monitor],
-            dbsBlocknames=[x['dbsBlock'] for x in success_from_registration],
+            dbsBlocknames=[x['dbsBlock'] for x in success_from_monitor],
             blockCompletes= [x['complete'] for x in success_from_monitor],
         )
         fileDocs_failed_monitor = make_filedoc_for_db(
