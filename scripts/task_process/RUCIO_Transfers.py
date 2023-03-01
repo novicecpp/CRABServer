@@ -651,7 +651,7 @@ def monitor_locks_status():
                 for file_ in locks_generator:
                     monitor_logger.debug("LOCK %s", file_)
                     filename = file_['name']
-                    result = { 'filename': filename, 'block_complete': 'OK' if r['state'] == 'OK' else 'NO'}
+                    result = { 'filename': filename, 'dbsBlock': ds['name'], 'complete': 'OK' if r['state'] == 'OK' else 'NO'}
 
                     # skip files already processed
                     if filename in already_processed_list:
@@ -670,6 +670,7 @@ def monitor_locks_status():
                     if status == "OK":
                         list_good.append(result)
                     # No need to retry job at this point --> DELEGATE TO RUCIO
+                    # We did not use list_failed anymore
                     # if status == "STUCK":
                     #     did = {'scope': glob.rucio_scope, 'name': filename }
                     #     monitor_logger.debug("Getting source RSE information for %s" % filename)
@@ -873,7 +874,8 @@ def main():
         fileDocs_success_monitor = make_filedoc_for_db(
             ids=[glob.id2lfn_map[x['filename']] for x in success_from_monitor],
             states=["DONE" for x in success_from_monitor],
-            blockCompletes= [x['block_complete'] for x in success_from_monitor]
+            dbsBlocknames=[x['dbsBlock'] for x in success_from_registration],
+            blockCompletes= [x['complete'] for x in success_from_monitor],
         )
         fileDocs_failed_monitor = make_filedoc_for_db(
             ids=[glob.id2lfn_map[x[0]] for x in failed_from_monitor],
