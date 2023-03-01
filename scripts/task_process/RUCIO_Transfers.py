@@ -599,7 +599,7 @@ def register_replicas(input_replicas: dict) -> tuple:
                 failed += [x["name"] for x in chunk]
                 continue
             # check the current number of files in the dataset
-            if len(list(glob.rucio_client.list_content(glob.rucio_scope, glob.current_dataset))) > glob.dataset_file_limit:
+            if len(list(glob.rucio_client.list_content(glob.rucio_scope, glob.current_dataset))) >= glob.dataset_file_limit:
                 # -if everything full create new one
                 glob.rucio_client.close(glob.rucio_scope, glob.current_dataset)
                 check_or_create_current_dataset(force_create=True)
