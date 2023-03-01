@@ -15,6 +15,31 @@ Script algorithm
     - monitor the Rucio replica locks for the datasets
         + update info in oracle accordingly
 """
+#transfers.txt
+#{
+#    "id": "7e6d075f7434f1307a764d491d86ab1192554b76106d139846810834",
+#    "username": "tseethon",
+#    "taskname": "230227_174038:tseethon_crab_rucio_transfer_test12_20230227_184034",
+#    "start_time": 1677520683,
+#    "destination": "T2_CH_CERN",
+#    "destination_lfn": "/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1677519634/230227_174038/0000/output_2.root",
+#    "source": "T3_US_FNALLPC",
+#    "source_lfn": "/store/temp/user/tseethon.d6830fc3715ee01030105e83b81ff3068df7c8e0/tseethon/test-workflow/GenericTTbar/autotest-1677519634/230227_174038/0000/output_2.root",
+#    "filesize": 630710,
+#    "publish": 0,
+#    "transfer_state": "NEW",
+#    "publication_state": "NOT_REQUIRED",
+#    "job_id": "2",
+#    "job_retry_count": 1,
+#    "type": "output",
+#    "publishname": "autotest-1677519634-00000000000000000000000000000000",
+#    "checksums": {
+#        "adler32": "5cbf440e",
+#        "cksum": "3473488862"
+#    },
+#    "outputdataset": "/GenericTTbar/tseethon-autotest-1677519634-94ba0e06145abd65ccb1d21786dc7e1d/USER"
+#}
+
 from __future__ import absolute_import, division, print_function
 import json
 import logging
@@ -62,7 +87,6 @@ glob = globs()
 # TODO: review info level logging information
 
 logging.basicConfig(
-    filename='task_process/transfer_rucio.log',
     level=logging.DEBUG,
     format='[%(asctime)s] [%(name)s] [%(levelname)s] %(message)s'
 )
@@ -627,6 +651,7 @@ def monitor_locks_status():
                 for file_ in locks_generator:
                     monitor_logger.debug("LOCK %s", file_)
                     filename = file_['name']
+                    result = { 'filename': filename, 'block_complete': 'OK' if r['state'] == 'OK' else 'NO'}
 
                     # skip files already processed
                     if filename in already_processed_list:
@@ -643,7 +668,7 @@ def monitor_locks_status():
                     sitename = file_['rse']
 
                     if status == "OK":
-                        list_good.append(filename)
+                        list_good.append(result)
                     # No need to retry job at this point --> DELEGATE TO RUCIO
                     # if status == "STUCK":
                     #     did = {'scope': glob.rucio_scope, 'name': filename }
@@ -773,6 +798,8 @@ def main():
     main_logger = logging.getLogger("main")
     transfers_dicts = []
 
+    # do 1
+
     try:
         init_crabrest_client()
         init_rucio_client()
@@ -833,6 +860,8 @@ def main():
     except Exception as ex:
         raise ex
 
+
+    # do 2
     try:
         success_from_monitor, failed_from_monitor, ruleid_update = monitor_locks_status()
     except Exception as ex:
@@ -842,8 +871,9 @@ def main():
 
     try:
         fileDocs_success_monitor = make_filedoc_for_db(
-            ids=[glob.id2lfn_map[x] for x in success_from_monitor],
+            ids=[glob.id2lfn_map[x['filename']] for x in success_from_monitor],
             states=["DONE" for x in success_from_monitor],
+            blockCompletes= [x['block_complete'] for x in success_from_monitor]
         )
         fileDocs_failed_monitor = make_filedoc_for_db(
             ids=[glob.id2lfn_map[x[0]] for x in failed_from_monitor],
