@@ -15,30 +15,6 @@ Script algorithm
     - monitor the Rucio replica locks for the datasets
         + update info in oracle accordingly
 """
-#transfers.txt
-#{
-#    "id": "7e6d075f7434f1307a764d491d86ab1192554b76106d139846810834",
-#    "username": "tseethon",
-#    "taskname": "230227_174038:tseethon_crab_rucio_transfer_test12_20230227_184034",
-#    "start_time": 1677520683,
-#    "destination": "T2_CH_CERN",
-#    "destination_lfn": "/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1677519634/230227_174038/0000/output_2.root",
-#    "source": "T3_US_FNALLPC",
-#    "source_lfn": "/store/temp/user/tseethon.d6830fc3715ee01030105e83b81ff3068df7c8e0/tseethon/test-workflow/GenericTTbar/autotest-1677519634/230227_174038/0000/output_2.root",
-#    "filesize": 630710,
-#    "publish": 0,
-#    "transfer_state": "NEW",
-#    "publication_state": "NOT_REQUIRED",
-#    "job_id": "2",
-#    "job_retry_count": 1,
-#    "type": "output",
-#    "publishname": "autotest-1677519634-00000000000000000000000000000000",
-#    "checksums": {
-#        "adler32": "5cbf440e",
-#        "cksum": "3473488862"
-#    },
-#    "outputdataset": "/GenericTTbar/tseethon-autotest-1677519634-94ba0e06145abd65ccb1d21786dc7e1d/USER"
-#}
 
 from __future__ import absolute_import, division, print_function
 import json
@@ -62,8 +38,8 @@ class globs:
     rucio_client: Client = None
 
     # Utility variables
-    dataset_file_limit: int = 9
-    replicas_chunk_size: int = 2
+    dataset_file_limit: int = 100
+    replicas_chunk_size: int = 20
     last_line: int = 0
 
     # RUCIO/Task variables
@@ -87,6 +63,7 @@ glob = globs()
 # TODO: review info level logging information
 
 logging.basicConfig(
+    filename='task_process/transfer_rucio.log',
     level=logging.DEBUG,
     format='[%(asctime)s] [%(name)s] [%(levelname)s] %(message)s'
 )
@@ -799,8 +776,6 @@ def main():
     main_logger = logging.getLogger("main")
     transfers_dicts = []
 
-    # do 1
-
     try:
         init_crabrest_client()
         init_rucio_client()
@@ -861,8 +836,6 @@ def main():
     except Exception as ex:
         raise ex
 
-
-    # do 2
     try:
         success_from_monitor, failed_from_monitor, ruleid_update = monitor_locks_status()
     except Exception as ex:
