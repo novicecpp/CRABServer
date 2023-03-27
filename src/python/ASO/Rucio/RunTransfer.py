@@ -24,13 +24,16 @@ class RunTransfer:
         #AddFilesToTransfer(self.rucios, elf.transfer)
         # do 2
 
-    def _initRucioClient(self, username, proxypath):
+    def _initRucioClient(self, username, proxypath=None):
         # maybe we can share with getNativeRucioClient
         rucioLogger = logging.getLogger('RucioTransfer.RucioClient')
         if os.environ.get('X509_USER_PROXY', None):
             creds = None
         else:
-            creds = {"client_cert": proxypath, "client_key": proxypath},
+            if os.path.exists(proxypath):
+                creds = {"client_cert": proxypath, "client_key": proxypath}
+            else:
+                raise RucioTransferException(f'proxy file not found: {proxypath}')
         rc = RucioClient(
             account=username,
             auth_type="x509_proxy",

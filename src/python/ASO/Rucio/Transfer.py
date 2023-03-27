@@ -25,8 +25,9 @@ class Transfer:
             with open(REST_INFO_PATH, 'r', encoding='utf-8') as r:
                 restInfo = json.load(r)
                 self.proxypath = os.getcwd() + "/" + restInfo['proxyfile']
-        except FileNotFoundError:
+        except FileNotFoundError as ex:
             self.logger.error(f'{REST_INFO_PATH} does not exist. Probably no completed jobs in the task yet')
+            raise ex
 
     def _readTransferInfo(self):
         try:
@@ -35,5 +36,6 @@ class Transfer:
                 self.user = transferInfo['username']
                 self.destination = transferInfo['destiation']
                 self.publishname = transferInfo['outputdataset']
-        except FileNotFoundError:
+        except FileNotFoundError as ex:
             self.logger.error(f'{TRANSFER_INFO_PATH} does not exist. Probably no completed jobs in the task yet')
+            raise ex
