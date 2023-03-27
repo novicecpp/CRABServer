@@ -1,7 +1,6 @@
 import logging
 
 from ASO.Rucio.RunTransfer import RunTransfer
-from python.ASO.Rucio.exception import RucioTransferException
 
 class RucioTransferMain:
     def __init__(self):
@@ -10,10 +9,15 @@ class RucioTransferMain:
 
     def run(self):
         print("executing RunTransfer")
-        run = RunTransfer()
-        exception:
+        try:
+            self.logger.info('executing RunTransfer')
+            run = RunTransfer()
+            run.algorithm()
+        except Exception as ex:
+            self.logger.exception("error during main loop %s", ex)
+        self.logger.info('transfer completed')
 
-    def _initLogger():
+    def _initLogger(self):
         logger = logging.getLogger('RucioTransfer')
         logger.setLevel(logging.DEBUG)
         hldr = logging.StreamHandler()
@@ -22,10 +26,10 @@ class RucioTransferMain:
         logger.addHandler(hldr)
 
 
-except Exception as ex:
-
-
-
 def main():
     rucioTransfer = RucioTransferMain()
     rucioTransfer.run()
+
+
+if __name__ == "__main__":
+    main()
