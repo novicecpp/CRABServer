@@ -14,7 +14,8 @@ class RucioTransferMain:
             run = RunTransfer()
             run.algorithm()
         except Exception as ex:
-            self.logger.exception("error during main loop %s", ex)
+            self.logger.exception("unexpected error during main loop %s", ex)
+            raise ex
         self.logger.info('transfer completed')
 
     def _initLogger(self):

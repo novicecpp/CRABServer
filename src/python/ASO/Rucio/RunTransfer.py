@@ -10,21 +10,11 @@ from ASO.Rucio.exception import RucioTransferException
 
 class RunTransfer:
     def __init__(self):
-        self._initLogger()
         self.logger = logging.getLogger("RucioTransfer.RunTransfer")
 
         self.transfer = Transfer()
 
         self.rucio = self._initRucioClient(self.transfer.username, self.transfer.proxypath)
-
-    def run(self):
-        try:
-            self.algorithm()
-        except RucioTransferException as ex:
-            raise ex
-        except Exception as ex:
-            self.logger.error('unexpected exception')
-            raise ex
 
     def algorithm(self):
         # do nothing
@@ -33,7 +23,6 @@ class RunTransfer:
         # do 1
         #AddFilesToTransfer(self.rucios, elf.transfer)
         # do 2
-
 
     def _initRucioClient(self, username, proxypath):
         # maybe we can share with getNativeRucioClient
