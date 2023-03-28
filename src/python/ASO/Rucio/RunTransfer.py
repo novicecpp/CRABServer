@@ -3,7 +3,7 @@ import os
 
 from rucio.client.client import Client as RucioClient
 
-#from ASO.Rucio.Actions.BuildTaskDataset import BuildTaskDataset
+from ASO.Rucio.Actions.BuildTaskDataset import BuildTaskDataset
 #from ASO.Rucio.Actions.AddFilesToTransfer import AddFilesToTransfer
 from ASO.Rucio.Transfer import Transfer
 from ASO.Rucio.exception import RucioTransferException
@@ -18,8 +18,7 @@ class RunTransfer:
 
     def algorithm(self):
         # do nothing
-        pass
-        #BuildTaskDataset(self.transfer, self.rucio)
+        BuildTaskDataset(self.transfer, self.rucio).execute()
         # do 1
         #AddFilesToTransfer(self.rucios, elf.transfer)
         # do 2
@@ -30,7 +29,7 @@ class RunTransfer:
         if os.environ.get('X509_USER_PROXY', None):
             creds = None
         else:
-            if os.path.exists(proxypath):
+            if proxypath and os.path.exists(proxypath):
                 creds = {"client_cert": proxypath, "client_key": proxypath}
             else:
                 raise RucioTransferException(f'proxy file not found: {proxypath}')

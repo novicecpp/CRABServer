@@ -12,13 +12,18 @@ class Transfer:
     def __init__(self):
         self.logger = logging.getLogger('RucioTransfer.Transfer')
 
-        self.proxypath = None
+        self.proxypath = ''
         self._readRestInfo()
 
-        self.username = None
-        self.destination = None
-        self.publishname = None
+        self.username = ''
+        self.rucioScope = ''
+        self.destination = ''
+        self.publishname = ''
+        self.logsDataset = ''
         self._readTransferInfo()
+
+        # dynamically change throughout the scripts
+        self.currentDataset = ''
 
     def _readRestInfo(self):
         try:
@@ -26,16 +31,16 @@ class Transfer:
                 restInfo = json.load(r)
                 self.proxypath = os.getcwd() + "/" + restInfo['proxyfile']
         except FileNotFoundError as ex:
-            self.logger.error(f'{REST_INFO_PATH} does not exist. Probably no completed jobs in the task yet')
-            raise ex
+            raise RucioTransferException(f'{REST_INFO_PATH} does not exist. Probably no completed jobs in the task yet') from ex
 
     def _readTransferInfo(self):
         try:
             with open(TRANSFER_INFO_PATH, 'r', encoding='utf-8') as r:
-                transferInfo = json.loads(r.readline())
-                self.user = transferInfo['username']
+                transferInfo = json.loads(r.readline()) # read from first line
+                self.username = transferInfo['username']
+                self.rucioScope = f'user.{transferInfo["username"]}'
                 self.destination = transferInfo['destiation']
                 self.publishname = transferInfo['outputdataset']
+                self.logsDataset = f'{transferInfo["outputdataset"]}+#LOGS'
         except FileNotFoundError as ex:
-            self.logger.error(f'{TRANSFER_INFO_PATH} does not exist. Probably no completed jobs in the task yet')
-            raise ex
+            raise RucioTransferException(f'{REST_INFO_PATH} does not exist. Probably no completed jobs in the task yet') from ex
