@@ -30,7 +30,7 @@ class RunTransfer:
             creds = None
         else:
             if proxypath and os.path.exists(proxypath):
-                creds = {"client_cert": proxypath, "client_key": proxypath}
+                creds = {"client_proxy": proxypath}
             else:
                 raise RucioTransferException(f'proxy file not found: {proxypath}')
         rc = RucioClient(

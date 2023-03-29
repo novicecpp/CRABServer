@@ -1,15 +1,16 @@
 import logging
 import uuid
 
-from rucio.common.exception import DataIdentifierAlreadyExists
+from rucio.common.exception import DataIdentifierAlreadyExists, InvalidObject, DuplicateRule
 
-from ASO.Rucio.exception import RucioTransferException, InvalidObject
+from ASO.Rucio.exception import RucioTransferException
+from ASO.Rucio.config import config
 
 class BuildTaskDataset():
     def __init__(self, transfer, rucioClient):
         self.logger = logging.getLogger("RucioTransfer.Actions.BuildTaskDataset")
-        self.rucioClient = transfer
-        self.tranfer = rucioClient
+        self.rucioClient = rucioClient
+        self.transfer = transfer
 
     def execute(self):
         # TODO: REFACTORING: refactoring these two function
@@ -52,16 +53,25 @@ class BuildTaskDataset():
             logs_ds_exists = False
             for d in datasets:
                 if d['name'] == self.transfer.logsDataset:
+                    self.logger.debug(f'Found LOG dataset: {d["name"]}')
                     logs_ds_exists = True
                 dids.append(d)
             # If a ds for logs does not exists, create one
             if not logs_ds_exists:
+                self.logger.debug(f'Creating LOG dataset {self.transfer.logsDataset}')
                 try:
                     self.rucioClient.add_dataset(self.transfer.rucioScope, self.transfer.logsDataset)
+                except DataIdentifierAlreadyExists:
+                    self.logger.info(f"{self.transfer.publishname} log dataset already exists, doing nothing")
+                try:
                     ds_did = {'scope': self.transfer.rucioScope, 'type': "DATASET", 'name': self.transfer.logsDataset}
                     self.rucioClient.add_replication_rule([ds_did], 1, self.transfer.destination)
+                # TODO: not sure if any other case make the rule duplicate beside script crash
+                except DuplicateRule:
+                    self.logger.info(f"Rule already exists, doing nothing")
+                try:
                     # attach dataset to the container
-                    self.rucioClient.attach_dids(self.transfer.rucioScope, self.transfer.logsDataset, [ds_did])
+                    self.rucioClient.attach_dids(self.transfer.rucioScope, self.transfer.publishname, [ds_did])
                 except Exception as ex:
                     raise RucioTransferException("Failed to create and attach a logs RUCIO dataset") from ex
             if len(dids) > 0:

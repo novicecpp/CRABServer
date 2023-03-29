@@ -6,9 +6,11 @@ import logging
 from argparse import ArgumentParser
 
 from ASO.Rucio.RunTransfer import RunTransfer
+import ASO.Rucio.config as config
+
 
 class RucioTransferMain:
-    def __init__(self, opts):
+    def __init__(self):
         self._initLogger()
         self.logger = logging.getLogger('RucioTransfer.RucioTransferMain')
 
@@ -34,11 +36,12 @@ class RucioTransferMain:
 
 def main():
     opt = ArgumentParser(usage=__doc__)
-    opt.add_argument("--force-dataset-name", dest="force_dataset_name", default=None,
+    opt.add_argument("--force-publishname", dest="force_publishname", default=None,
                      help="use provided output dataset name instead of output")
     opts = opt.parse_args()
 
-    rucioTransfer = RucioTransferMain(opts)
+    config.config = opts
+    rucioTransfer = RucioTransferMain()
 
     rucioTransfer.run()
 
