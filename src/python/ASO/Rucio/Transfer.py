@@ -13,30 +13,27 @@ class Transfer:
     def __init__(self):
         self.logger = logging.getLogger('RucioTransfer.Transfer')
 
+        # from rest info
         self.proxypath = ''
-        self._readRestInfo()
 
+        # from transfer info
         self.username = ''
         self.rucioScope = ''
         self.destination = ''
         self.publishname = ''
         self.logsDataset = ''
-        self._readTransferInfo()
 
         # dynamically change throughout the scripts
         self.currentDataset = ''
 
-        self.logger.debug(str(self.__dict__))
-
-    def _readRestInfo(self):
+    def readInfo(self):
         try:
             with open(REST_INFO_PATH, 'r', encoding='utf-8') as r:
                 restInfo = json.load(r)
-                self.proxypath = os.getcwd() + "/" + restInfo['proxyfile']
+                self.proxypath = restInfo['proxyfile']
         except FileNotFoundError as ex:
             raise RucioTransferException(f'{REST_INFO_PATH} does not exist. Probably no completed jobs in the task yet') from ex
 
-    def _readTransferInfo(self):
         try:
             with open(TRANSFER_INFO_PATH, 'r', encoding='utf-8') as r:
                 transferInfo = json.loads(r.readline()) # read from first line
