@@ -1,9 +1,10 @@
-# hello there!
+# should test detect provided wrong path to open function?
 
 import pytest
 import builtins
 import json
 from unittest.mock import patch, mock_open
+from argparse import Namespace
 
 from ASO.Rucio.Transfer import Transfer
 from ASO.Rucio.exception import RucioTransferException
@@ -37,8 +38,7 @@ def test_Transfer_readInfo():
         "checksums": {"adler32": "812b8235", "cksum": "1236675270"},
         "outputdataset": "/GenericTTbar/tseethon-autotest-1679671056-94ba0e06145abd65ccb1d21786dc7e1d/USER"
     }
-    from argparse import Namespace
-    config.config = Namespace(force_publishname=None)
+    config.config = Namespace(force_publishname=None, rest_info_path='/a/b/c', transfer_info_path='/d/e/f')
     with patch('builtins.open', new_callable=mock_open, read_data=f'{json.dumps(restInfoForFileTransfersJson)}\n') as mo:
         # setup config
         mo.side_effect = (mo.return_value, mock_open(read_data=f'{json.dumps(transfersTxt)}\n').return_value,)
@@ -53,10 +53,11 @@ def test_Transfer_readInfo():
         assert t.logsDataset == '/GenericTTbar/tseethon-autotest-1679671056-94ba0e06145abd65ccb1d21786dc7e1d/USER#LOGS'
         assert t.currentDataset == ''
 
-#def test_Transfer_readInfo_filenotfound():
-#    # setup config
-#
-#    # run transfer
-#    t = Transfer()
-#    with pytest.raises(RucioTransferException):
-#        t.readInfo()
+def test_Transfer_readInfo_filenotfound():
+    # setup config
+
+    # run transfer
+    config.config = Namespace(rest_info_path='/a/b/c', transfer_info_path='/d/e/f')
+    t = Transfer()
+    with pytest.raises(RucioTransferException):
+        t.readInfo()
