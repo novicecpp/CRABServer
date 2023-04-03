@@ -91,18 +91,7 @@ class BuildTaskDataset():
                         open_ds.append(md["name"])
             if len(open_ds) == 0:
                 self.logger.info("No dataset available yet, creating one")
-                self.transfer.currentDataset = f'{self.transfer.publishname}#{uuid.uuid4()}'
-                # create a new dataset
-                try:
-                    self.rucioClient.add_dataset(self.transfer.rucioScope, self.transfer.currentDataset)
-                    ds_did = {'scope': self.transfer.rucioScope,
-                              'type': "DATASET", 'name': self.transfer.currentDataset}
-                    self.rucioClient.add_replication_rule([ds_did], 1, self.transfer.destination)
-                    # attach dataset to the container
-                    self.rucioClient.attach_dids(
-                        self.transfer.rucioScope, self.transfer.publishname, [ds_did])
-                except Exception as ex:
-                    raise RucioTransferException("Failed to create and attach a new RUCIO dataset") from ex
+                self.createDataset()
             elif len(open_ds) > 1:
                 self.logger.info(
                     "Found more than one open dataset, closing the one with more files and using the other as the current one")
@@ -114,15 +103,19 @@ class BuildTaskDataset():
                 self.transfer.currentDataset = open_ds[0]
         else:
             self.logger.info("Forced creation of a new dataset.")
-            self.transfer.currentDataset = f"{self.transfer.publishname}#{uuid.uuid4()}"
-            # create a new dataset
-            # TODO: REFACTORING: merge with force_create = false
-            try:
-                self.rucioClient.add_dataset(self.transfer.rucioScope, self.transfer.currentDataset)
-                ds_did = {'scope': self.transfer.rucioScope,
-                          'type': "DATASET", 'name': self.transfer.currentDataset}
-                self.rucioClient.add_replication_rule([ds_did], 1, self.transfer.destination)
-                # attach dataset to the container
-                self.rucioClient.attach_dids(self.transfer.rucioScope, self.transfer.publishname, [ds_did])
-            except Exception as ex:
-                raise RucioTransferException("Failed to create and attach a new RUCIO dataset") from ex
+            self.createDataset()
+
+
+    def createDataset(self):
+        self.transfer.currentDataset = f"{self.transfer.publishname}#{uuid.uuid4()}"
+        # create a new dataset
+        # TODO: REFACTORING: merge with force_create = false
+        try:
+            self.rucioClient.add_dataset(self.transfer.rucioScope, self.transfer.currentDataset)
+            ds_did = {'scope': self.transfer.rucioScope,
+                      'type': "DATASET", 'name': self.transfer.currentDataset}
+            self.rucioClient.add_replication_rule([ds_did], 1, self.transfer.destination)
+            # attach dataset to the container
+            self.rucioClient.attach_dids(self.transfer.rucioScope, self.transfer.publishname, [ds_did])
+        except Exception as ex:
+            raise RucioTransferException("Failed to create and attach a new RUCIO dataset") from ex
