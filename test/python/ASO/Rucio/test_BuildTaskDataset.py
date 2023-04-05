@@ -4,7 +4,7 @@ import uuid
 import datetime
 from unittest.mock import patch, Mock
 from ASO.Rucio.exception import RucioTransferException
-from rucio.common.exception import DataIdentifierAlreadyExists, InvalidObject, DuplicateRule
+from rucio.common.exception import DataIdentifierAlreadyExists, InvalidObject, DuplicateRule, DuplicateContent
 
 from ASO.Rucio.Actions.BuildTaskDataset import BuildTaskDataset
 
@@ -37,9 +37,15 @@ def test_check_or_create_container_container_exist(mock_rucioClient, mock_Transf
     b.check_or_create_container()
 
 
+# NOTE:
+# 1) unittest still pass when you get data from self instead of param
+#    how do we check that?
+# 2) we did not check if params parse to rucioClient function correctly,
+#    should we do it in integration test or in unittest?
+
 def test_createDataset(mock_Transfer, mock_rucioClient):
     b = BuildTaskDataset(mock_Transfer, mock_rucioClient)
-    b.createDataset(mock_Transfer.rucioScope, mock_Transfer.datasetName, mock_Transfer.publishname)
+    b.createDataset(mock_Transfer.datasetName)
     mock_rucioClient.add_dataset.assert_called_once()
     mock_rucioClient.add_replication_rule.assert_called_once()
     mock_rucioClient.attach_dids.assert_called_once()
@@ -47,12 +53,12 @@ def test_createDataset(mock_Transfer, mock_rucioClient):
 @pytest.mark.parametrize('methodName,exception', [
     ('add_dataset', DataIdentifierAlreadyExists),
     ('add_replication_rule', DuplicateRule),
-    ('attach_dids', Exception),
+    ('attach_dids', DuplicateContent),
 ])
 def test_createDataset_raise_exception(mock_Transfer, mock_rucioClient, methodName, exception):
     getattr(mock_rucioClient, methodName).side_effect = exception
     b = BuildTaskDataset(mock_Transfer, mock_rucioClient)
-    b.createDataset(mock_Transfer.rucioScope, mock_Transfer.datasetName, mock_Transfer.publishname)
+    b.createDataset(mock_Transfer.datasetName)
     # too lazy to check args. maybe it should
     mock_rucioClient.add_dataset.assert_called_once()
     mock_rucioClient.add_replication_rule.assert_called_once()
@@ -66,6 +72,7 @@ def test_createDataset_raise_exception(mock_Transfer, mock_rucioClient, methodNa
 # - if open_ds == 1 use [0]
 # - if open_ds == 0: create new
 # this assume we always have logs dataset in container before come to this function
+#
 
 def genContentAndMetadata(transfer, num, withLogsDataset=True):
     dataset = []
@@ -114,12 +121,17 @@ def genContentAndMetadata(transfer, num, withLogsDataset=True):
 
 @pytest.mark.parametrize('nDataset', [0, 1, 5])
 def test_getOrCreateDataset_new_dataset(mock_Transfer, mock_rucioClient, nDataset):
-    datasetContent, datasetMedataContent = genContentAndMetadata(mock_Transfer, nDataset)
+    datasetContent, datasetMetadataContent = genContentAndMetadata(mock_Transfer, nDataset)
     mock_rucioClient.list_content.return_value = datasetContent
     # we cannot use get_metadata_bulk right now because even recent dataset,
     # bytes from rucioClient.list_client still None
     mock_rucioClient.get_metadata_bulk.side_effect = InvalidObject
-    mock_rucioClient.get_metadata.side_effect = tuple(datasetMedataContent)
+    def mock_get_metadata(scope, name):
+        for i in datasetMetadataContent:
+            if i['name'] == name:
+                return i
+        return None
+    mock_rucioClient.get_metadata.side_effect = mock_get_metadata
     b = BuildTaskDataset(mock_Transfer, mock_rucioClient)
     b.createDataset = Mock()
     newDatasetName = f'{mock_Transfer.publishname}#{mock_Transfer.currentDatasetUUID}'
@@ -127,28 +139,27 @@ def test_getOrCreateDataset_new_dataset(mock_Transfer, mock_rucioClient, nDatase
         mock_uuid4.return_value = uuid.UUID(mock_Transfer.currentDatasetUUID)
         ret = b.getOrCreateDataset()
     assert ret == newDatasetName
-    b.createDataset.assert_called_once_with(mock_Transfer.rucioScope, newDatasetName, mock_Transfer.publishname)
+    b.createDataset.assert_called_once_with(newDatasetName)
 
 
 def test_getOrCreateDataset_one_open_dataset(mock_Transfer, mock_rucioClient):
     datasetContent, datasetMetadataContent = genContentAndMetadata(mock_Transfer, 5)
     datasetMetadataContent[1]['is_open'] = True
+    mock_rucioClient.list_content.return_value = datasetContent
+    # we cannot use get_metadata_bulk right now because even recent dataset,
+    # bytes from rucioClient.list_client still None
+    mock_rucioClient.get_metadata_bulk.side_effect = InvalidObject
     def mock_get_metadata(scope, name):
         for i in datasetMetadataContent:
             if i['name'] == name:
                 return i
         return None
-    mock_rucioClient.list_content.return_value = datasetContent
-    # we cannot use get_metadata_bulk right now because even recent dataset,
-    # bytes from rucioClient.list_client still None
-    mock_rucioClient.get_metadata_bulk.side_effect = InvalidObject
     mock_rucioClient.get_metadata.side_effect = mock_get_metadata
     b = BuildTaskDataset(mock_Transfer, mock_rucioClient)
     b.createDataset = Mock()
     newDatasetName = f'{datasetContent[1]["name"]}'
     assert b.getOrCreateDataset() == newDatasetName
-    b.createDataset.assert_called_once_with(mock_Transfer.rucioScope, newDatasetName, mock_Transfer.publishname)
-
+    b.createDataset.assert_called_once_with(newDatasetName)
 
 
 def test_getOrCreateDataset_two_open_dataset(mock_Transfer, mock_rucioClient):
@@ -159,94 +170,14 @@ def test_getOrCreateDataset_two_open_dataset(mock_Transfer, mock_rucioClient):
     # we cannot use get_metadata_bulk right now because even recent dataset,
     # bytes from rucioClient.list_client still None
     mock_rucioClient.get_metadata_bulk.side_effect = InvalidObject
-    mock_rucioClient.get_metadata.side_effect = tuple(datasetMetadataContent)
+    def mock_get_metadata(scope, name):
+        for i in datasetMetadataContent:
+            if i['name'] == name:
+                return i
+        return None
+    mock_rucioClient.get_metadata.side_effect = mock_get_metadata
     b = BuildTaskDataset(mock_Transfer, mock_rucioClient)
     b.createDataset = Mock()
     newDatasetName = f'{datasetContent[1]["name"]}'
     assert b.getOrCreateDataset() == newDatasetName
-    b.createDataset.assert_called_once_with(mock_Transfer.rucioScope, newDatasetName, mock_Transfer.publishname)
-
-
-
-
-
-
-#def test_getOrCreateCurrentDataset_close_dataset(mock_Transfer, mock_rucioClient):
-#    datasetContent, datasetMedataContent = genContentAndMetadata(5)
-#    def mock_rucioClient_raise_InvalidObject():
-#        raise InvalidObject
-#    mock_rucioClient.list_content.return_value = datasetContent
-#    # we cannot use get_metadata_bulk right now because even recent dataset,
-#    # bytes from rucioClient.list_client still None
-#    mock_rucioClient.get_metadata_bulk = mock_rucioClient_raise_InvalidObject
-#    mock_rucioClient.get_metadata.side_effect = tuple(datasetMedataContent)
-#    b = BuildTaskDataset(mock_Transfer, mock_rucioClient)
-#    b.createDataset = Mock()
-#    b.getOrCreateDataset()
-#    datasetName = f'{mock_Transfer.publishname}#8fa92764-63c5-4825-ade8-4684288bf984'
-#    with patch('uuid.uuid4', autospec=True) as mock_uuid4:
-#        mock_uuid4.return_value = uuid.UUID('8fa92764-63c5-4825-ade8-4684288bf984')
-#        b.createDataset.assert_called_with(mock_Transfer.rucioScope, datasetName, mock_Transfer.publishname)
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#def test_getOrCreateDataset_one_open_dataset(mock_Transfer, mock_rucioClient):
-#    datasetContent, datasetMedataContent = genContentAndMetadata(3)
-#    def mock_rucioClient_raise_InvalidObject():
-#        raise InvalidObject
-#    mock_rucioClient.list_content.return_value = datasetContent
-#    # we cannot use get_metadata_bulk right now because even recent dataset,
-#    # bytes from rucioClient.list_client still None
-#    mock_rucioClient.get_metadata_bulk = mock_rucioClient_raise_InvalidObject
-#    mock_rucioClient.get_metadata.side_effect = tuple(datasetMedataContent)
-#    previousDataset = mock_Transfer.currentDataset
-#    b = BuildTaskDataset(mock_Transfer, mock_rucioClient)
-#    b.createDataset = Mock()
-#    b.getOrCreateDataset()
-#    b.createDataset.assert_called_once_with()
-#    assert mock_Transfer.currentDataset != previousDataset
-#
-#def test_getOrCreateCurrentDataset_two_open_dataset(mock_Transfer, mock_rucioClient):
-#    datasetContent, datasetMedataContent = genContentAndMetadata(5)
-#    def mock_rucioClient_raise_InvalidObject():
-#        raise InvalidObject
-#    mock_rucioClient.list_content.return_value = datasetContent
-#    # we cannot use get_metadata_bulk right now because even recent dataset,
-#    # bytes from rucioClient.list_client still None
-#    mock_rucioClient.get_metadata_bulk = mock_rucioClient_raise_InvalidObject
-#    mock_rucioClient.get_metadata.side_effect = tuple(datasetMedataContent)
-#    previousDataset = mock_Transfer.currentDataset
-#    b = BuildTaskDataset(mock_Transfer, mock_rucioClient)
-#    b.createDataset = Mock()
-#    b.getOrCreateDataset()
-#    b.createDataset.assert_not_called()
-#    assert mock_Transfer.currentDataset != previousDataset
-#
-#
-#def test_createLogsDataset_logs_dataset_does_not_exist(mock_Transfer, mock_rucioClient):
-#    datasetContent, datasetMedataContent = genContentAndMetadata(5, withLogsDataset=False)
-#    mock_rucioClient.list_content.return_value = datasetContent
-#    b = BuildTaskDataset(mock_Transfer, mock_rucioClient)
-#    b.createDataset = Mock()
-#    b.createLogsDataset()
-#    datasetName = f'{mock_Transfer.publishname}#LOG'
-#    b.createDataset.assert_called_with(mock_Transfer.rucioScope, datasetName, mock_Transfer.publishname)
-#
-#
-#def test_createLogsDataset_logs_dataset_exist(mock_Transfer, mock_rucioClient):
-#    datasetContent, datasetMedataContent = genContentAndMetadata(5)
-#    mock_rucioClient.list_content.return_value = datasetContent
-#    b = BuildTaskDataset(mock_Transfer, mock_rucioClient)
-#    b.createDataset = Mock()
-#    b.createLogsDataset()
-#    datasetName = f'{mock_Transfer.publishname}#LOG'
-#    b.createDataset.assert_called_with(mock_Transfer.rucioScope, datasetName, mock_Transfer.publishname)
+    b.createDataset.assert_called_once_with(newDatasetName)

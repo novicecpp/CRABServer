@@ -1,7 +1,7 @@
 import logging
 import uuid
 
-from rucio.common.exception import DataIdentifierAlreadyExists, InvalidObject, DuplicateRule
+from rucio.common.exception import DataIdentifierAlreadyExists, InvalidObject, DuplicateRule, DuplicateContent
 
 from ASO.Rucio.exception import RucioTransferException
 from ASO.Rucio.config import config
@@ -14,7 +14,8 @@ class BuildTaskDataset():
 
     def execute(self):
         self.check_or_create_container()
-        self.createDataset(self.transfer.rucioScope, self.transfer.logsDataset, self.transfer.publishname)
+        # create log dataset
+        self.createDataset(self.transfer.logsDataset)
         self.transfer.currentDataset = self.getOrCreateDataset()
 
     def check_or_create_container(self):
@@ -66,16 +67,16 @@ class BuildTaskDataset():
             # so far we take the first and then let the Publisher close the dataset when task completed
             currentDatasetName = openDatasets[0]
         # always execute createDataset() again in case replication rule is not create and the dids is not attach to root container
-        self.createDataset(self.transfer.rucioScope, currentDatasetName, self.transfer.publishname)
+        self.createDataset(currentDatasetName)
         return currentDatasetName
 
-    def createDataset(self, rucioScope, datasetName, containerName):
-        self.logger.debug(f'Creating dataset {self.transfer.logsDataset}')
+    def createDataset(self, datasetName):
+        self.logger.debug(f'Creating dataset {datasetName}')
         try:
-            self.rucioClient.add_dataset(self.transfer.rucioScope, self.transfer.logsDataset)
+            self.rucioClient.add_dataset(self.transfer.rucioScope, datasetName)
         except DataIdentifierAlreadyExists:
-            self.logger.info(f"{self.transfer.publishname} dataset already exists, doing nothing")
-        ds_did = {'scope': self.transfer.rucioScope, 'type': "DATASET", 'name': self.transfer.logsDataset}
+            self.logger.info(f"{datasetName} dataset already exists, doing nothing")
+        ds_did = {'scope': self.transfer.rucioScope, 'type': "DATASET", 'name': datasetName}
         try:
             self.rucioClient.add_replication_rule([ds_did], 1, self.transfer.destination)
             # TODO: not sure if any other case make the rule duplicate beside script crash
@@ -84,5 +85,5 @@ class BuildTaskDataset():
         try:
         # attach dataset to the container
             self.rucioClient.attach_dids(self.transfer.rucioScope, self.transfer.publishname, [ds_did])
-        except RucioTransferException as ex:
-            raise RucioTransferException("Failed to create and attach a RUCIO dataset") from ex
+        except DuplicateContent as ex:
+            self.logger.info(f'{datasetName} dataset has attached to {self.transfer.publishname}, doing nothing')
