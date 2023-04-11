@@ -557,6 +557,8 @@ def register_replicas(input_replicas: dict) -> tuple:
     failed = []
 
     # Per rse and per chunks
+    #replica = {'scope': glob.rucio_scope, 'pfn': pfn_map[rse][source_lfn],
+    #           'name': destination_lfn, 'bytes': size, 'adler32': checksum}
 
     for rse, replicas in input_replicas.items():
 
