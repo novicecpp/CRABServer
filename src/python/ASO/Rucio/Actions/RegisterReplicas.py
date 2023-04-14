@@ -39,7 +39,6 @@ class RegisterReplicas:
         return replicasByRSE
 
 
-
     def getSourcePFN(self, sourceLFN, sourceRSE, destinationRSE):
         try:
             _, srcScheme, _, _ = find_matching_scheme(
