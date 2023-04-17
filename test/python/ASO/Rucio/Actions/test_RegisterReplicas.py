@@ -116,8 +116,8 @@ def test_register(mock_Transfer, mock_rucioClient):
     }
     expectedSuccess = [
         {
-            "name": "/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1679671056/230324_151740/0000/output_9.root"
-            "dataset": mock_Transfer.currentDataset
+            "name": "/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1679671056/230324_151740/0000/output_9.root",
+            "dataset": mock_Transfer.currentDataset,
         }
     ]
     expectedFail = []

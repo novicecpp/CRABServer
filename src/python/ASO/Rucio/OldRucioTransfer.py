@@ -655,7 +655,7 @@ def monitor_locks_status():
                     filename = file_['name']
                     result = { 'filename': filename, 'dbsBlock': ds['name'], 'complete': 'OK' if r['state'] == 'OK' else 'NO'}
 
-                    # skip files already processed
+                    # TODO: skip files already processed
                     if filename in already_processed_list:
                         continue
 
@@ -714,6 +714,16 @@ def monitor_locks_status():
 
     list_failed = list_failed_tmp + list_stuck
     return list_good, list_failed, list_update
+
+
+
+#to_update_success_docs = make_filedoc_for_db(
+#    ids=[glob.id2lfn_map[x['lfn']] for x in success_from_registration],
+#    states=["SUBMITTED" for x in success_from_registration],
+#    dbsBlocknames=[x['dbsBlock'] for x in success_from_registration],
+#    blockCompletes=[x['complete'] for x in success_from_registration],
+#    reasons=None
+#)
 
 
 def make_filedoc_for_db(

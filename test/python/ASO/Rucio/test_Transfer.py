@@ -61,3 +61,25 @@ def test_Transfer_readInfo_filenotfound():
     t = Transfer()
     with pytest.raises(RucioTransferException):
         t.readInfo()
+
+def test_readLastTransferLine():
+    with patch('builtins.open', new_callable=mock_open, read_data='5\n') as mo:
+        t = Transfer()
+        t.readLastTransferLine()
+        assert t.lastTransferLine == 5
+
+def test_readLastTransferLine_file_not_found():
+    config.config = Namespace(last_line_path='/a/b/c')
+    t = Transfer()
+    with pytest.raises(FileNotFoundError):
+        t.readLastTransferLine()
+
+# do we need to test this thing?
+# ======================
+# if not os.path.exists('task_process/transfers'):
+#     os.makedirs('task_process/transfers')
+
+
+def test_readTransferItems():
+    t = Transfer()
+    t.readTransferItems()
