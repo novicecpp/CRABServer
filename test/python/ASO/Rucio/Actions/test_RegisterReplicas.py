@@ -83,7 +83,7 @@ def test_prepare_single_xdict(mock_Transfer, mock_rucioClient):
     # expectedOuput should be
     getSourcePFNReturnValue = 'davs://eoscms.cern.ch:443/eos/cms/store/temp/user/tseethon.d6830fc3715ee01030105e83b81ff3068df7c8e0/tseethon/test-workflow/GenericTTbar/autotest-1679671056/230324_151740/0000/output_9.root'
     expectedOutput = {
-        "T2_CH_CERN": [
+        "T2_CH_CERN_Temp": [
             {
                 "scope": "user.cmscrab",
                 "pfn": getSourcePFNReturnValue,
@@ -98,7 +98,7 @@ def test_prepare_single_xdict(mock_Transfer, mock_rucioClient):
         r = RegisterReplicas(mock_Transfer, mock_rucioClient)
         assert r.prepare(prepareInput) == expectedOutput
 
-@pytest.mark.skip(reason="Need to implement (or not?) but skip it for now.")
+@pytest.mark.skip(reason="Need to implement (or not?) but skip it for now due deadline.")
 def test_prepare_skip_direct_stageout(mock_Transfer, mock_rucioClient, loadTransferList):
     pass
 

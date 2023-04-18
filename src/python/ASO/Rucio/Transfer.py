@@ -56,19 +56,7 @@ class Transfer:
                     r.readline()
                 for line in r:
                     doc = json.loads(line)
-                    xdict = {
-                        "source_lfn": doc["source_lfn"],
-                        "destination_lfn": doc["destination_lfn"],
-                        "id": doc["id"],
-                        # /store/temp path is recognize on rucio as <sitename>_Temp
-                        "source": doc["source"]+"_Temp",
-                        "destination": doc["destination"],
-                        "checksum": doc["checksums"]["adler32"].rjust(8, '0'),
-                        "filesize": doc["filesize"],
-                        "publishname": doc["outputdataset"],
-                        "username": doc["username"],
-                    }
-                    self.transferItems.append(xdict)
+                    self.transferItems.append(doc)
                     self.lastTransferLine += 1
         except FileNotFoundError as ex:
             raise RucioTransferException(f'{path} does not exist. Probably no completed jobs in the task yet.') from ex

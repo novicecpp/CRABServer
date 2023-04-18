@@ -126,9 +126,8 @@ def test_readTransferItems_start_at_line_zero(transfersTxtContent):
         t.readTransferItems()
         assert mo.call_args.args[0] == path
         assert t.transferItems[5]['id'] == '5b5c6d9f2e99ae32191e2c702ca9bba32951d69027289a7cde884468'
-        assert t.transferItems[5]['source'] == 'T2_CH_CERN_Temp'
-        assert t.transferItems[5]['checksum'] == 'cde8011f'
-        print(t.transferItems[5])
+        assert t.transferItems[5]['source'] == 'T2_CH_CERN'
+        assert t.transferItems[5]['checksums']['adler32'] == 'cde8011f'
 
 def test_readTransferItems_start_at_line_six(transfersTxtContent):
     t = Transfer()
@@ -139,8 +138,8 @@ def test_readTransferItems_start_at_line_six(transfersTxtContent):
         t.readTransferItems()
         assert mo.call_args.args[0] == path
         assert t.transferItems[0]['id'] == '5b5c6d9f2e99ae32191e2c702ca9bba32951d69027289a7cde884468'
-        assert t.transferItems[0]['source'] == 'T2_CH_CERN_Temp'
-        assert t.transferItems[0]['checksum'] == 'cde8011f'
+        assert t.transferItems[0]['source'] == 'T2_CH_CERN'
+        assert t.transferItems[0]['checksums']['adler32'] == 'cde8011f'
 
 
 def test_readTransferItems_FileNotFoundError():

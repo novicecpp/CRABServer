@@ -11,14 +11,15 @@ class RegisterReplicas:
         self.transfer = transfer
     def execute(self):
         raise NotImplementedError
-    def register(self):
+    def register(self, prepareList):
         raise NotImplementedError
     def prepare(self, transferList):
         # create bucket rse
         bucket = {}
         replicasByRSE = {}
         for xdict in transferList:
-            rse = xdict["source"]
+            # /store/temp are register as `<site>_Temp` in rucio
+            rse = f'{xdict["source"]}_Temp'
             if not rse in bucket:
                 bucket[rse] = []
             bucket[rse].append(xdict)
@@ -33,7 +34,8 @@ class RegisterReplicas:
                     'pfn': f'{pfnPrefix}{xdict["source_lfn"]}',
                     'name': xdict['destination_lfn'],
                     'bytes': xdict['filesize'],
-                    'adler32': xdict['checksums']['adler32'],
+                    # FIXME: not sure why we need str.rjust here
+                    'adler32': xdict['checksums']['adler32'].rjust(8, '0'),
                 }
                 replicasByRSE[rse].append(replica)
         return replicasByRSE
