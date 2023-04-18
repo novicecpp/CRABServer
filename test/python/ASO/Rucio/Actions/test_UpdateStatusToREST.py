@@ -91,7 +91,7 @@ def generateExpectedOutput(doctype, dataset):
 def test_makefileDoc_success_register_replica(mock_crabserver, mock_Transfer):
     registerReplicasOutput = [
         {
-            "name": "/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1679671056/230324_151740/0000/output_9.root",
+            "id": "98f353b91ec84f0217da80bde84d6b520c0c6640f60ad9aabb7b20ca",
             "dataset": mock_Transfer.currentDataset,
         }
     ]

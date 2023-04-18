@@ -52,7 +52,7 @@ class BuildTaskDataset():
         - If only one is open, go ahead and use it.
         - if none, create new one.
         Note that this method always call createDataset to check if
-        rule and container of dataset are attach properly
+        rule and container of dataset are attach properly.
 
         :returns: dataset name
         :rtype: str
@@ -74,7 +74,7 @@ class BuildTaskDataset():
         openDatasets = [md['name'] for md in metadata if md['is_open'] == True]
         if len(openDatasets) == 0:
             self.logger.info("No dataset available yet, creating one")
-            currentDatasetName = f'{self.transfer.publishname}#{str(uuid.uuid4())}'
+            currentDatasetName = self.generateDatasetName()
         elif len(openDatasets) == 1:
             currentDatasetName = openDatasets[0]
             self.logger.info(f"Found exactly one open dataset: {currentDatasetName}")
@@ -114,3 +114,9 @@ class BuildTaskDataset():
             self.rucioClient.attach_dids(self.transfer.rucioScope, self.transfer.publishname, [ds_did])
         except DuplicateContent as ex:
             self.logger.info(f'{datasetName} dataset has attached to {self.transfer.publishname}, doing nothing')
+
+    def countReplicasInDataset(self, dataset):
+        return len(list(self.rucioClient.list_content(self.transfer.rucioRcope, dataset)))
+
+    def generateDatasetName(self):
+        return f'{self.transfer.publishname}#{str(uuid.uuid4())}'

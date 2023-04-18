@@ -1,7 +1,11 @@
 import logging
+from ASO.Rucio.Actions.BuildTaskDataset import BuildTaskDataset
 from rucio.rse.rsemanager import find_matching_scheme
+from rucio.common.exception import FileAlreadyExists
 
 from ASO.Rucio.exception import RucioTransferException
+from ASO.Rucio.utils import chunks
+import ASO.Rucio.config as config
 
 
 class RegisterReplicas:
@@ -11,8 +15,51 @@ class RegisterReplicas:
         self.transfer = transfer
     def execute(self):
         raise NotImplementedError
-    def register(self, prepareList):
-        raise NotImplementedError
+    def register(self, prepareReplicas):
+        successReplicas = []
+        failReplicas = []
+        b = BuildTaskDataset(self.transfer, self.rucioClient)
+        # Ii will treat as fail the whole chunks if one of replicas is fail.
+        for rse, replicas in prepareReplicas.items():
+            for chunk in chunks(replicas, config.config.replicas_chunk_size):
+                try:
+                    if not self.rucioClient.add_replicas(rse, chunk):
+                        failItems = [{
+                            'id': x['id'],
+                            'dataset': '',
+                        } for x in chunk]
+                        failReplicas.append(failItems)
+                except ExceptionWhenSomeFileAlreadyAddToReplica:
+                    self.logger.info("files were already registered, going ahead.")
+                dids = [{
+                    'scope': self.transfer.rucioScope,
+                    'type': "FILE",
+                    'name': x["name"]
+                } for x in chunk]
+                # no need to try catch for duplicate content.
+                # not sure if restart process is enough for the case of connection error
+                self.rucioClient.add_files_to_datasets([{
+                        'scope': self.transfer.rucioScope,
+                        'name': self.transfer.current_dataset,
+                        'dids': dids
+                    }],
+                    ignore_duplicate=True)
+                successItems = [{
+                    'id': x['id'],
+                    'dataset': self.transfer.currentDataset
+                } for x in chunk]
+                successReplicas.append(successItems)
+                # TODO: close if update comes > 4h, or is it a Publisher task?
+                # check the current number of files in the dataset
+                num = len(list(self.rucioClient.list_content(self.transfer.rucioRcope, self.transfer.currentDataset)))
+                if num >= config.config.dataset_file_limit:
+                    # -if everything full create new one
+                    b.rucioClient.close(self.transfer.rucioScope, self.transfer.currentDataset)
+                    newDataset = b.generateDatasetName()
+                    b.createDataset(newDataset)
+                    self.transfer.currentDataset = newDataset
+        return successReplicas, failReplicas
+
     def prepare(self, transferList):
         # create bucket rse
         bucket = {}
@@ -36,6 +83,7 @@ class RegisterReplicas:
                     'bytes': xdict['filesize'],
                     # FIXME: not sure why we need str.rjust here
                     'adler32': xdict['checksums']['adler32'].rjust(8, '0'),
+                    'id': xdict['id']
                 }
                 replicasByRSE[rse].append(replica)
         return replicasByRSE

@@ -1,8 +1,10 @@
 import pytest
 import json
 from unittest.mock import patch, Mock
+from argparse import Namespace
 
 from ASO.Rucio.Actions.RegisterReplicas import RegisterReplicas
+import ASO.Rucio.config as config
 
 # prepare_replicas
 # input is just transfers.txt start from last lines
@@ -90,6 +92,7 @@ def test_prepare_single_xdict(mock_Transfer, mock_rucioClient):
                 "name": "/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1679671056/230324_151740/0000/output_9.root",
                 "bytes": 628054,
                 "adler32": "812b8235",
+                "id": "98f353b91ec84f0217da80bde84d6b520c0c6640f60ad9aabb7b20ca"
             }
         ]
     }
@@ -98,32 +101,50 @@ def test_prepare_single_xdict(mock_Transfer, mock_rucioClient):
         r = RegisterReplicas(mock_Transfer, mock_rucioClient)
         assert r.prepare(prepareInput) == expectedOutput
 
-@pytest.mark.skip(reason="Need to implement (or not?) but skip it for now due deadline.")
+@pytest.mark.skip(reason="Need to implement (or not?) but skip it for now.")
 def test_prepare_skip_direct_stageout(mock_Transfer, mock_rucioClient, loadTransferList):
     pass
 
-def test_register(mock_Transfer, mock_rucioClient):
+def test_register_success(mock_Transfer, mock_rucioClient):
     prepareReplicasByRSE = {
-        "T2_CH_CERN": [
+        "T2_CH_CERN_Temp": [
             {
                 "scope": "user.cmscrab",
                 "pfn": 'davs://eoscms.cern.ch:443/eos/cms/store/temp/user/tseethon.d6830fc3715ee01030105e83b81ff3068df7c8e0/tseethon/test-workflow/GenericTTbar/autotest-1679671056/230324_151740/0000/output_9.root',
                 "name": "/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1679671056/230324_151740/0000/output_9.root",
                 "bytes": 628054,
                 "adler32": "812b8235",
+                "id": "98f353b91ec84f0217da80bde84d6b520c0c6640f60ad9aabb7b20ca",
             }
         ]
     }
     expectedSuccess = [
         {
-            "name": "/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1679671056/230324_151740/0000/output_9.root",
+            "id": "98f353b91ec84f0217da80bde84d6b520c0c6640f60ad9aabb7b20ca",
             "dataset": mock_Transfer.currentDataset,
         }
     ]
     expectedFail = []
+    config.config = Namespace(replicas_chunk_size=2, dataset_file_limit=9)
     r = RegisterReplicas(mock_Transfer, mock_rucioClient)
     s, f = r.register(prepareReplicasByRSE)
-    # FIXME: should we add replica one at a time instead of bulk
+    # FIXME: should we add replica one at a time instead of bulk?
     # to prevent one file cause fail whole bulk
-    mock_rucioClient.add_replicas.assert_called_once()
-    mock_rucioClient.add_files_to_datasets.assert_called_once()
+    mock_rucioClient.add_replicas.assert_called()
+    mock_rucioClient.add_files_to_datasets.assert_called()
+
+@pytest.mark.skip(reason="Skip it for now due deadline.")
+def test_register_fail(mock_Transfer, mock_rucioClient):
+    pass
+
+@pytest.mark.skip(reason="Skip it for now due deadline.")
+def test_register_mix_fail_and_success(mock_Transfer, mock_rucioClient):
+    pass
+
+@pytest.mark.skip(reason="Skip it for now due deadline.")
+def test_register_rerun_from_last_crash(mock_Transfer, mock_rucioClient):
+    pass
+
+@pytest.mark.skip(reason="Skip it for now due deadline.")
+def test_register_create_new_dataset(mock_Transfer, mock_rucioClient):
+    pass
