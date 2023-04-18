@@ -889,18 +889,19 @@ def main():
             dbsBlocknames=[x['dbsBlock'] for x in success_from_monitor],
             blockCompletes= [x['complete'] for x in success_from_monitor],
         )
-        fileDocs_failed_monitor = make_filedoc_for_db(
-            ids=[glob.id2lfn_map[x[0]] for x in failed_from_monitor],
-            states=["FAILED" for x in failed_from_monitor],
-            reasons=[x[1] for x in failed_from_monitor],
-        )
+        #fileDocs_failed_monitor = make_filedoc_for_db(
+        #    ids=[glob.id2lfn_map[x[0]] for x in failed_from_monitor],
+        #    states=["FAILED" for x in failed_from_monitor],
+        #    reasons=[x[1] for x in failed_from_monitor],
+        #)
         fileDocs_ruleid_monitor = make_filedoc_for_db(
             ids=[glob.id2lfn_map[x[0]] for x in ruleid_update],
             states=["SUBMITTED" for x in ruleid_update],
             rule_ids=[x[1] for x in ruleid_update]
         )
         update_db([fileDocs_success_monitor,
-                   fileDocs_failed_monitor, fileDocs_ruleid_monitor])
+                   #fileDocs_failed_monitor,
+                   fileDocs_ruleid_monitor])
     except Exception as ex:
         raise ex
 
