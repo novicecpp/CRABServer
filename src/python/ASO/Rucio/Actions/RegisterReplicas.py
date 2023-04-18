@@ -13,8 +13,40 @@ class RegisterReplicas:
         self.logger = logging.getLogger("RucioTransfer.Actions.RegisterReplicas")
         self.rucioClient = rucioClient
         self.transfer = transfer
-    def execute(self):
-        raise NotImplementedError
+
+    def execute(self, rawList):
+        preparedReplicasByRSE = self.prepare(rawList)
+        success, fail = self.register(preparedReplicasByRSE)
+        return (success, fail)
+
+    def prepare(self, transferList):
+        # create bucket rse
+        bucket = {}
+        replicasByRSE = {}
+        for xdict in transferList:
+            # /store/temp are register as `<site>_Temp` in rucio
+            rse = f'{xdict["source"]}_Temp'
+            if not rse in bucket:
+                bucket[rse] = []
+            bucket[rse].append(xdict)
+        for rse in bucket:
+            xdict = bucket[rse][0]
+            pfn = self.getSourcePFN(xdict["source_lfn"], rse, xdict["destination"])
+            pfnPrefix = pfn.split(xdict["source_lfn"])[0]
+            replicasByRSE[rse] = []
+            for xdict in bucket[rse]:
+                replica = {
+                    'scope': self.transfer.rucioScope,
+                    'pfn': f'{pfnPrefix}{xdict["source_lfn"]}',
+                    'name': xdict['destination_lfn'],
+                    'bytes': xdict['filesize'],
+                    # FIXME: not sure why we need str.rjust here
+                    'adler32': xdict['checksums']['adler32'].rjust(8, '0'),
+                    'id': xdict['id']
+                }
+                replicasByRSE[rse].append(replica)
+        return replicasByRSE
+
     def register(self, prepareReplicas):
         successReplicas = []
         failReplicas = []
@@ -59,35 +91,6 @@ class RegisterReplicas:
                     b.createDataset(newDataset)
                     self.transfer.currentDataset = newDataset
         return successReplicas, failReplicas
-
-    def prepare(self, transferList):
-        # create bucket rse
-        bucket = {}
-        replicasByRSE = {}
-        for xdict in transferList:
-            # /store/temp are register as `<site>_Temp` in rucio
-            rse = f'{xdict["source"]}_Temp'
-            if not rse in bucket:
-                bucket[rse] = []
-            bucket[rse].append(xdict)
-        for rse in bucket:
-            xdict = bucket[rse][0]
-            pfn = self.getSourcePFN(xdict["source_lfn"], rse, xdict["destination"])
-            pfnPrefix = pfn.split(xdict["source_lfn"])[0]
-            replicasByRSE[rse] = []
-            for xdict in bucket[rse]:
-                replica = {
-                    'scope': self.transfer.rucioScope,
-                    'pfn': f'{pfnPrefix}{xdict["source_lfn"]}',
-                    'name': xdict['destination_lfn'],
-                    'bytes': xdict['filesize'],
-                    # FIXME: not sure why we need str.rjust here
-                    'adler32': xdict['checksums']['adler32'].rjust(8, '0'),
-                    'id': xdict['id']
-                }
-                replicasByRSE[rse].append(replica)
-        return replicasByRSE
-
 
     def getSourcePFN(self, sourceLFN, sourceRSE, destinationRSE):
         try:
