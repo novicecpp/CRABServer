@@ -30,6 +30,7 @@ class RunTransfer:
         """
         # init
         self.transfer = Transfer()
+        self.transfer.readInfo()
         self.rucio = self._initRucioClient(self.transfer.username, self.transfer.proxypath)
         # do nothing
         BuildTaskDataset(self.transfer, self.rucio).execute()

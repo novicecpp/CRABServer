@@ -31,24 +31,65 @@ class Transfer:
     def readInfo(self):
         """
         Read the information from input files using path from configuration.
+        It needs to execute to following order because of dependency between method.
         """
-        try:
-            with open(config.config.rest_info_path, 'r', encoding='utf-8') as r:
-                restInfo = json.load(r)
-                self.proxypath = restInfo['proxyfile']
-        except FileNotFoundError as ex:
-            raise RucioTransferException(f'{config.config.rest_info_path} does not exist. Probably no completed jobs in the task yet') from ex
+        self.readLastTransferLine()
+        self.readTransferItems()
+        self.readRESTInfo()
+        self.readInfoFromTransferItems()
 
+    def readLastTransferLine(self):
+        path = config.config.last_line_path
         try:
-            with open(config.config.transfer_info_path, 'r', encoding='utf-8') as r:
-                transferInfo = json.loads(r.readline()) # read from first line
-                self.username = transferInfo['username']
-                self.rucioScope = f'user.{transferInfo["username"]}'
-                self.destination = transferInfo['destination']
-                if config.config.force_publishname:
-                    self.publishname = config.config.force_publishname
-                else:
-                    self.publishname = transferInfo['outputdataset']
-                self.logsDataset = f'{self.publishname}#LOGS'
+            with open(path, 'r', encoding='utf-8') as r:
+                self.lastTransferLine = int(r.read())
+        except FileNotFoundError:
+            self.logger.info(f'{path} not found. Assume it is first time it run.')
+            self.lastTransferLine = 0
+
+    def readTransferItems(self):
+        path = config.config.transfers_txt_path
+        self.transferItems = []
+        try:
+            with open(path, 'r', encoding='utf-8') as r:
+                for _ in range(self.lastTransferLine):
+                    r.readline()
+                for line in r:
+                    doc = json.loads(line)
+                    xdict = {
+                        "source_lfn": doc["source_lfn"],
+                        "destination_lfn": doc["destination_lfn"],
+                        "id": doc["id"],
+                        # /store/temp path is recognize on rucio as <sitename>_Temp
+                        "source": doc["source"]+"_Temp",
+                        "destination": doc["destination"],
+                        "checksum": doc["checksums"]["adler32"].rjust(8, '0'),
+                        "filesize": doc["filesize"],
+                        "publishname": doc["outputdataset"],
+                        "username": doc["username"],
+                    }
+                    self.transferItems.append(xdict)
+                    self.lastTransferLine += 1
         except FileNotFoundError as ex:
-            raise RucioTransferException(f'{config.config.rest_info_path} does not exist. Probably no completed jobs in the task yet') from ex
+            raise RucioTransferException(f'{path} does not exist. Probably no completed jobs in the task yet.') from ex
+        if len(self.transferItems) == 0:
+            raise RucioTransferException(f'{path} does not contain new entry.')
+
+    def readRESTInfo(self):
+        path = config.config.rest_info_path
+        try:
+            with open(path, 'r', encoding='utf-8') as r:
+                doc = json.loads(r.read())
+                self.restHost = doc['host']
+                self.restDBinstance = doc['dbInstance']
+                self.restProxyFile = doc['proxyfile']
+        except FileNotFoundError as ex:
+            raise RucioTransferException(f'{path} does not exist. Probably no completed jobs in the task yet.') from ex
+
+    def readInfoFromTransferItems(self):
+        info = self.transferItems[0]
+        self.username = info['username']
+        self.rucioScope = f'user.{self.username}'
+        self.destination = info['destination']
+        self.publishname = info['publishname']
+        self.logsDataset = f'{self.publishname}#LOGS'
