@@ -13,8 +13,12 @@ class MonitorLocksStatus:
         # only process non-ok rule from bookkeeping
         ruleToMontior = [x for x in self.transfer.allRules if not x in self.transfer.okRules]
         retOKReplicas, retNotOKReplicas, retOKRules = self.checkLocksStatus(ruleToMontior)
-        preparedOK, preparedNotOK  = self.prepareFileDoc(retOKReplicas, retNotOKReplicas)
-        updateDB(self.crabRESTClient, 'filetransfers', 'updateTransfers', preparedOK, self.logger)
+        if retOKReplicas:
+            OKFileDoc = self.prepareOKFileDoc(retOKReplicas)
+            updateDB(self.crabRESTClient, 'filetransfers', 'updateRucioInfo', OKFileDoc, self.logger)
+        if retNotOKReplicas:
+            NotOKFileDoc = self.prepareNotOKFileDoc(retNotOKReplicas)
+            updateDB(self.crabRESTClient, 'filetransfers', 'updateTransfers', NotOKFileDoc, self.logger)
         self.transfer.updateOKRules(retOKRules)
 
     def checkLocksStatus(self, ruleIDs):
@@ -46,32 +50,35 @@ class MonitorLocksStatus:
                     notOKReplicas.append(replica)
         return (OKReplicas, notOKReplicas, OKRuleIDs)
 
-    def prepareFileDoc(self, okReplicas, notOKReplicas):
+    def prepareOKFileDoc(self, replicas):
         """
         In case REST expected upload success and fail doc in time the reNot sure on the REST side if it support
         """
-        numOKReplicas = len(okReplicas)
-        okFileDoc = {
+        num = len(replicas)
+        fileDoc = {
             'asoworker': 'rucio',
-            'list_of_ids': [x['id'] for x in okReplicas],
-            'list_of_transfer_state': ['DONE']*numOKReplicas,
-            'list_of_dbs_blockname': [x['dataset'] for x in okReplicas],
-            'list_of_block_complete': [x['blockcomplete'] for x in okReplicas],
-            'list_of_fts_instance': ['https://fts3-cms.cern.ch:8446/']*numOKReplicas,
+            'list_of_ids': [x['id'] for x in replicas],
+            'list_of_transfer_state': ['DONE']*num,
+            'list_of_dbs_blockname': [x['dataset'] for x in replicas],
+            'list_of_block_complete': [x['blockcomplete'] for x in replicas],
+            'list_of_fts_instance': ['https://fts3-cms.cern.ch:8446/']*num,
             'list_of_failure_reason': None, # omit
             'list_of_retry_value': None, # omit
-            'list_of_fts_id': ['NA']*numOKReplicas,
+            'list_of_fts_id': ['NA']*num,
         }
-        numNotOKReplicas = len(okReplicas)
-        notOKFileDoc = {
+        return fileDoc
+
+    def prepareNotOKFileDoc(self, replicas):
+        num = len(replicas)
+        fileDoc = {
             'asoworker': 'rucio',
-            'list_of_ids': [x['id'] for x in notOKReplicas],
-            'list_of_transfer_state': ['SUBMITTED']*numNotOKReplicas,
+            'list_of_ids': [x['id'] for x in replicas],
+            'list_of_transfer_state': ['SUBMITTED']*num,
             'list_of_dbs_blockname': None, # omit
             'list_of_block_complete': None, # omit
-            'list_of_fts_instance': ['https://fts3-cms.cern.ch:8446/']*numNotOKReplicas,
+            'list_of_fts_instance': ['https://fts3-cms.cern.ch:8446/']*num,
             'list_of_failure_reason': None, # omit
             'list_of_retry_value': None, # omit
-            'list_of_fts_id': [x['ruleid'] for x in notOKReplicas],
+            'list_of_fts_id': [x['ruleid'] for x in replicas],
         }
-        return okFileDoc, notOKFileDoc
+        return fileDoc

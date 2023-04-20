@@ -55,8 +55,8 @@ def test_checkLockStatus_all_ok(mock_Transfer, mock_rucioClient):
     mock_rucioClient.get_replication_rule.return_value = getReplicationRuleReturnValue
     mock_rucioClient.list_replica_locks.side_effect = ((x for x in listReplicaLocksReturnValue), ) # list_replica_locks return generator
     mock_Transfer.getIDFromLFN.return_value = '98f353b91ec84f0217da80bde84d6b520c0c6640f60ad9aabb7b20ca'
-    m = MonitorLocksStatus(mock_Transfer, mock_rucioClient)
-    assert m.checkLocksStatus(listRuleIDs) == (outputAllOK, [])
+    m = MonitorLocksStatus(mock_Transfer, mock_rucioClient, Mock())
+    assert m.checkLocksStatus(listRuleIDs) == (outputAllOK, [], ["b43a554244c54dba954aa29cb2fdde0a"])
 
 def test_checkLockStatus_all_replicating(mock_Transfer, mock_rucioClient):
     listRuleIDs = ['b43a554244c54dba954aa29cb2fdde0a']
@@ -80,8 +80,8 @@ def test_checkLockStatus_all_replicating(mock_Transfer, mock_rucioClient):
     mock_rucioClient.get_replication_rule.return_value = getReplicationRuleReturnValue
     mock_rucioClient.list_replica_locks.side_effect = ((x for x in listReplicaLocksReturnValue), ) # list_replica_locks return generator
     mock_Transfer.getIDFromLFN.return_value = '98f353b91ec84f0217da80bde84d6b520c0c6640f60ad9aabb7b20ca'
-    m = MonitorLocksStatus(mock_Transfer, mock_rucioClient)
-    assert m.checkLocksStatus(listRuleIDs) == ([], outputNotOK)
+    m = MonitorLocksStatus(mock_Transfer, mock_rucioClient, Mock())
+    assert m.checkLocksStatus(listRuleIDs) == ([], outputNotOK, [])
 
 @pytest.mark.skip(reason="Skip it for now due deadline.")
 def test_checkLockStatus_mix():
@@ -103,7 +103,7 @@ def test_execute_bookkeeping_none(mock_checkLockStatus, mock_Transfer):
     mock_Transfer.updateOKRules.assert_called_once()
 
 @patch.object(MonitorLocksStatus, 'checkLocksStatus')
-def test_execute_bookkeeping_all(mock_checkLockStatus, mock_updateDB, mock_Transfer):
+def test_execute_bookkeeping_all(mock_checkLockStatus, mock_Transfer):
     allRules = ['b43a554244c54dba954aa29cb2fdde0a']
     okRules = ['b43a554244c54dba954aa29cb2fdde0a']
     mock_Transfer.allRules = allRules
@@ -141,9 +141,8 @@ def generateExpectedOutput(doctype):
             'list_of_fts_id': ['b43a554244c54dba954aa29cb2fdde0b'],
         }
 
-def test_prepareFileDoc():
+def test_prepareOKFileDoc(mock_Transfer):
     okFileDoc = generateExpectedOutput('complete')
-    notOKFileDoc = generateExpectedOutput('notcomplete')
     outputOK = [
         {
             "id": "98f353b91ec84f0217da80bde84d6b520c0c6640f60ad9aabb7b20ca",
@@ -152,6 +151,12 @@ def test_prepareFileDoc():
             "ruleid": "b43a554244c54dba954aa29cb2fdde0a",
         }
     ]
+    m = MonitorLocksStatus(mock_Transfer, Mock(), Mock())
+    assert okFileDoc == m.prepareOKFileDoc(outputOK)
+
+
+def test_prepareNotOKFileDoc(mock_Transfer):
+    notOKFileDoc = generateExpectedOutput('notcomplete')
     outputNotOK = [
         {
             "id": "98f353b91ec84f0217da80bde84d6b520c0c6640f60ad9aabb7b20cb",
@@ -160,7 +165,5 @@ def test_prepareFileDoc():
             "ruleid": "b43a554244c54dba954aa29cb2fdde0b",
         }
     ]
-    m = MonitorLocksStatus(mock_Transfer, mock_rucioClient, Mock())
-    retOKFileDoc, retNotOKFileDoc = m.prepareFileDoc(outputOK, outputNotOK)
-    assert retOKFileDoc == okFileDoc
-    assert retNotOKFileDoc == notOKFileDoc
+    m = MonitorLocksStatus(mock_Transfer, Mock(), Mock())
+    assert notOKFileDoc == m.prepareNotOKFileDoc(outputNotOK)
