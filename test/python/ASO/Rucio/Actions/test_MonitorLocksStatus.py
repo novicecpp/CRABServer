@@ -96,20 +96,71 @@ def test_execute_bookkeeping_none(mock_checkLockStatus, mock_Transfer):
     okRules = []
     mock_Transfer.allRules = allRules
     mock_Transfer.okRules = okRules
-    m = MonitorLocksStatus(mock_Transfer, mock_rucioClient)
+    m = MonitorLocksStatus(mock_Transfer, mock_rucioClient, Mock())
     mock_checkLockStatus.return_value = ([], [], okRules)
     m.execute()
     mock_checkLockStatus.assert_called_once_with(allRules)
     mock_Transfer.updateOKRules.assert_called_once()
 
 @patch.object(MonitorLocksStatus, 'checkLocksStatus')
-def test_execute_bookkeeping_all(mock_checkLockStatus, mock_Transfer):
+def test_execute_bookkeeping_all(mock_checkLockStatus, mock_updateDB, mock_Transfer):
     allRules = ['b43a554244c54dba954aa29cb2fdde0a']
     okRules = ['b43a554244c54dba954aa29cb2fdde0a']
     mock_Transfer.allRules = allRules
     mock_Transfer.okRules = okRules
-    m = MonitorLocksStatus(mock_Transfer, mock_rucioClient)
+    m = MonitorLocksStatus(mock_Transfer, mock_rucioClient, Mock())
     mock_checkLockStatus.return_value = ([], [], [])
     m.execute()
     mock_checkLockStatus.assert_called_once_with([])
     mock_Transfer.updateOKRules.assert_called_once()
+
+
+def generateExpectedOutput(doctype):
+    if doctype == 'complete':
+        return {
+            'asoworker': 'rucio',
+            'list_of_ids': ['98f353b91ec84f0217da80bde84d6b520c0c6640f60ad9aabb7b20ca'], # hmm, how do we get this
+            'list_of_transfer_state': ['DONE'],
+            'list_of_dbs_blockname': ['/TestDataset/cmscrab-unittest-1/USER#c9b28b96-5d16-41cd-89af-2678971132ca'],
+            'list_of_block_complete': ['OK'],
+            'list_of_fts_instance': ['https://fts3-cms.cern.ch:8446/'],
+            'list_of_failure_reason': None, # omit
+            'list_of_retry_value': None, # omit
+            'list_of_fts_id': ['NA'],
+        }
+    elif doctype == 'notcomplete':
+        return {
+            'asoworker': 'rucio',
+            'list_of_ids': ['98f353b91ec84f0217da80bde84d6b520c0c6640f60ad9aabb7b20cb'], # hmm, how do we get this
+            'list_of_transfer_state': ['SUBMITTED'],
+            'list_of_dbs_blockname': None,
+            'list_of_block_complete': None,
+            'list_of_fts_instance': ['https://fts3-cms.cern.ch:8446/'],
+            'list_of_failure_reason': None, # omit
+            'list_of_retry_value': None, # omit
+            'list_of_fts_id': ['b43a554244c54dba954aa29cb2fdde0b'],
+        }
+
+def test_prepareFileDoc():
+    okFileDoc = generateExpectedOutput('complete')
+    notOKFileDoc = generateExpectedOutput('notcomplete')
+    outputOK = [
+        {
+            "id": "98f353b91ec84f0217da80bde84d6b520c0c6640f60ad9aabb7b20ca",
+            "dataset": '/TestDataset/cmscrab-unittest-1/USER#c9b28b96-5d16-41cd-89af-2678971132ca',
+            "blockcomplete": 'OK',
+            "ruleid": "b43a554244c54dba954aa29cb2fdde0a",
+        }
+    ]
+    outputNotOK = [
+        {
+            "id": "98f353b91ec84f0217da80bde84d6b520c0c6640f60ad9aabb7b20cb",
+            "dataset": '/GenericTTbar/tseethon-autotest-1679671056-94ba0e06145abd65ccb1d21786dc7e1d/USER#c9b28b96-5d16-41cd-89af-2678971132c9',
+            "blockcomplete": 'NO',
+            "ruleid": "b43a554244c54dba954aa29cb2fdde0b",
+        }
+    ]
+    m = MonitorLocksStatus(mock_Transfer, mock_rucioClient, Mock())
+    retOKFileDoc, retNotOKFileDoc = m.prepareFileDoc(outputOK, outputNotOK)
+    assert retOKFileDoc == okFileDoc
+    assert retNotOKFileDoc == notOKFileDoc
