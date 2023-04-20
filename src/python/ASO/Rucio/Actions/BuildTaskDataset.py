@@ -95,8 +95,9 @@ class BuildTaskDataset():
         Ignore error if it already done.
 
         :param datasetName: dataset name to create.
-        :returns: None :raises RucioTransferException: wrapping
-            generic Exception and add message.
+        :returns: None
+        :raises RucioTransferException: wrapping generic Exception and add
+            message.
         """
         self.logger.debug(f'Creating dataset {datasetName}')
         try:
@@ -105,18 +106,15 @@ class BuildTaskDataset():
             self.logger.info(f"{datasetName} dataset already exists, doing nothing")
         ds_did = {'scope': self.transfer.rucioScope, 'type': "DATASET", 'name': datasetName}
         try:
-            self.rucioClient.add_replication_rule([ds_did], 1, self.transfer.destination)
+            ruleID = self.rucioClient.add_replication_rule([ds_did], 1, self.transfer.destination)
             # TODO: not sure if any other case make the rule duplicate beside script crash
         except DuplicateRule:
             self.logger.info(f"Rule already exists, doing nothing")
+            ruleID = None
         try:
         # attach dataset to the container
             self.rucioClient.attach_dids(self.transfer.rucioScope, self.transfer.publishname, [ds_did])
-        except DuplicateContent as ex:
+        except DuplicateContent:
             self.logger.info(f'{datasetName} dataset has attached to {self.transfer.publishname}, doing nothing')
-
-    def countReplicasInDataset(self, dataset):
-        return len(list(self.rucioClient.list_content(self.transfer.rucioRcope, dataset)))
-
-    def generateDatasetName(self):
-        return f'{self.transfer.publishname}#{str(uuid.uuid4())}'
+        # add new ruleID to bookkeeping
+        self.transfer.AddNewRule(ruleID)

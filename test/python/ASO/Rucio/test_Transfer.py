@@ -198,14 +198,33 @@ def test_updateOKRules(bookkeepingRulesJSONContent):
     with patch('ASO.Rucio.Transfer.open', new_callable=mock_open) as mo:
         with patch('ASO.Rucio.Transfer.somecontextlibfunc') as mock_somecontextlibfunc:
             t = Transfer()
-            t.allRules = bookkeepingRulesJSONContent['all']
-            t.okRules = bookkeepingRulesJSONContent['ok']
+            t.allRules = list(bookkeepingRulesJSONContent['all'])
+            t.okRules = list(bookkeepingRulesJSONContent['ok'])
             writePath = '/path/to/tmp'
             mock_somecontextlibfunc.return_value.__enter__.return_value = writePath
-            t.updateOKRules(['e609d75e4a7a4fa3a880ea0bb6681371'])
+            newOK = ['e609d75e4a7a4fa3a880ea0bb6681371']
+            t.updateOKRules(newOK)
             mo.assert_called_once_with(writePath, 'w', encoding='utf-8')
+            assert t.okRules == bookkeepingRulesJSONContent['ok'] + newOK
             # TODO: need to check content but I do not know how to do it
 
 @pytest.mark.skip(reason='Skip for now due to deadline')
 def test_updateOKRules_ok_rules_not_in_all(bookkeepingRulesJSONContent):
     assert 0 == 1
+
+
+def test_addNewRule(bookkeepingRulesJSONContent):
+    config.config = Namespace(bookkeeping_rules_path='/path/to/bookkeeping_rules.json')
+    with patch('ASO.Rucio.Transfer.open', new_callable=mock_open) as mo:
+        with patch('ASO.Rucio.Transfer.somecontextlibfunc') as mock_somecontextlibfunc:
+            t = Transfer()
+            t.allRules = list(bookkeepingRulesJSONContent['all'])
+            t.okRules = list(bookkeepingRulesJSONContent['ok'])
+            writePath = '/path/to/tmp'
+            mock_somecontextlibfunc.return_value.__enter__.return_value = writePath
+            newAll = ['e609d75e4a7a4fa3a880ea0bb6681999']
+            t.addNewRule(newAll)
+            mo.assert_called_once_with(writePath, 'w', encoding='utf-8')
+            assert t.allRules == bookkeepingRulesJSONContent['all'] + newAll
+            assert t.okRules == bookkeepingRulesJSONContent['ok']
+            # TODO: need to check content but I do not know how to do it

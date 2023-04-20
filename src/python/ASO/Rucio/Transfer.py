@@ -105,13 +105,29 @@ class Transfer:
         path = config.config.bookkeeping_rules_path
         if not all(x in self.allRules for x in rules):
             raise RucioTransferException('Some rules are not in "all" list')
+        else:
+            self.okRules += rules
         with somecontextlibfunc(path) as tmpPath:
             with open(tmpPath, 'w', encoding='utf-8') as w:
                 doc = {
                     'all': self.allRules,
-                    'ok': self.okRules + rules,
+                    'ok': self.okRules
                 }
                 json.dump(doc, w)
+
+    def addNewRule(self, rules):
+        path = config.config.bookkeeping_rules_path
+        self.allRules += rules
+        with somecontextlibfunc(path) as tmpPath:
+            with open(tmpPath, 'w', encoding='utf-8') as w:
+                doc = {
+                    'all': self.allRules,
+                    'ok': self.okRules,
+                }
+                json.dump(doc, w)
+
+
+
 
 
 
