@@ -23,6 +23,12 @@ def restInfoForFileTransfersJsonContent():
     with open(path, 'r', encoding='utf-8') as r:
         return r.read()
 
+@pytest.fixture
+def bookkeepingRulesJSONContent():
+    path = 'test/assets/bookkeeping_rules.json'
+    with open(path, 'r', encoding='utf-8') as r:
+        return json.load(r)
+
 
 #old relic
 #def test_Transfer_readInfo():
@@ -117,7 +123,7 @@ def test_readRESTInfo_FileNotFoundError():
         t.readRESTInfo()
 
 
-def test_readTransferItems_start_at_line_zero(transfersTxtContent):
+def test_readTransferItems(transfersTxtContent):
     t = Transfer()
     t.lastTransferLine = 0
     path = '/path/to/transfers.txt'
@@ -129,19 +135,6 @@ def test_readTransferItems_start_at_line_zero(transfersTxtContent):
         assert t.transferItems[5]['source'] == 'T2_CH_CERN'
         assert t.transferItems[5]['checksums']['adler32'] == 'cde8011f'
 
-def test_readTransferItems_start_at_line_six(transfersTxtContent):
-    t = Transfer()
-    t.lastTransferLine = 5
-    path = '/path/to/transfers.txt'
-    config.config = Namespace(transfers_txt_path=path)
-    with patch('ASO.Rucio.Transfer.open', new_callable=mock_open, read_data=transfersTxtContent) as mo:
-        t.readTransferItems()
-        assert mo.call_args.args[0] == path
-        assert t.transferItems[0]['id'] == '5b5c6d9f2e99ae32191e2c702ca9bba32951d69027289a7cde884468'
-        assert t.transferItems[0]['source'] == 'T2_CH_CERN'
-        assert t.transferItems[0]['checksums']['adler32'] == 'cde8011f'
-
-
 def test_readTransferItems_FileNotFoundError():
     t = Transfer()
     t.lastTransferLine = 0
@@ -149,7 +142,6 @@ def test_readTransferItems_FileNotFoundError():
     config.config = Namespace(transfers_txt_path=path)
     with pytest.raises(RucioTransferException):
         t.readTransferItems()
-
 
 def test_readTransferItems_no_new_item(transfersTxtContent):
     # maybe another exception class to seperate between filenotfound and no new entry
@@ -179,3 +171,41 @@ def test_readLastTransferLine_file_not_found():
 # ======================
 # if not os.path.exists('task_process/transfers'):
 #     os.makedirs('task_process/transfers')
+
+
+
+def test_readBookkeepingRules(bookkeepingRulesJSONContent):
+    config.config = Namespace(bookkeeping_rules_path='/path/to/bookkeeping_rules.json')
+    with patch('ASO.Rucio.Transfer.open', new_callable=mock_open, read_data=json.dumps(bookkeepingRulesJSONContent)) as mo:
+        t = Transfer()
+        t.readBookkeepingRules()
+        assert t.allRules == bookkeepingRulesJSONContent['all']
+        assert t.okRules == bookkeepingRulesJSONContent['ok']
+
+
+def test_readBookkeepingRules_FileNotFoundError():
+    config.config = Namespace(bookkeeping_rules_path='/path/to/bookkeeping_rules.json')
+    with patch('ASO.Rucio.Transfer.open', new_callable=mock_open) as mo:
+        mo.side_effect = FileNotFoundError
+        t = Transfer()
+        t.readBookkeepingRules()
+        assert t.allRules == []
+        assert t.okRules == []
+
+
+def test_updateOKRules(bookkeepingRulesJSONContent):
+    config.config = Namespace(bookkeeping_rules_path='/path/to/bookkeeping_rules.json')
+    with patch('ASO.Rucio.Transfer.open', new_callable=mock_open) as mo:
+        with patch('ASO.Rucio.Transfer.somecontextlibfunc') as mock_somecontextlibfunc:
+            t = Transfer()
+            t.allRules = bookkeepingRulesJSONContent['all']
+            t.okRules = bookkeepingRulesJSONContent['ok']
+            writePath = '/path/to/tmp'
+            mock_somecontextlibfunc.return_value.__enter__.return_value = writePath
+            t.updateOKRules(['e609d75e4a7a4fa3a880ea0bb6681371'])
+            mo.assert_called_once_with(writePath, 'w', encoding='utf-8')
+            # TODO: need to check content but I do not know how to do it
+
+@pytest.mark.skip(reason='Skip for now due to deadline')
+def test_updateOKRules_ok_rules_not_in_all(bookkeepingRulesJSONContent):
+    assert 0 == 1

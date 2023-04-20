@@ -16,7 +16,10 @@ class Transfer:
         self.logger = logging.getLogger('RucioTransfer.Transfer')
 
         # from rest info
-        self.proxypath = ''
+        self.restHost = ''
+        self.restDBinstance = ''
+        self.restProxyFile = ''
+
 
         # from transfer info
         self.username = ''
@@ -27,6 +30,10 @@ class Transfer:
 
         # dynamically change throughout the scripts
         self.currentDataset = ''
+
+        # rule bookkeeping
+        self.allRules = None
+        self.okRules = None
 
     def readInfo(self):
         """
@@ -81,3 +88,38 @@ class Transfer:
         self.destination = info['destination']
         self.publishname = info['publishname']
         self.logsDataset = f'{self.publishname}#LOGS'
+
+    def readBookkeepingRules(self):
+        path = config.config.bookkeeping_rules_path
+        try:
+            with open(path, 'r', encoding='utf-8') as r:
+                doc = json.load(r)
+                self.allRules = doc['all']
+                self.okRules = doc['ok']
+        except FileNotFoundError as ex:
+            self.logger.info(f'Bookkeeping rules "{path}" does not exist. Assume it is first time it run.')
+            self.allRules = []
+            self.okRules = []
+
+    def updateOKRules(self, rules):
+        path = config.config.bookkeeping_rules_path
+        if not all(x in self.allRules for x in rules):
+            raise RucioTransferException('Some rules are not in "all" list')
+        with somecontextlibfunc(path) as tmpPath:
+            with open(tmpPath, 'w', encoding='utf-8') as w:
+                doc = {
+                    'all': self.allRules,
+                    'ok': self.okRules + rules,
+                }
+                json.dump(doc, w)
+
+
+
+from contextlib import contextmanager
+import shutil
+
+@contextmanager
+def somecontextlibfunc(path):
+    tmpPath = f'{path}_tmp'
+    yield tmpPath
+    shutil.move(tmpPath, path)
