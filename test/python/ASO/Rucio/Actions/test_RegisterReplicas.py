@@ -101,6 +101,11 @@ def test_prepare_single_xdict(mock_Transfer, mock_rucioClient):
         r = RegisterReplicas(mock_Transfer, mock_rucioClient)
         assert r.prepare(prepareInput) == expectedOutput
 
+@pytest.mark.skip(reason="skip it for now due to deadline.")
+def test_prepare_last_line_is_not_zero(mock_Transfer, mock_rucioClient):
+    pass
+
+
 @pytest.mark.skip(reason="Need to implement (or not?) but skip it for now.")
 def test_prepare_skip_direct_stageout(mock_Transfer, mock_rucioClient, loadTransferList):
     pass
@@ -147,4 +152,9 @@ def test_register_rerun_from_last_crash(mock_Transfer, mock_rucioClient):
 
 @pytest.mark.skip(reason="Skip it for now due deadline.")
 def test_register_create_new_dataset(mock_Transfer, mock_rucioClient):
+    pass
+
+
+@pytest.mark.skip(reason="Skip it for now due deadline.")
+def test_register_ensure_bookkeeping_to_last_transfers(mock_Transfer, mock_rucioClient):
     pass

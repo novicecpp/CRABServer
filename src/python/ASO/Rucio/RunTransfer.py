@@ -1,5 +1,6 @@
 import logging
 import os
+from python.ASO.Rucio.Actions.MonitorLocksStatus import MonitorLocksStatus
 
 from rucio.client.client import Client as RucioClient
 
@@ -37,7 +38,8 @@ class RunTransfer:
         # do 1
         #AddFilesToTransfer(self.rucios, elf.transfer)
         # do 2
-
+        #m = MonitorLocksStatus()
+        #m.execute()
     def _initRucioClient(self, username, proxypath=None):
         # maybe we can share with getNativeRucioClient
         rucioLogger = logging.getLogger('RucioTransfer.RucioClient')

@@ -50,8 +50,8 @@ class RegisterReplicas:
     def register(self, prepareReplicas):
         successReplicas = []
         failReplicas = []
-        b = BuildTaskDataset(self.transfer, self.rucioClient)
         # Ii will treat as fail the whole chunks if one of replicas is fail.
+        b = BuildTaskDataset(self.transfer, self.rucioClient)
         for rse, replicas in prepareReplicas.items():
             for chunk in chunks(replicas, config.config.replicas_chunk_size):
                 try:
@@ -86,7 +86,7 @@ class RegisterReplicas:
                 num = len(list(self.rucioClient.list_content(self.transfer.rucioRcope, self.transfer.currentDataset)))
                 if num >= config.config.dataset_file_limit:
                     # -if everything full create new one
-                    b.rucioClient.close(self.transfer.rucioScope, self.transfer.currentDataset)
+                    self.rucioClient.close(self.transfer.rucioScope, self.transfer.currentDataset)
                     newDataset = b.generateDatasetName()
                     b.createDataset(newDataset)
                     self.transfer.currentDataset = newDataset
