@@ -50,6 +50,7 @@ def test_getSourcePFN(mock_Transfer, mock_rucioClient):
     mock_rucioClient.lfns2pfns.return_value = returnLfns2pfns
     with patch('ASO.Rucio.Actions.RegisterReplicas.find_matching_scheme', autospec=True) as mock_find_matching_scheme:
         mock_find_matching_scheme.return_value = ('', 'davs', '', '')
+        # TODO: ensure RSE pass as argument should not have suffix with '_Temp'
         r = RegisterReplicas(mock_Transfer, mock_rucioClient)
         assert r.getSourcePFN(srcLFN, srcRSE, dstRSE) == srcPFN
         mock_find_matching_scheme.assert_called_once()
@@ -135,6 +136,7 @@ def test_register_success(mock_Transfer, mock_rucioClient):
     s, f = r.register(prepareReplicasByRSE)
     # FIXME: should we add replica one at a time instead of bulk?
     # to prevent one file cause fail whole bulk
+    # TODO: ensure add_replicas only have all key exception id (id is crab id we store in rest)
     mock_rucioClient.add_replicas.assert_called()
     mock_rucioClient.add_files_to_datasets.assert_called()
 
