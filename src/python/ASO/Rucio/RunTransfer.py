@@ -1,6 +1,7 @@
 import logging
 import os
-from python.ASO.Rucio.Actions.MonitorLocksStatus import MonitorLocksStatus
+from ASO.Rucio.Actions.MonitorLocksStatus import MonitorLocksStatus
+from ASO.Rucio.Actions.RegisterReplicas import RegisterReplicas
 
 from rucio.client.client import Client as RucioClient
 
@@ -21,7 +22,8 @@ class RunTransfer:
     def __init__(self):
         self.logger = logging.getLogger("RucioTransfer.RunTransfer")
         self.transfer = None
-        self.rucio = None
+        self.rucioClient = None
+        self.crabRESTClient = None
 
     def algorithm(self):
         """
@@ -32,11 +34,12 @@ class RunTransfer:
         # init
         self.transfer = Transfer()
         self.transfer.readInfo()
-        self.rucio = self._initRucioClient(self.transfer.username, self.transfer.proxypath)
+        self.rucioClient = self._initRucioClient(self.transfer.username, self.transfer.restProxyFile)
+        #self.crabRESTClient = self._initCrabRESTClient
         # do nothing
-        BuildTaskDataset(self.transfer, self.rucio).execute()
+        BuildTaskDataset(self.transfer, self.rucioClient).execute()
         # do 1
-        #AddFilesToTransfer(self.rucios, elf.transfer)
+        RegisterReplicas(self.transfer, self.rucioClient, self.crabRESTClient).execute()
         # do 2
         #m = MonitorLocksStatus()
         #m.execute()

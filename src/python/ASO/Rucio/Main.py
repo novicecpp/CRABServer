@@ -2,9 +2,9 @@ import logging
 
 from argparse import ArgumentParser
 
-from ASO.Rucio.RunTransfer import RunTransfer
 import ASO.Rucio.config as config
-from python.ASO.Rucio.exception import RucioTransferException
+from ASO.Rucio.RunTransfer import RunTransfer
+from ASO.Rucio.exception import RucioTransferException
 
 
 class RucioTransferMain:
@@ -34,7 +34,7 @@ class RucioTransferMain:
         except RucioTransferException as ex:
             raise ex
         except Exception as ex:
-            raise Exception("Unexpected error during main  %s") from ex
+            raise Exception("Unexpected error during main") from ex
         self.logger.info('transfer completed')
 
     def _initLogger(self):
@@ -53,15 +53,38 @@ def main():
     run process directly from this file.
     """
     opt = ArgumentParser(usage=__doc__)
-    opt.add_argument("--force-publishname", dest="force_publishname", default=None,
+    opt.add_argument("--force-publishname", dest="force_publishname", default=None, type=str,
                      help="use provided output dataset name instead of output")
+    opt.add_argument("--force-last-line", dest="force_last_line", default=None, type=int,
+                     help="")
+    opt.add_argument("--force-total-files", dest="force_total_files", default=None, type=int,
+                     help="")
+    opt.add_argument("--force-replica-name-suffix", dest="force_replica_name_suffix", default=None, type=str,
+                     help="")
+    # default here must change because theses current value is too low (chunk=2/max=5)
+    opt.add_argument("--replicas-chunk-size", dest="replicas_chunk_size", default=2, type=int,
+                     help="")
+    opt.add_argument("--max-file-per-dataset", dest="max_file_per_dataset", default=5, type=int,
+                     help="")
+    opt.add_argument("--last-line-path", dest="last_line_path",
+                     default='task_process/transfers/last_transfer.txt',
+                     help="")
+    opt.add_argument("--transfer-txt-path", dest="transfers_txt_path",
+                     default='task_process/transfers.txt',
+                     help="")
+    opt.add_argument("--rest-info-path", dest="rest_info_path",
+                     default='task_process/RestInfoForFileTransfers.json',
+                     help="")
+    opt.add_argument("--bookkeeping-rules-path", dest="bookkeeping_rules_path",
+                     default='task_process/transfers/bookkeeping_rules.json',
+                     help="")
     opts = opt.parse_args()
 
     # Wa: I personally does not know how to mock this in unittest. I manually
     # instantiate new one in test function before run one.
     # Will switch to WMCore.Configuration.ConfigurationEx later
-
     config.config = opts
+
     rucioTransfer = RucioTransferMain()
 
     rucioTransfer.run()

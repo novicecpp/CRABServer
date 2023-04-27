@@ -37,6 +37,7 @@ class BuildTaskDataset():
         :returns: None :raises RucioTransferException: wrapping
         generic Exception and add message.
         """
+        self.logger.debug(f'Creating container "{self.transfer.rucioScope}:{self.transfer.publishname}')
         try:
             self.rucioClient.add_container(self.transfer.rucioScope, self.transfer.publishname)
             self.logger.info(f"{self.transfer.publishname} container created")
@@ -60,10 +61,11 @@ class BuildTaskDataset():
 
         datasets = self.rucioClient.list_content(self.transfer.rucioScope, self.transfer.publishname)
         # remove log dataset
-        datasets = [ds for ds in datasets if not ds['name'].endswith('#LOG')]
+        datasets = [ds for ds in datasets if not ds['name'].endswith('#LOGS')]
+        self.logger.debug(f"datasets in container: {datasets}")
+
         # get_metadata_bulk "Always" raise InvalidObject.
         # Probably a bug on rucio server, even production block.
-
         try:
             metadata = self.rucioClient.get_metadata_bulk(datasets)
         except InvalidObject:
@@ -72,6 +74,7 @@ class BuildTaskDataset():
             for ds in datasets:
                 metadata.append(self.rucioClient.get_metadata(self.transfer.rucioScope, ds["name"]))
         openDatasets = [md['name'] for md in metadata if md['is_open'] == True]
+        self.logger.debug(f"open datasets: {datasets}")
         if len(openDatasets) == 0:
             self.logger.info("No dataset available yet, creating one")
             currentDatasetName = self.generateDatasetName()
@@ -117,4 +120,7 @@ class BuildTaskDataset():
         except DuplicateContent:
             self.logger.info(f'{datasetName} dataset has attached to {self.transfer.publishname}, doing nothing')
         # add new ruleID to bookkeeping
-        self.transfer.AddNewRule(ruleID)
+        self.transfer.addNewRule(ruleID)
+
+    def generateDatasetName(self):
+        return f'{self.transfer.publishname}#{uuid.uuid4()}'

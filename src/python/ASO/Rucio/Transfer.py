@@ -31,6 +31,9 @@ class Transfer:
         # dynamically change throughout the scripts
         self.currentDataset = ''
 
+        # bookkeeping
+        self.lastTransferLine = 0
+
         # rule bookkeeping
         self.allRules = None
         self.okRules = None
@@ -44,8 +47,12 @@ class Transfer:
         self.readTransferItems()
         self.readRESTInfo()
         self.readInfoFromTransferItems()
+        self.readBookkeepingRules()
 
     def readLastTransferLine(self):
+        if config.config.force_last_line != None: #  Need explicit compare to None
+            self.lastTransferLine = config.config.force_last_line
+            return
         path = config.config.last_line_path
         try:
             with open(path, 'r', encoding='utf-8') as r:
@@ -59,12 +66,9 @@ class Transfer:
         self.transferItems = []
         try:
             with open(path, 'r', encoding='utf-8') as r:
-                for _ in range(self.lastTransferLine):
-                    r.readline()
                 for line in r:
                     doc = json.loads(line)
                     self.transferItems.append(doc)
-                    self.lastTransferLine += 1
         except FileNotFoundError as ex:
             raise RucioTransferException(f'{path} does not exist. Probably no completed jobs in the task yet.') from ex
         if len(self.transferItems) == 0:
@@ -86,7 +90,10 @@ class Transfer:
         self.username = info['username']
         self.rucioScope = f'user.{self.username}'
         self.destination = info['destination']
-        self.publishname = info['publishname']
+        if config.config.force_publishname:
+            self.publishname = config.config.force_publishname
+        else:
+            self.publishname = info['outputdataset']
         self.logsDataset = f'{self.publishname}#LOGS'
 
     def readBookkeepingRules(self):
@@ -115,9 +122,9 @@ class Transfer:
                 }
                 json.dump(doc, w)
 
-    def addNewRule(self, rules):
+    def addNewRule(self, rule):
         path = config.config.bookkeeping_rules_path
-        self.allRules += rules
+        self.allRules.append(rule)
         with somecontextlibfunc(path) as tmpPath:
             with open(tmpPath, 'w', encoding='utf-8') as w:
                 doc = {
