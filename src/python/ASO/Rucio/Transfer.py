@@ -2,8 +2,8 @@ import logging
 import json
 import os
 
-
 from ASO.Rucio.exception import RucioTransferException
+from ASO.Rucio.utils import writePath
 import ASO.Rucio.config as config
 
 class Transfer:
@@ -35,25 +35,28 @@ class Transfer:
         self.lastTransferLine = 0
 
         # rule bookkeeping
-        self.allRules = None
-        self.okRules = None
+        self.containerRuleID = ''
 
     def readInfo(self):
         """
         Read the information from input files using path from configuration.
-        It needs to execute to following order because of dependency between method.
+        It needs to execute to following order because of dependency between
+        method.
         """
         self.readLastTransferLine()
         self.readTransferItems()
         self.readRESTInfo()
         self.readInfoFromTransferItems()
-        self.readBookkeepingRules()
+        self.readContainerRuleID()
 
     def readLastTransferLine(self):
-        if config.config.force_last_line != None: #  Need explicit compare to None
-            self.lastTransferLine = config.config.force_last_line
+        """
+        Reading lastTransferLine from task_process/transfers/last_transfer.txt
+        """
+        if config.args.force_last_line != None: #  Need explicit compare to None
+            self.lastTransferLine = config.args.force_last_line
             return
-        path = config.config.last_line_path
+        path = config.args.last_line_path
         try:
             with open(path, 'r', encoding='utf-8') as r:
                 self.lastTransferLine = int(r.read())
@@ -62,7 +65,10 @@ class Transfer:
             self.lastTransferLine = 0
 
     def readTransferItems(self):
-        path = config.config.transfers_txt_path
+        """
+        Reading transferItems (whole files) from task_process/transfers.txt
+        """
+        path = config.args.transfers_txt_path
         self.transferItems = []
         try:
             with open(path, 'r', encoding='utf-8') as r:
@@ -75,7 +81,10 @@ class Transfer:
             raise RucioTransferException(f'{path} does not contain new entry.')
 
     def readRESTInfo(self):
-        path = config.config.rest_info_path
+        """
+        Reading REST info from from task_process/RestInfoForFileTransfers.json
+        """
+        path = config.args.rest_info_path
         try:
             with open(path, 'r', encoding='utf-8') as r:
                 doc = json.loads(r.read())
@@ -86,63 +95,35 @@ class Transfer:
             raise RucioTransferException(f'{path} does not exist. Probably no completed jobs in the task yet.') from ex
 
     def readInfoFromTransferItems(self):
+        """
+        Convert info from first transferItems to this object attribute.
+        Need to execute readTransferItems before this method.
+        """
         info = self.transferItems[0]
         self.username = info['username']
         self.rucioScope = f'user.{self.username}'
         self.destination = info['destination']
-        if config.config.force_publishname:
-            self.publishname = config.config.force_publishname
+        if config.args.force_publishname:
+            self.publishname = config.args.force_publishname
         else:
             self.publishname = info['outputdataset']
         self.logsDataset = f'{self.publishname}#LOGS'
 
-    def readBookkeepingRules(self):
-        path = config.config.bookkeeping_rules_path
+    def readContainerRuleID(self):
+        """
+        Read containerRuleID from task_process/transfers/bookkeeping_rules.json
+        """
+        path = config.args.container_ruleid_path
         try:
             with open(path, 'r', encoding='utf-8') as r:
-                doc = json.load(r)
-                self.allRules = doc['all']
-                self.okRules = doc['ok']
-        except FileNotFoundError as ex:
+                self.containerRuleID = r.read()
+        except FileNotFoundError:
             self.logger.info(f'Bookkeeping rules "{path}" does not exist. Assume it is first time it run.')
-            self.allRules = []
-            self.okRules = []
 
-    def updateOKRules(self, rules):
-        path = config.config.bookkeeping_rules_path
-        if not all(x in self.allRules for x in rules):
-            raise RucioTransferException('Some rules are not in "all" list')
-        else:
-            self.okRules += rules
-        with somecontextlibfunc(path) as tmpPath:
-            with open(tmpPath, 'w', encoding='utf-8') as w:
-                doc = {
-                    'all': self.allRules,
-                    'ok': self.okRules
-                }
-                json.dump(doc, w)
-
-    def addNewRule(self, rule):
-        path = config.config.bookkeeping_rules_path
-        self.allRules.append(rule)
-        with somecontextlibfunc(path) as tmpPath:
-            with open(tmpPath, 'w', encoding='utf-8') as w:
-                doc = {
-                    'all': self.allRules,
-                    'ok': self.okRules,
-                }
-                json.dump(doc, w)
-
-
-
-
-
-
-from contextlib import contextmanager
-import shutil
-
-@contextmanager
-def somecontextlibfunc(path):
-    tmpPath = f'{path}_tmp'
-    yield tmpPath
-    shutil.move(tmpPath, path)
+    def updateContainerRuleID(self, ruleID):
+        """
+        update task_process/transfers/container_ruleid.txt
+        """
+        path = config.args.container_ruleid_path
+        with writePath(path) as w:
+            w.write(ruleID)

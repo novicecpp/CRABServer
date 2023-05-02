@@ -43,8 +43,8 @@ def main():
     opt.add_argument("--rest-info-path", dest="rest_info_path",
                      default='task_process/RestInfoForFileTransfers.json',
                      help="")
-    opt.add_argument("--bookkeeping-rules-path", dest="bookkeeping_rules_path",
-                     default='task_process/transfers/bookkeeping_rules.json',
+    opt.add_argument("--container-ruleid-path", dest="container_ruleid_path",
+                     default='task_process/transfers/container_ruleid.txt',
                      help="")
     opts = opt.parse_args()
 

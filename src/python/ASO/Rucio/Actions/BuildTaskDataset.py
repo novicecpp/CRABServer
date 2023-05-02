@@ -45,6 +45,22 @@ class BuildTaskDataset():
             self.logger.info(f"{self.transfer.publishname} container already exists, doing nothing")
         except Exception as ex:
             raise RucioTransferException('Failed to create container') from ex
+        if self.transfer.containerRuleID:
+            self.logger.info("Rule already exists, doing nothing")
+        else:
+            try:
+                containerDID = {
+                    'scope': self.transfer.rucioScope,
+                    'name': self.transfer.publishname,
+                    'type': "CONTAINER",
+                }
+                ruleID = self.rucioClient.add_replication_rule([containerDID], 1, self.transfer.destination)
+                self.transfer.updateContainerRuleID(ruleID)
+                # TODO: not sure if any other case make the rule duplicate beside script crash
+            except DuplicateRule:
+                self.logger.info(f"Rule already exists. Get rule ID from Rucio.")
+                ruleID = list(self.rucioClient.list_did_rules(self.transfer.rucioScope, self.transfer.publishname))[0]
+                self.transfer.updateContainerRuleID(ruleID)
 
     def getOrCreateDataset(self):
         """
@@ -107,20 +123,12 @@ class BuildTaskDataset():
             self.rucioClient.add_dataset(self.transfer.rucioScope, datasetName)
         except DataIdentifierAlreadyExists:
             self.logger.info(f"{datasetName} dataset already exists, doing nothing")
-        ds_did = {'scope': self.transfer.rucioScope, 'type': "DATASET", 'name': datasetName}
-        try:
-            ruleID = self.rucioClient.add_replication_rule([ds_did], 1, self.transfer.destination)
-            # TODO: not sure if any other case make the rule duplicate beside script crash
-        except DuplicateRule:
-            self.logger.info(f"Rule already exists, doing nothing")
-            ruleID = None
+        dsDID = {'scope': self.transfer.rucioScope, 'type': "DATASET", 'name': datasetName}
         try:
         # attach dataset to the container
-            self.rucioClient.attach_dids(self.transfer.rucioScope, self.transfer.publishname, [ds_did])
+            self.rucioClient.attach_dids(self.transfer.rucioScope, self.transfer.publishname, [dsDID])
         except DuplicateContent:
             self.logger.info(f'{datasetName} dataset has attached to {self.transfer.publishname}, doing nothing')
-        # add new ruleID to bookkeeping
-        self.transfer.addNewRule(ruleID)
 
     def generateDatasetName(self):
         return f'{self.transfer.publishname}#{uuid.uuid4()}'
