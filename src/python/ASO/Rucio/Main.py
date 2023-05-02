@@ -80,10 +80,10 @@ def main():
                      help="")
     opts = opt.parse_args()
 
-    # Wa: I personally does not know how to mock this in unittest. I manually
-    # instantiate new one in test function before run one.
-    # Will switch to WMCore.Configuration.ConfigurationEx later
-    config.config = opts
+    # Put args to config module to share variable across process.
+    # NOTE: For unittest, manually instantiate new one with argparse.Namespace
+    # class before execute test.
+    config.args = opts
 
     rucioTransfer = RucioTransferMain()
 

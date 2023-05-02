@@ -107,7 +107,7 @@ def test_readInfoFromTransferItems():
 def test_readRESTInfo(restInfoForFileTransfersJsonContent):
     t = Transfer()
     t.lastTransferLine = 0
-    config.config = Namespace(rest_info_path='/path/to/RestInfoForFileTransfers.json')
+    config.args = Namespace(rest_info_path='/path/to/RestInfoForFileTransfers.json')
     with patch('ASO.Rucio.Transfer.open', new_callable=mock_open, read_data=restInfoForFileTransfersJsonContent) as mo:
         t.readRESTInfo()
         assert mo.call_args.args[0] == '/path/to/RestInfoForFileTransfers.json'
@@ -118,7 +118,7 @@ def test_readRESTInfo(restInfoForFileTransfersJsonContent):
 def test_readRESTInfo_FileNotFoundError():
     t = Transfer()
     t.lastTransferLine = 0
-    config.config = Namespace(rest_info_path='/path/should/not/found')
+    config.args = Namespace(rest_info_path='/path/should/not/found')
     with pytest.raises(RucioTransferException):
         t.readRESTInfo()
 
@@ -127,7 +127,7 @@ def test_readTransferItems(transfersTxtContent):
     t = Transfer()
     t.lastTransferLine = 0
     path = '/path/to/transfers.txt'
-    config.config = Namespace(transfers_txt_path=path)
+    config.args = Namespace(transfers_txt_path=path)
     with patch('ASO.Rucio.Transfer.open', new_callable=mock_open, read_data=transfersTxtContent) as mo:
         t.readTransferItems()
         assert mo.call_args.args[0] == path
@@ -139,7 +139,7 @@ def test_readTransferItems_FileNotFoundError():
     t = Transfer()
     t.lastTransferLine = 0
     path = '/path/to/transfers.txt'
-    config.config = Namespace(transfers_txt_path=path)
+    config.args = Namespace(transfers_txt_path=path)
     with pytest.raises(RucioTransferException):
         t.readTransferItems()
 
@@ -148,13 +148,13 @@ def test_readTransferItems_no_new_item(transfersTxtContent):
     t = Transfer()
     t.lastTransferLine = 20
     path = '/path/to/transfers.txt'
-    config.config = Namespace(transfers_txt_path=path)
+    config.args = Namespace(transfers_txt_path=path)
     with patch('ASO.Rucio.Transfer.open', new_callable=mock_open, read_data=transfersTxtContent) as mo:
         with pytest.raises(RucioTransferException):
             t.readTransferItems()
 
 def test_readLastTransferLine():
-    config.config = Namespace(last_line_path='/path/to/last_transfer.txt')
+    config.args = Namespace(last_line_path='/path/to/last_transfer.txt')
     with patch('ASO.Rucio.Transfer.open', new_callable=mock_open, read_data='5\n') as mo:
         t = Transfer()
         t.readLastTransferLine()
@@ -162,7 +162,7 @@ def test_readLastTransferLine():
         assert mo.call_args.args[0] == '/path/to/last_transfer.txt'
 
 def test_readLastTransferLine_file_not_found():
-    config.config = Namespace(last_line_path='/path/should/not/found')
+    config.args = Namespace(last_line_path='/path/should/not/found')
     t = Transfer()
     t.readLastTransferLine()
     assert t.lastTransferLine == 0
@@ -175,7 +175,7 @@ def test_readLastTransferLine_file_not_found():
 
 
 def test_readBookkeepingRules(bookkeepingRulesJSONContent):
-    config.config = Namespace(bookkeeping_rules_path='/path/to/bookkeeping_rules.json')
+    config.args = Namespace(bookkeeping_rules_path='/path/to/bookkeeping_rules.json')
     with patch('ASO.Rucio.Transfer.open', new_callable=mock_open, read_data=json.dumps(bookkeepingRulesJSONContent)) as mo:
         t = Transfer()
         t.readBookkeepingRules()
@@ -184,7 +184,7 @@ def test_readBookkeepingRules(bookkeepingRulesJSONContent):
 
 
 def test_readBookkeepingRules_FileNotFoundError():
-    config.config = Namespace(bookkeeping_rules_path='/path/to/bookkeeping_rules.json')
+    config.args = Namespace(bookkeeping_rules_path='/path/to/bookkeeping_rules.json')
     with patch('ASO.Rucio.Transfer.open', new_callable=mock_open) as mo:
         mo.side_effect = FileNotFoundError
         t = Transfer()
@@ -194,7 +194,7 @@ def test_readBookkeepingRules_FileNotFoundError():
 
 
 def test_updateOKRules(bookkeepingRulesJSONContent):
-    config.config = Namespace(bookkeeping_rules_path='/path/to/bookkeeping_rules.json')
+    config.args = Namespace(bookkeeping_rules_path='/path/to/bookkeeping_rules.json')
     with patch('ASO.Rucio.Transfer.open', new_callable=mock_open) as mo:
         with patch('ASO.Rucio.Transfer.somecontextlibfunc') as mock_somecontextlibfunc:
             t = Transfer()
@@ -214,7 +214,7 @@ def test_updateOKRules_ok_rules_not_in_all(bookkeepingRulesJSONContent):
 
 
 def test_addNewRule(bookkeepingRulesJSONContent):
-    config.config = Namespace(bookkeeping_rules_path='/path/to/bookkeeping_rules.json')
+    config.args = Namespace(bookkeeping_rules_path='/path/to/bookkeeping_rules.json')
     with patch('ASO.Rucio.Transfer.open', new_callable=mock_open) as mo:
         with patch('ASO.Rucio.Transfer.somecontextlibfunc') as mock_somecontextlibfunc:
             t = Transfer()
