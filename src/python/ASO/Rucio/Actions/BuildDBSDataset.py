@@ -22,7 +22,8 @@ class BuildDBSDataset():
 
     def execute(self):
         """
-        Main method.
+        Creating DBS Dataset by create a new Rucio container and add a new
+        Rucio dataset to it.
         """
         self.checkOrCreateContainer()
         # create log dataset
@@ -31,12 +32,12 @@ class BuildDBSDataset():
 
     def checkOrCreateContainer(self):
         """
-        Creating container. Check if container already exists,
-        otherwise create it.
+        Creating Rucio container for files transfer and add replication rule to
+        it. Do nothing if container and rule are already created.
 
-        :returns: None :raises RucioTransferException: wrapping
-        generic Exception and add message.
+        :returns: None
         """
+
         self.logger.debug(f'Creating container "{self.transfer.rucioScope}:{self.transfer.publishname}')
         try:
             self.rucioClient.add_container(self.transfer.rucioScope, self.transfer.publishname)
@@ -45,6 +46,8 @@ class BuildDBSDataset():
             self.logger.info(f"{self.transfer.publishname} container already exists, doing nothing")
         except Exception as ex:
             raise RucioTransferException('Failed to create container') from ex
+
+        self.logger.debug(f'Add replication rule to container "{self.transfer.rucioScope}:{self.transfer.publishname}')
         if self.transfer.containerRuleID:
             self.logger.info("Rule already exists, doing nothing")
         else:
@@ -68,8 +71,8 @@ class BuildDBSDataset():
         - If open more than 2, choose one and close other.
         - If only one is open, go ahead and use it.
         - if none, create new one.
-        Note that this method always call createDataset to check if
-        rule and container of dataset are attach properly.
+        Note that this method always call createDataset() to ensure that datasets
+        are attached to container.
 
         :returns: dataset name
         :rtype: str
