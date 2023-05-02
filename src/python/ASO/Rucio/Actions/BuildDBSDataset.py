@@ -4,7 +4,6 @@ import uuid
 from rucio.common.exception import DataIdentifierAlreadyExists, InvalidObject, DuplicateRule, DuplicateContent
 
 from ASO.Rucio.exception import RucioTransferException
-from ASO.Rucio.config import config
 
 class BuildDBSDataset():
     """

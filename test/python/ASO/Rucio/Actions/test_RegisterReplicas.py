@@ -56,7 +56,7 @@ def test_getSourcePFN(mock_Transfer, mock_rucioClient):
     with patch('ASO.Rucio.Actions.RegisterReplicas.find_matching_scheme', autospec=True) as mock_find_matching_scheme:
         mock_find_matching_scheme.return_value = ('', 'davs', '', '')
         # TODO: ensure RSE pass as argument should not have suffix with '_Temp'
-        r = RegisterReplicas(mock_Transfer, mock_rucioClient)
+        r = RegisterReplicas(mock_Transfer, mock_rucioClient, Mock())
         assert r.getSourcePFN(srcLFN, srcRSE, dstRSE) == srcPFN
         mock_find_matching_scheme.assert_called_once()
     mock_rucioClient.get_protocols.assert_called()
@@ -103,8 +103,10 @@ def test_prepare_single_xdict(mock_Transfer, mock_rucioClient):
         ]
     }
     with patch('ASO.Rucio.Actions.RegisterReplicas.RegisterReplicas.getSourcePFN', autospec=True) as mock_getSourcePFN:
+        config.args = Namespace(force_replica_name_suffix=None)
         mock_getSourcePFN.return_value = getSourcePFNReturnValue
-        r = RegisterReplicas(mock_Transfer, mock_rucioClient)
+        mock_Transfer.replicasInContainer = []
+        r = RegisterReplicas(mock_Transfer, mock_rucioClient, Mock())
         assert r.prepare(prepareInput) == expectedOutput
 
 @pytest.mark.skip(reason="skip it for now due to deadline.")
@@ -120,15 +122,15 @@ def test_prepare_skip_direct_stageout(mock_Transfer, mock_rucioClient, loadTrans
 def test_prepare_duplicate_replicas(mock_Transfer, mock_rucioClient, loadTransferList, loadPrepareExpectedOutput):
     prepareInput = loadTransferList[:3]
     mock_Transfer.rucioScope = f"user.{loadTransferList[0]['username']}"
-    mock_Transfer.replicasInRucio = [prepareInput[0]['destination_lfn']] # skip first
+    mock_Transfer.replicasInContainer = [prepareInput[0]['destination_lfn']] # skip first
     expectedOutput = loadPrepareExpectedOutput
-    expectedOutput['T2_CH_CERN_Temp'] = expectedOutput['T2_CH_CERN_Temp'][1:] # expect 2 items
-    getSourcePFNReturnValue = [x['pfn'] for x in expectedOutput['T2_CH_CERN_Temp'][1:]]
-    config.config = Namespace(force_replica_name_suffix=None)
+    expectedOutput['T2_CH_CERN_Temp'] = loadPrepareExpectedOutput['T2_CH_CERN_Temp'][1:] # expect 2 items
+    getSourcePFNReturnValue = [x['pfn'] for x in expectedOutput['T2_CH_CERN_Temp']]
+    config.args = Namespace(force_replica_name_suffix=None)
     with patch('ASO.Rucio.Actions.RegisterReplicas.RegisterReplicas.getSourcePFN', autospec=True) as mock_getSourcePFN:
         mock_getSourcePFN.side_effect = getSourcePFNReturnValue
         r = RegisterReplicas(mock_Transfer, mock_rucioClient, Mock())
-        assert expectedOutput == r.prepare(prepareInput)
+        assert r.prepare(prepareInput) == expectedOutput
 
 
 def test_register_success(mock_Transfer, mock_rucioClient):
@@ -152,10 +154,10 @@ def test_register_success(mock_Transfer, mock_rucioClient):
     ]
     expectedFail = []
     config.config = Namespace(replicas_chunk_size=2, dataset_file_limit=9)
-    r = RegisterReplicas(mock_Transfer, mock_rucioClient)
+    r = RegisterReplicas(mock_Transfer, mock_rucioClient, Mock())
     s, f = r.register(prepareReplicasByRSE)
     # FIXME: should we add replica one at a time instead of bulk?
-    # to prevent one file cause fail whole bulk
+    # to prevent one file cause fail whole bulk and prevent postjob to retry
     # TODO: ensure add_replicas only have all key exception id (id is crab id we store in rest)
     mock_rucioClient.add_replicas.assert_called()
     mock_rucioClient.add_files_to_datasets.assert_called()

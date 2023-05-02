@@ -9,6 +9,7 @@ from argparse import Namespace
 from ASO.Rucio.Transfer import Transfer
 from ASO.Rucio.exception import RucioTransferException
 import ASO.Rucio.config as config
+from .fixtures import mock_rucioClient
 
 
 @pytest.fixture
@@ -29,6 +30,18 @@ def bookkeepingRulesJSONContent():
     with open(path, 'r', encoding='utf-8') as r:
         return json.load(r)
 
+
+@pytest.fixture
+def listContentDatasets():
+    path = 'test/assets/rucio_list_content_datasets.json'
+    with open(path, 'r', encoding='utf-8') as r:
+        return json.load(r)
+
+@pytest.fixture
+def listContentFiles():
+    path = 'test/assets/rucio_list_content_datasets.json'
+    with open(path, 'r', encoding='utf-8') as r:
+        return json.load(r)
 
 #old relic
 #def test_Transfer_readInfo():
@@ -229,23 +242,29 @@ def test_addNewRule(bookkeepingRulesJSONContent):
             assert t.okRules == bookkeepingRulesJSONContent['ok']
             # TODO: need to check content but I do not know how to do it
 
-def test_getContainerInfo():
+def test_getContainerInfo(listContentDatasets, listContentFiles):
     t = Transfer()
     t.publishname = '/GenericTTbar/tseethon-integrationtest-1/USER'
     t.rucioScope = 'user.tseethon'
     t.getContainerInfo()
-    datasetInRucio = ['/GenericTTbar/tseethon-integrationtest-1/USER#f17a6041-015b-44e7-bd02-81e3886dc890']
-    replicasMap = ['
-user.tseethon:/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1682573944/230427_053908/0000/output_14.root_integrationtest	T1_IT_CNAF_Disk_Temp
-T2_CH_CERN
-user.tseethon:/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1682573944/230427_053908/0000/output_15.root_integrationtest	T1_IT_CNAF_Disk_Temp
-T2_CH_CERN
-user.tseethon:/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1682573944/230427_053908/0000/output_18.root_integrationtest	T1_IT_CNAF_Disk_Temp
-T2_CH_CERN
-user.tseethon:/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1682573944/230427_053908/0000/output_19.root_integrationtest	T1_IT_CNAF_Disk_Temp
-T2_CH_CERN
-user.tseethon:/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1682573944/230427_053908/0000/output_2.root_integrationtest	T1_IT_CNAF_Disk_Temp
-T2_CH_CERN
-user.tseethon:/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1682573944/230427_053908/0000/output_7.root_integrationtest
-    assert t.datasetsInRucio ==
-    assert t.replicasInRucio ==
+    #datasetInRucio = ['/GenericTTbar/tseethon-integrationtest-1/USER#f17a6041-015b-44e7-bd02-81e3886dc890']
+    #replicasMap = ['
+    #user.tseethon:/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1682573944/230427_053908/0000/output_14.root_integrationtest	T1_IT_CNAF_Disk_Temp
+    #T2_CH_CERN
+    #user.tseethon:/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1682573944/230427_053908/0000/output_15.root_integrationtest	T1_IT_CNAF_Disk_Temp
+    #T2_CH_CERN
+    #user.tseethon:/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1682573944/230427_053908/0000/output_18.root_integrationtest	T1_IT_CNAF_Disk_Temp
+    #T2_CH_CERN
+    #user.tseethon:/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1682573944/230427_053908/0000/output_19.root_integrationtest	T1_IT_CNAF_Disk_Temp
+    #T2_CH_CERN
+    #user.tseethon:/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1682573944/230427_053908/0000/output_2.root_integrationtest	T1_IT_CNAF_Disk_Temp
+    #T2_CH_CERN
+    #user.tseethon:/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1682573944/230427_053908/0000/output_7.root_integrationtest
+    #assert t.datasetsInRucio ==
+    mock_rucioClient.list_content.side_effect = [
+        (x for x in listContentDatasets),
+        (x for x in listContentFiles[:3]),
+        (x for x in listContentFiles[3:]),
+    ]
+    expectedReplicas = [x['name'] for x in listContentFiles]
+    assert t.replicasInContainer == expectedReplicas

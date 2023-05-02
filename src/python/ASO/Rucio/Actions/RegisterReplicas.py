@@ -1,12 +1,13 @@
 import logging
 import itertools
-from ASO.Rucio.Actions.BuildTaskDataset import BuildTaskDataset
+from ASO.Rucio.Actions.BuildDBSDataset import BuildDBSDataset
 from rucio.rse.rsemanager import find_matching_scheme
 from rucio.common.exception import FileAlreadyExists
 
+import ASO.Rucio.config as config
 from ASO.Rucio.exception import RucioTransferException
 from ASO.Rucio.utils import chunks
-import ASO.Rucio.config as config
+
 
 
 class RegisterReplicas:
@@ -18,8 +19,8 @@ class RegisterReplicas:
 
     def execute(self):
         start = self.transfer.lastTransferLine
-        if config.config.force_total_files:
-            end = config.config.force_total_files
+        if config.args.force_total_files:
+            end = config.args.force_total_files
         else:
             end = len(self.transfer.lastTransferLine)
         transferGenerator = itertools.islice(self.transfer.transferItems, start, end)
@@ -31,7 +32,8 @@ class RegisterReplicas:
         # create bucket rse
         bucket = {}
         replicasByRSE = {}
-        transfers = [x for x in transfers if not x['destination_lfs'] in self.transfer.replicasInRucio]
+        # Remove registered replicas
+        transfers = [x for x in transfers if not x['destination_lfn'] in self.transfer.replicasInContainer]
         for xdict in transfers:
             # /store/temp are register as `<site>_Temp` in rucio
             rse = f'{xdict["source"]}_Temp'
@@ -46,8 +48,8 @@ class RegisterReplicas:
             pfnPrefix = pfn.split(xdict["source_lfn"])[0]
             replicasByRSE[rse] = []
             for xdict in bucket[rse]:
-                if config.config.force_replica_name_suffix:
-                    replicaName = f"{xdict['destination_lfn']}_{config.config.force_replica_name_suffix}"
+                if config.args.force_replica_name_suffix:
+                    replicaName = f"{xdict['destination_lfn']}_{config.args.force_replica_name_suffix}"
                 else:
                     replicaName = xdict['destination_lfn']
                 replica = {
@@ -67,10 +69,11 @@ class RegisterReplicas:
         failReplicas = []
         self.logger.debug(f'PrepareReplicas: {prepareReplicas}')
         # Ii will treat as fail the whole chunks if one of replicas is fail.
-        b = BuildTaskDataset(self.transfer, self.rucioClient)
+        b = BuildDBSDataset(self.transfer, self.rucioClient)
         for rse, replicas in prepareReplicas.items():
-            for chunk in chunks(replicas, config.config.replicas_chunk_size):
+            for chunk in chunks(replicas, config.args.replicas_chunk_size):
                 try:
+                    # remove 'id' from dict
                     r = []
                     for c in chunk:
                         d = c.copy()
@@ -106,7 +109,7 @@ class RegisterReplicas:
                 # TODO: close if update comes > 4h, or is it a Publisher task?
                 # check the current number of files in the dataset
                 num = len(list(self.rucioClient.list_content(self.transfer.rucioScope, self.transfer.currentDataset)))
-                if num >= config.config.max_file_per_dataset:
+                if num >= config.args.max_file_per_dataset:
                     # -if everything full create new one
                     self.rucioClient.close(self.transfer.rucioScope, self.transfer.currentDataset)
                     newDataset = b.generateDatasetName()
