@@ -39,6 +39,11 @@ def loadTransferList():
     with open('test/assets/transfers.txt', encoding='utf-8') as r:
         return [json.loads(line) for line in r]
 
+@pytest.fixture
+def loadPrepareExpectedOutput():
+    with open('test/assets/prepare_expectedoutput.json', encoding='utf-8') as r:
+        return json.load(r)
+
 
 def test_getSourcePFN(mock_Transfer, mock_rucioClient):
     srcRSE = 'T3_US_FNALLPC'
@@ -104,12 +109,27 @@ def test_prepare_single_xdict(mock_Transfer, mock_rucioClient):
 
 @pytest.mark.skip(reason="skip it for now due to deadline.")
 def test_prepare_last_line_is_not_zero(mock_Transfer, mock_rucioClient):
-    pass
+    assert 0 == 1
 
 
 @pytest.mark.skip(reason="Need to implement (or not?) but skip it for now.")
 def test_prepare_skip_direct_stageout(mock_Transfer, mock_rucioClient, loadTransferList):
-    pass
+    assert 0 == 1
+
+
+def test_prepare_duplicate_replicas(mock_Transfer, mock_rucioClient, loadTransferList, loadPrepareExpectedOutput):
+    prepareInput = loadTransferList[:3]
+    mock_Transfer.rucioScope = f"user.{loadTransferList[0]['username']}"
+    mock_Transfer.replicasInRucio = [prepareInput[0]['destination_lfn']] # skip first
+    expectedOutput = loadPrepareExpectedOutput
+    expectedOutput['T2_CH_CERN_Temp'] = expectedOutput['T2_CH_CERN_Temp'][1:] # expect 2 items
+    getSourcePFNReturnValue = [x['pfn'] for x in expectedOutput['T2_CH_CERN_Temp'][1:]]
+    config.config = Namespace(force_replica_name_suffix=None)
+    with patch('ASO.Rucio.Actions.RegisterReplicas.RegisterReplicas.getSourcePFN', autospec=True) as mock_getSourcePFN:
+        mock_getSourcePFN.side_effect = getSourcePFNReturnValue
+        r = RegisterReplicas(mock_Transfer, mock_rucioClient, Mock())
+        assert expectedOutput == r.prepare(prepareInput)
+
 
 def test_register_success(mock_Transfer, mock_rucioClient):
     prepareReplicasByRSE = {
@@ -142,21 +162,21 @@ def test_register_success(mock_Transfer, mock_rucioClient):
 
 @pytest.mark.skip(reason="Skip it for now due deadline.")
 def test_register_fail(mock_Transfer, mock_rucioClient):
-    pass
+    assert 0 == 1
 
 @pytest.mark.skip(reason="Skip it for now due deadline.")
 def test_register_mix_fail_and_success(mock_Transfer, mock_rucioClient):
-    pass
+    assert 0 == 1
 
 @pytest.mark.skip(reason="Skip it for now due deadline.")
 def test_register_rerun_from_last_crash(mock_Transfer, mock_rucioClient):
-    pass
+    assert 0 == 1
 
 @pytest.mark.skip(reason="Skip it for now due deadline.")
 def test_register_create_new_dataset(mock_Transfer, mock_rucioClient):
-    pass
+    assert 0 == 1
 
 
 @pytest.mark.skip(reason="Skip it for now due deadline.")
 def test_register_ensure_bookkeeping_to_last_transfers(mock_Transfer, mock_rucioClient):
-    pass
+    assert 0 == 1

@@ -31,6 +31,7 @@ class RegisterReplicas:
         # create bucket rse
         bucket = {}
         replicasByRSE = {}
+        transfers = [x for x in transfers if not x['destination_lfs'] in self.transfer.replicasInRucio]
         for xdict in transfers:
             # /store/temp are register as `<site>_Temp` in rucio
             rse = f'{xdict["source"]}_Temp'

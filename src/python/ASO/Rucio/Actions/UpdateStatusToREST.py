@@ -1,8 +1,11 @@
+import logging
 from ServerUtilities import encodeRequest
+
 from ASO.Rucio.exception import RucioTransferException
 
 class UpdateStatusToREST:
     def __init__(self, crabRESTClient):
+        self.logger = logging.getLogger("RucioTransfer.Actions.UpdateStatusToREST")
         self.crabRESTClient = crabRESTClient
 
     def execute(self):

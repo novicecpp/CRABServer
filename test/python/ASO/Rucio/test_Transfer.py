@@ -228,3 +228,24 @@ def test_addNewRule(bookkeepingRulesJSONContent):
             assert t.allRules == bookkeepingRulesJSONContent['all'] + newAll
             assert t.okRules == bookkeepingRulesJSONContent['ok']
             # TODO: need to check content but I do not know how to do it
+
+def test_getContainerInfo():
+    t = Transfer()
+    t.publishname = '/GenericTTbar/tseethon-integrationtest-1/USER'
+    t.rucioScope = 'user.tseethon'
+    t.getContainerInfo()
+    datasetInRucio = ['/GenericTTbar/tseethon-integrationtest-1/USER#f17a6041-015b-44e7-bd02-81e3886dc890']
+    replicasMap = ['
+user.tseethon:/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1682573944/230427_053908/0000/output_14.root_integrationtest	T1_IT_CNAF_Disk_Temp
+T2_CH_CERN
+user.tseethon:/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1682573944/230427_053908/0000/output_15.root_integrationtest	T1_IT_CNAF_Disk_Temp
+T2_CH_CERN
+user.tseethon:/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1682573944/230427_053908/0000/output_18.root_integrationtest	T1_IT_CNAF_Disk_Temp
+T2_CH_CERN
+user.tseethon:/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1682573944/230427_053908/0000/output_19.root_integrationtest	T1_IT_CNAF_Disk_Temp
+T2_CH_CERN
+user.tseethon:/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1682573944/230427_053908/0000/output_2.root_integrationtest	T1_IT_CNAF_Disk_Temp
+T2_CH_CERN
+user.tseethon:/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1682573944/230427_053908/0000/output_7.root_integrationtest
+    assert t.datasetsInRucio ==
+    assert t.replicasInRucio ==
