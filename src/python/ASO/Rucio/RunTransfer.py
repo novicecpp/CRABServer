@@ -1,14 +1,12 @@
 import logging
 import os
-from ASO.Rucio.Actions.MonitorLocksStatus import MonitorLocksStatus
-from ASO.Rucio.Actions.RegisterReplicas import RegisterReplicas
-
 from rucio.client.client import Client as RucioClient
 
-from ASO.Rucio.Actions.BuildTaskDataset import BuildTaskDataset
-#from ASO.Rucio.Actions.AddFilesToTransfer import AddFilesToTransfer
 from ASO.Rucio.Transfer import Transfer
 from ASO.Rucio.exception import RucioTransferException
+from ASO.Rucio.Actions.BuildDBSDataset import BuildDBSDataset
+from ASO.Rucio.Actions.MonitorLocksStatus import MonitorLocksStatus
+from ASO.Rucio.Actions.RegisterReplicas import RegisterReplicas
 
 class RunTransfer:
     """
@@ -37,7 +35,7 @@ class RunTransfer:
         self.rucioClient = self._initRucioClient(self.transfer.username, self.transfer.restProxyFile)
         #self.crabRESTClient = self._initCrabRESTClient
         # do nothing
-        BuildTaskDataset(self.transfer, self.rucioClient).execute()
+        BuildDBSDataset(self.transfer, self.rucioClient).execute()
         # do 1
         RegisterReplicas(self.transfer, self.rucioClient, self.crabRESTClient).execute()
         # do 2

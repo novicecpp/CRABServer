@@ -6,7 +6,7 @@ from rucio.common.exception import DataIdentifierAlreadyExists, InvalidObject, D
 from ASO.Rucio.exception import RucioTransferException
 from ASO.Rucio.config import config
 
-class BuildTaskDataset():
+class BuildDBSDataset():
     """
     Create Rucio's container and dataset.
 
@@ -16,7 +16,7 @@ class BuildTaskDataset():
     :type object: class:`rucio.client.client.Client`
     """
     def __init__(self, transfer, rucioClient):
-        self.logger = logging.getLogger("RucioTransfer.Actions.BuildTaskDataset")
+        self.logger = logging.getLogger("RucioTransfer.Actions.BuildDBSDataset")
         self.rucioClient = rucioClient
         self.transfer = transfer
 

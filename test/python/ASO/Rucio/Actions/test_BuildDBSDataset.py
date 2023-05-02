@@ -6,7 +6,10 @@ from unittest.mock import patch, Mock
 from ASO.Rucio.exception import RucioTransferException
 from rucio.common.exception import DataIdentifierAlreadyExists, InvalidObject, DuplicateRule, DuplicateContent
 
-from ASO.Rucio.Actions.BuildTaskDataset import BuildTaskDataset
+from ASO.Rucio.Actions.BuildDBSDataset import BuildTaskDataset
+
+# FIXME: class name is changed from BuildTaskDataset to BuildDBSDataset.
+# Need to fix on all test in this files
 
 @pytest.fixture
 def mock_Transfer():
