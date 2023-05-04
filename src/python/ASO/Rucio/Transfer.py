@@ -40,7 +40,7 @@ class Transfer:
         # all replicas from rucio
         self.replicasInContainer = None
 
-    def readInfo(self, rucioClient):
+    def readInfo(self):
         """
         Read the information from input files using path from configuration.
         It needs to execute to following order because of dependency between
@@ -51,13 +51,15 @@ class Transfer:
         self.readRESTInfo()
         self.readInfoFromTransferItems()
         self.readContainerRuleID()
+
+    def readInfoFromRucio(self, rucioClient):
         self.getContainerInfo(rucioClient)
 
     def readLastTransferLine(self):
         """
         Reading lastTransferLine from task_process/transfers/last_transfer.txt
         """
-        if config.args.force_last_line != None: #  Need explicit compare to None
+        if config.args.force_last_line != None: #  Need explicitly compare to None
             self.lastTransferLine = config.args.force_last_line
             return
         path = config.args.last_line_path
@@ -138,5 +140,7 @@ class Transfer:
         for ds in datasets:
             files = rucioClient.list_content(self.rucioScope, ds['name'])
             for f in files:
-                replicasInContainer.append(f['name'])
+                if not f['name'] in replicasInContainer:
+                    replicasInContainer.append(f['name'])
+        self.logger.debug(f'all replicas in container: {replicasInContainer}')
         self.replicasInContainer = replicasInContainer

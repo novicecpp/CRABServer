@@ -27,8 +27,6 @@ def main():
                      help="")
     opt.add_argument("--force-total-files", dest="force_total_files", default=None, type=int,
                      help="")
-    opt.add_argument("--force-replica-name-suffix", dest="force_replica_name_suffix", default=None, type=str,
-                     help="")
     # default here must change because theses current value is too low (chunk=2/max=5)
     opt.add_argument("--replicas-chunk-size", dest="replicas_chunk_size", default=2, type=int,
                      help="")

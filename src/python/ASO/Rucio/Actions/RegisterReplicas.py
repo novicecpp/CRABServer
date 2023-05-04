@@ -48,14 +48,10 @@ class RegisterReplicas:
             pfnPrefix = pfn.split(xdict["source_lfn"])[0]
             replicasByRSE[rse] = []
             for xdict in bucket[rse]:
-                if config.args.force_replica_name_suffix:
-                    replicaName = f"{xdict['destination_lfn']}_{config.args.force_replica_name_suffix}"
-                else:
-                    replicaName = xdict['destination_lfn']
                 replica = {
                     'scope': self.transfer.rucioScope,
                     'pfn': f'{pfnPrefix}{xdict["source_lfn"]}',
-                    'name': replicaName,
+                    'name': xdict['destination_lfn'],
                     'bytes': xdict['filesize'],
                     # FIXME: not sure why we need str.rjust here
                     'adler32': xdict['checksums']['adler32'].rjust(8, '0'),

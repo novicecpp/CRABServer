@@ -33,6 +33,7 @@ class RunTransfer:
         self.transfer = Transfer()
         self.transfer.readInfo()
         self.rucioClient = self._initRucioClient(self.transfer.username, self.transfer.restProxyFile)
+        self.transfer.readInfoFromRucio(self.rucioClient)
         #self.crabRESTClient = self._initCrabRESTClient
         # do nothing
         BuildDBSDataset(self.transfer, self.rucioClient).execute()
