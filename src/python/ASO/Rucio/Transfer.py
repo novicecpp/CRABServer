@@ -37,7 +37,10 @@ class Transfer:
         # rule bookkeeping
         self.containerRuleID = ''
 
-    def readInfo(self):
+        # all replicas from rucio
+        self.replicasInContainer = None
+
+    def readInfo(self, rucioClient):
         """
         Read the information from input files using path from configuration.
         It needs to execute to following order because of dependency between
@@ -48,6 +51,7 @@ class Transfer:
         self.readRESTInfo()
         self.readInfoFromTransferItems()
         self.readContainerRuleID()
+        self.getContainerInfo(rucioClient)
 
     def readLastTransferLine(self):
         """
@@ -127,3 +131,12 @@ class Transfer:
         path = config.args.container_ruleid_path
         with writePath(path) as w:
             w.write(ruleID)
+
+    def getContainerInfo(self, rucioClient):
+        replicasInContainer = []
+        datasets = rucioClient.list_content(self.rucioScope, self.publishname)
+        for ds in datasets:
+            files = rucioClient.list_content(self.rucioScope, ds['name'])
+            for f in files:
+                replicasInContainer.append(f['name'])
+        self.replicasInContainer = replicasInContainer
