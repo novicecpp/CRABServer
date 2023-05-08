@@ -1,21 +1,22 @@
 import logging
 import itertools
+import copy
 from ASO.Rucio.Actions.BuildDBSDataset import BuildDBSDataset
 from rucio.rse.rsemanager import find_matching_scheme
 from rucio.common.exception import FileAlreadyExists
 
 import ASO.Rucio.config as config
 from ASO.Rucio.exception import RucioTransferException
-from ASO.Rucio.utils import chunks
+from ASO.Rucio.utils import chunks, updateDB
 
 
 
 class RegisterReplicas:
-    def __init__(self, transfer, rucioClient, crabRestClient):
+    def __init__(self, transfer, rucioClient, crabRESTClient):
         self.logger = logging.getLogger("RucioTransfer.Actions.RegisterReplicas")
         self.rucioClient = rucioClient
         self.transfer = transfer
-        self.crabRestClient = crabRestClient
+        self.crabRESTClient = crabRESTClient
 
     def execute(self):
         start = self.transfer.lastTransferLine
@@ -25,15 +26,27 @@ class RegisterReplicas:
             end = len(self.transfer.lastTransferLine)
         transferGenerator = itertools.islice(self.transfer.transferItems, start, end)
         preparedReplicasByRSE = self.prepare(transferGenerator)
-        success, fail = self.register(preparedReplicasByRSE)
-        return (success, fail)
+
+        # Remove registered replicas
+        replicasToRegisterByRSE, registeredReplicas = self.removeRegisteredReplicas(preparedReplicasByRSE)
+        self.logger.debug(f'replicasToRegisterByRSE: {replicasToRegisterByRSE}')
+        self.logger.debug(f'registeredReplicas: {registeredReplicas}')
+        successReplicasFromRegister, failReplicas = self.register(replicasToRegisterByRSE)
+        self.logger.debug(f'successReplicasFromRegister: {successReplicasFromRegister}')
+        self.logger.debug(f'failReplicas: {failReplicas}')
+        successReplicas = successReplicasFromRegister + registeredReplicas
+        self.logger.debug(f'successReplicas: {successReplicas}')
+        if successReplicas:
+            successFileDoc = self.prepareSuccessFileDoc(successReplicas)
+            updateDB(self.crabRESTClient, 'filetransfers', 'updateRucioInfo', successFileDoc, self.logger)
+        if failReplicas:
+            failFileDoc = self.prepareFailFileDoc(failReplicas)
+            updateDB(self.crabRESTClient, 'filetransfers', 'updateTransfers', failFileDoc, self.logger)
 
     def prepare(self, transfers):
         # create bucket rse
         bucket = {}
         replicasByRSE = {}
-        # Remove registered replicas
-        transfers = [x for x in transfers if not x['destination_lfn'] in self.transfer.replicasInContainer]
         for xdict in transfers:
             # /store/temp are register as `<site>_Temp` in rucio
             rse = f'{xdict["source"]}_Temp'
@@ -63,7 +76,7 @@ class RegisterReplicas:
     def register(self, prepareReplicas):
         successReplicas = []
         failReplicas = []
-        self.logger.debug(f'PrepareReplicas: {prepareReplicas}')
+        self.logger.debug(f'Prepare replicas: {prepareReplicas}')
         # Ii will treat as fail the whole chunks if one of replicas is fail.
         b = BuildDBSDataset(self.transfer, self.rucioClient)
         for rse, replicas in prepareReplicas.items():
@@ -126,3 +139,55 @@ class RegisterReplicas:
             return sourcePFNMap[did]
         except Exception as ex:
             raise RucioTransferException("Failed to get source PFN") from ex
+
+
+    def removeRegisteredReplicas(self, replicasByRSE):
+        """
+        It might better to get state from rest once at startup and just skip at
+        prepare.
+        """
+        notRegister = copy.deepcopy(replicasByRSE)
+        registered = []
+        for k, v in notRegister.items():
+            newV = []
+            for i in range(len(v)):
+                if v[i]['name'] in self.transfer.replicasInContainer:
+                    registeredReplica = {
+                        'id': v[i]['id'],
+                        'dataset': self.transfer.replicasInContainer[v[i]['name']],
+                    }
+                    registered.append(registeredReplica)
+                else:
+                    newV.append(v[i])
+            notRegister[k] = newV
+        return notRegister, registered
+
+    def prepareSuccessFileDoc(self, replicas):
+        num = len(replicas)
+        fileDoc = {
+            'asoworker': 'rucio',
+            'list_of_ids': [x['id'] for x in replicas],
+            'list_of_transfer_state': ['SUBMITTED']*num,
+            'list_of_dbs_blockname': [x['dataset'] for x in replicas],
+            'list_of_block_complete': ['NO']*num,
+            'list_of_fts_instance': ['https://fts3-cms.cern.ch:8446/']*num,
+            'list_of_failure_reason': None, # omit
+            'list_of_retry_value': None, # omit
+            'list_of_fts_id': ['NA']*num,
+        }
+        return fileDoc
+
+    def prepareFailFileDoc(self, replicas):
+        num = len(replicas)
+        fileDoc = {
+            'asoworker': 'rucio',
+            'list_of_ids': [x['id'] for x in replicas],
+            'list_of_transfer_state': ['FAILED']*num,
+            'list_of_dbs_blockname': None,  # omit
+            'list_of_block_complete': None, # omit
+            'list_of_fts_instance': ['https://fts3-cms.cern.ch:8446/']*num,
+            'list_of_failure_reason': ['Failed to register files within RUCIO']*num,
+            'list_of_retry_value': [0]*num, # No need for retry -> delegate to RUCIO
+            'list_of_fts_id': ['NA']*num,
+        }
+        return fileDoc

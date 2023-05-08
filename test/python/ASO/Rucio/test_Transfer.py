@@ -254,3 +254,7 @@ def test_getContainerInfo(mock_rucioClient, listContentDatasets, listContentFile
     t.getContainerInfo(mock_rucioClient)
     expectedReplicas = [x['name'] for x in listContentFiles]
     assert t.replicasInContainer == expectedReplicas
+
+@pytest.mark.skip(reason='I am really lazy')
+def test_buildReplica2IDMap():
+    assert 0 == 1

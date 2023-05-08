@@ -1,54 +1,65 @@
 import logging
 
+import ASO.Rucio.config as config
 from ASO.Rucio.utils import updateDB
 
 class MonitorLocksStatus:
     def __init__(self, transfer, rucioClient, crabRESTClient):
-        self.logger = logging.getLogger("RucioTransfer.Actions.BuildTaskDataset")
+        self.logger = logging.getLogger("RucioTransfer.Actions.MonitorLocksStatus")
         self.rucioClient = rucioClient
         self.transfer = transfer
         self.crabRESTClient = crabRESTClient
 
     def execute(self):
-        # only process non-ok rule from bookkeeping
-        ruleToMontior = [x for x in self.transfer.allRules if not x in self.transfer.okRules]
-        retOKReplicas, retNotOKReplicas, retOKRules = self.checkLocksStatus(ruleToMontior)
-        if retOKReplicas:
-            OKFileDoc = self.prepareOKFileDoc(retOKReplicas)
-            updateDB(self.crabRESTClient, 'filetransfers', 'updateRucioInfo', OKFileDoc, self.logger)
-        if retNotOKReplicas:
-            NotOKFileDoc = self.prepareNotOKFileDoc(retNotOKReplicas)
-            updateDB(self.crabRESTClient, 'filetransfers', 'updateTransfers', NotOKFileDoc, self.logger)
-        self.transfer.updateOKRules(retOKRules)
+        okReplicas, notOKReplicas = self.checkLocksStatus()
+        if okReplicas:
+            okFileDoc = self.prepareOKFileDoc(okReplicas)
+            updateDB(self.crabRESTClient, 'filetransfers', 'updateRucioInfo', okFileDoc, self.logger)
+        if notOKReplicas:
+            notOKFileDoc = self.prepareNotOKFileDoc(notOKReplicas)
+            updateDB(self.crabRESTClient, 'filetransfers', 'updateTransfers', notOKFileDoc, self.logger)
 
-    def checkLocksStatus(self, ruleIDs):
-        OKReplicas = []
-        OKRuleIDs = []
+    def checkLocksStatus(self):
+        okReplicas = []
         notOKReplicas = []
-        for rule in ruleIDs:
-            ruleStatus = self.rucioClient.get_replication_rule(rule)
-            # FIXME: sometime we got error that rucioClient cannot parse response of
-            # list_replica_locks and raise TypeError.
-            # Not sure how to handle this
-            if ruleStatus['state'] == 'OK':
+        replicasByDataset = {}
+        for replicaStatus in self.rucioClient.list_replica_locks(self.transfer.containerRuleID):
+            blockName = self.transfer.replicasInContainer[replicaStatus['name']]
+            replica = {
+                'id': self.transfer.replicaLFN2IDMap[replicaStatus['name']],
+                'dataset': blockName,
+                'blockcomplete': 'NO',
+                'ruleid': self.transfer.containerRuleID,
+                'state': replicaStatus['state'],
+            }
+            # Block complete state rely on `config.args.max_file_per_dataset`.
+            # Beware blockcomplete will alway "NO" if we rerun script while
+            # change max_file_per_dataset to bigger value when register
+            # replicas.
+            if not blockName in replicasByDataset:
+                replicasByDataset[blockName] = []
+            replicasByDataset[blockName].append(replica)
+        self.logger.debug(f'replicaByDataset dict: {replicasByDataset}')
+        for k, v in replicasByDataset.items():
+            if len(v) == config.args.max_file_per_dataset \
+               and all(x['state'] == 'OK' for x in v):
+                self.logger.debug(f'Dataset "{k}" is all OK.')
                 blockComplete = 'OK'
-                OKRuleIDs.append(rule)
             else:
+                self.logger.debug(f'Dataset "{k}" is still replicating.')
                 blockComplete = 'NO'
-            for replicaStatus in self.rucioClient.list_replica_locks(rule):
-                replica = {
-                    "id": self.transfer.getIDFromLFN(replicaStatus['name']),
-                    "dataset": ruleStatus['name'],
-                    "blockcomplete": blockComplete,
-                    "ruleid": rule,
-                }
-                if replicaStatus['state'] == 'OK':
-                    OKReplicas.append(replica)
+            for replica in v:
+                # change blockcomplete to OK when all block
+                replica['blockcomplete'] = blockComplete
+                # remove unnecessary key
+                state = replica.pop('state')
+                if state == 'OK':
+                    okReplicas.append(replica)
                 else:
-                    # TODO:   if now - replica["created_at"] > 12h:
+                    # TODO: if now - replica["created_at"] > 12h:
                     # delete replica and detach from dataset --> treat as STUCK
                     notOKReplicas.append(replica)
-        return (OKReplicas, notOKReplicas, OKRuleIDs)
+        return (okReplicas, notOKReplicas)
 
     def prepareOKFileDoc(self, replicas):
         """

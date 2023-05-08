@@ -44,6 +44,33 @@ def loadPrepareExpectedOutput():
     with open('test/assets/prepare_expectedoutput.json', encoding='utf-8') as r:
         return json.load(r)
 
+def generateExpectedOutput(doctype):
+    if doctype == 'success':
+        return {
+            'asoworker': 'rucio',
+            'list_of_ids': ['98f353b91ec84f0217da80bde84d6b520c0c6640f60ad9aabb7b20ca'], # hmm, how do we get this
+            'list_of_transfer_state': ['SUBMITTED'],
+            'list_of_dbs_blockname': ['/TestPrimary/test-dataset/RAW#c9b28b96-5d16-41cd-89af-2678971132c9'],
+            'list_of_block_complete': ['NO'],
+            'list_of_fts_instance': ['https://fts3-cms.cern.ch:8446/'],
+            'list_of_failure_reason': None, # omit
+            'list_of_retry_value': None, # omit
+            'list_of_fts_id': ['NA'], # maybe we should put ruleid of container here
+        }
+    elif doctype == 'fail':
+        return {
+            'asoworker': 'rucio',
+            'list_of_ids': ['98f353b91ec84f0217da80bde84d6b520c0c6640f60ad9aabb7b20ca'], # hmm, how do we get this
+            'list_of_transfer_state': ['FAILED'],
+            'list_of_dbs_blockname': None,  # omit
+            'list_of_block_complete': None, # omit
+            'list_of_fts_instance': ['https://fts3-cms.cern.ch:8446/'],
+            'list_of_failure_reason': ['Failed to register files within RUCIO'],
+            # No need for retry -> delegate to RUCIO
+            'list_of_retry_value': [0],
+            'list_of_fts_id': ['NA'],
+        }
+
 
 def test_getSourcePFN(mock_Transfer, mock_rucioClient):
     srcRSE = 'T3_US_FNALLPC'
@@ -118,20 +145,38 @@ def test_prepare_last_line_is_not_zero(mock_Transfer, mock_rucioClient):
 def test_prepare_skip_direct_stageout(mock_Transfer, mock_rucioClient, loadTransferList):
     assert 0 == 1
 
+#def test_prepare_duplicate_replicas(mock_Transfer, mock_rucioClient, loadTransferList, loadPrepareExpectedOutput):
+#    prepareInput = loadTransferList[:3]
+#    mock_Transfer.rucioScope = f"user.{loadTransferList[0]['username']}"
+#    mock_Transfer.replicasInContainer = [prepareInput[0]['destination_lfn']] # skip first
+#    expectedOutput = loadPrepareExpectedOutput
+#    expectedOutput['T2_CH_CERN_Temp'] = loadPrepareExpectedOutput['T2_CH_CERN_Temp'][1:] # expect 2 items
+#    getSourcePFNReturnValue = [x['pfn'] for x in expectedOutput['T2_CH_CERN_Temp']]
+#    config.args = Namespace(force_replica_name_suffix=None)
+#    with patch('ASO.Rucio.Actions.RegisterReplicas.RegisterReplicas.getSourcePFN', autospec=True) as mock_getSourcePFN:
+#        mock_getSourcePFN.side_effect = getSourcePFNReturnValue
+#        r = RegisterReplicas(mock_Transfer, mock_rucioClient, Mock())
+#        assert r.prepare(prepareInput) == expectedOutput
 
-def test_prepare_duplicate_replicas(mock_Transfer, mock_rucioClient, loadTransferList, loadPrepareExpectedOutput):
-    prepareInput = loadTransferList[:3]
-    mock_Transfer.rucioScope = f"user.{loadTransferList[0]['username']}"
-    mock_Transfer.replicasInContainer = [prepareInput[0]['destination_lfn']] # skip first
-    expectedOutput = loadPrepareExpectedOutput
-    expectedOutput['T2_CH_CERN_Temp'] = loadPrepareExpectedOutput['T2_CH_CERN_Temp'][1:] # expect 2 items
-    getSourcePFNReturnValue = [x['pfn'] for x in expectedOutput['T2_CH_CERN_Temp']]
+def test_removeRegisteredReplicas(mock_Transfer, mock_rucioClient, loadPrepareExpectedOutput):
+    fInput = {
+        'T2_CH_CERN_Temp': loadPrepareExpectedOutput['T2_CH_CERN_Temp'][:3]
+    }
+    mock_Transfer.replicasInContainer = {
+        '/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1679671056/230324_151740/0000/output_9.root': '/GenericTTbar/tseethon-autotest-1679671056-94ba0e06145abd65ccb1d21786dc7e1d/USER#ec579451-65f1-484f-a345-8c29916c3715'
+    }
+    expectedReplicasToRegister = {
+        'T2_CH_CERN_Temp': loadPrepareExpectedOutput['T2_CH_CERN_Temp'][1:3]
+    }
+    expectedRegisteredReplicas = [{
+        "id": "98f353b91ec84f0217da80bde84d6b520c0c6640f60ad9aabb7b20ca",
+        "dataset": '/GenericTTbar/tseethon-autotest-1679671056-94ba0e06145abd65ccb1d21786dc7e1d/USER#ec579451-65f1-484f-a345-8c29916c3715',
+        "blockcomplete": 'NO',
+    }]
+    expectedOutput = (expectedReplicasToRegister, expectedRegisteredReplicas)
     config.args = Namespace(force_replica_name_suffix=None)
-    with patch('ASO.Rucio.Actions.RegisterReplicas.RegisterReplicas.getSourcePFN', autospec=True) as mock_getSourcePFN:
-        mock_getSourcePFN.side_effect = getSourcePFNReturnValue
-        r = RegisterReplicas(mock_Transfer, mock_rucioClient, Mock())
-        assert r.prepare(prepareInput) == expectedOutput
-
+    r = RegisterReplicas(mock_Transfer, Mock(), Mock())
+    assert r.removeRegisteredReplicas(fInput) == expectedOutput
 
 def test_register_success(mock_Transfer, mock_rucioClient):
     prepareReplicasByRSE = {
@@ -182,3 +227,28 @@ def test_register_create_new_dataset(mock_Transfer, mock_rucioClient):
 @pytest.mark.skip(reason="Skip it for now due deadline.")
 def test_register_ensure_bookkeeping_to_last_transfers(mock_Transfer, mock_rucioClient):
     assert 0 == 1
+
+
+def test_prepareSuccessFileDoc(mock_Transfer):
+    successFileDoc = generateExpectedOutput('success')
+    outputSuccess = [
+        {
+            "id": successFileDoc['list_of_ids'][0],
+            "dataset": successFileDoc['list_of_dbs_blockname'][0],
+            "blockcomplete": 'NO',
+        }
+    ]
+    r = RegisterReplicas(mock_Transfer, Mock(), Mock())
+    assert successFileDoc == r.prepareSuccessFileDoc(outputSuccess)
+
+def test_prepareFailFileDoc(mock_Transfer):
+    failFileDoc = generateExpectedOutput('fail')
+    outputFail = [
+        {
+            "id": failFileDoc['list_of_ids'][0],
+            "dataset": '',
+            "blockcomplete": 'NO',
+        }
+    ]
+    r = RegisterReplicas(mock_Transfer, Mock(), Mock())
+    assert failFileDoc == r.prepareFailFileDoc(outputFail)

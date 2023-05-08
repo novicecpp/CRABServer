@@ -17,7 +17,7 @@ class Transfer:
 
         # from rest info
         self.restHost = ''
-        self.restDBinstance = ''
+        self.restDBInstance = ''
         self.restProxyFile = ''
 
 
@@ -40,6 +40,9 @@ class Transfer:
         # all replicas from rucio
         self.replicasInContainer = None
 
+        # map lf2 to id
+        self.replicaLFN2IDMap = None
+
     def readInfo(self):
         """
         Read the information from input files using path from configuration.
@@ -48,6 +51,7 @@ class Transfer:
         """
         self.readLastTransferLine()
         self.readTransferItems()
+        self.buildReplica2IDMap()
         self.readRESTInfo()
         self.readInfoFromTransferItems()
         self.readContainerRuleID()
@@ -86,6 +90,11 @@ class Transfer:
         if len(self.transferItems) == 0:
             raise RucioTransferException(f'{path} does not contain new entry.')
 
+    def buildReplica2IDMap(self):
+        self.replicaLFN2IDMap = {}
+        for x in self.transferItems:
+            self.replicaLFN2IDMap[x['destination_lfn']] = x['id']
+
     def readRESTInfo(self):
         """
         Reading REST info from from task_process/RestInfoForFileTransfers.json
@@ -95,7 +104,7 @@ class Transfer:
             with open(path, 'r', encoding='utf-8') as r:
                 doc = json.loads(r.read())
                 self.restHost = doc['host']
-                self.restDBinstance = doc['dbInstance']
+                self.restDBInstance = doc['dbInstance']
                 self.restProxyFile = doc['proxyfile']
         except FileNotFoundError as ex:
             raise RucioTransferException(f'{path} does not exist. Probably no completed jobs in the task yet.') from ex
@@ -123,6 +132,7 @@ class Transfer:
         try:
             with open(path, 'r', encoding='utf-8') as r:
                 self.containerRuleID = r.read()
+                self.logger.info(f'Got container rule ID from bookkeeping. Rule ID: {self.containerRuleID}')
         except FileNotFoundError:
             self.logger.info(f'Bookkeeping rules "{path}" does not exist. Assume it is first time it run.')
 
@@ -131,16 +141,17 @@ class Transfer:
         update task_process/transfers/container_ruleid.txt
         """
         path = config.args.container_ruleid_path
+        self.logger.info(f'Bookkeeping container rule ID [{ruleID}] to file: {path}')
         with writePath(path) as w:
             w.write(ruleID)
 
     def getContainerInfo(self, rucioClient):
-        replicasInContainer = []
+        replicasInContainer = {}
         datasets = rucioClient.list_content(self.rucioScope, self.publishname)
         for ds in datasets:
             files = rucioClient.list_content(self.rucioScope, ds['name'])
             for f in files:
                 if not f['name'] in replicasInContainer:
-                    replicasInContainer.append(f['name'])
+                    replicasInContainer[f['name']] = ds['name']
         self.logger.debug(f'all replicas in container: {replicasInContainer}')
         self.replicasInContainer = replicasInContainer

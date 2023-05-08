@@ -737,6 +737,15 @@ def make_filedoc_for_db(
     """
     prepare dictionary in a proper form to be passed for CRAB REST call
     """
+
+    #to_update_success_docs = make_filedoc_for_db(
+    #    ids=[glob.id2lfn_map[x['lfn']] for x in success_from_registration],
+    #    states=["SUBMITTED" for x in success_from_registration],
+    #    dbsBlocknames=[x['dbsBlock'] for x in success_from_registration],
+    #    blockCompletes=[x['complete'] for x in success_from_registration],
+    #    reasons=None
+    #)
+
     fileDoc = {}
 
     if len(ids) != len(states):

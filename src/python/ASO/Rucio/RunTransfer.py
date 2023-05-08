@@ -2,6 +2,7 @@ import logging
 import os
 from rucio.client.client import Client as RucioClient
 
+from RESTInteractions import CRABRest
 from ASO.Rucio.Transfer import Transfer
 from ASO.Rucio.exception import RucioTransferException
 from ASO.Rucio.Actions.BuildDBSDataset import BuildDBSDataset
@@ -34,14 +35,18 @@ class RunTransfer:
         self.transfer.readInfo()
         self.rucioClient = self._initRucioClient(self.transfer.username, self.transfer.restProxyFile)
         self.transfer.readInfoFromRucio(self.rucioClient)
-        #self.crabRESTClient = self._initCrabRESTClient
-        # do nothing
+        self.crabRESTClient = self._initCrabRESTClient(
+            self.transfer.restHost,
+            self.transfer.restDBInstance,
+            self.transfer.restProxyFile,
+        )
+        # build dataset
         BuildDBSDataset(self.transfer, self.rucioClient).execute()
         # do 1
         RegisterReplicas(self.transfer, self.rucioClient, self.crabRESTClient).execute()
         # do 2
-        #m = MonitorLocksStatus()
-        #m.execute()
+        MonitorLocksStatus(self.transfer, self.rucioClient, self.crabRESTClient).execute()
+
     def _initRucioClient(self, username, proxypath=None):
         # maybe we can share with getNativeRucioClient
         rucioLogger = logging.getLogger('RucioTransfer.RucioClient')
@@ -60,3 +65,22 @@ class RunTransfer:
         )
         self.logger.debug(f'RucioClient.whoami(): {rc.whoami()}')
         return rc
+
+    def _initCrabRESTClient(self, host, dbInstance, proxypath='/tmp/x509_u999999'):
+        """
+        Initialize client for CRAB REST
+        """
+        proxyPathEnv = os.environ.get('X509_USER_PROXY', None)
+        if proxyPathEnv:
+            proxypath = proxyPathEnv
+        if not os.path.isfile(proxypath):
+            raise RucioTransferException(f'proxy file not found: {proxypath}')
+
+        crabRESTClient = CRABRest(
+            host,
+            localcert=proxypath,
+            localkey=proxypath,
+            userAgent='CRABSchedd'
+        )
+        crabRESTClient.setDbInstance(dbInstance)
+        return crabRESTClient

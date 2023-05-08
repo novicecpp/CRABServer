@@ -11,10 +11,12 @@
 # 1. replicas state is ok: same as ReegisterReplicas.register(), but plus blockCompletes for rule state is ok
 # 2. replicas state is replication: need rule id and id (no need for dataset)
 
-from unittest.mock import patch, Mock, call
 import pytest
 import datetime
+from argparse import Namespace
+from unittest.mock import patch, Mock, call
 
+import ASO.Rucio.config as config
 from ASO.Rucio.Actions.MonitorLocksStatus import MonitorLocksStatus
 
 @pytest.fixture
@@ -43,20 +45,22 @@ def test_checkLockStatus_all_ok(mock_Transfer, mock_rucioClient):
             "ruleid": "b43a554244c54dba954aa29cb2fdde0a",
         }
     ]
-    getReplicationRuleReturnValue = {
-        'id': 'b43a554244c54dba954aa29cb2fdde0a',
-        'name': '/GenericTTbar/tseethon-autotest-1679671056-94ba0e06145abd65ccb1d21786dc7e1d/USER#c9b28b96-5d16-41cd-89af-2678971132c9',
-        'state': 'OK',
-    }
     listReplicaLocksReturnValue = [{
         'name': '/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1679671056/230324_151740/0000/output_9.root',
         'state': 'OK',
     }]
-    mock_rucioClient.get_replication_rule.return_value = getReplicationRuleReturnValue
+
     mock_rucioClient.list_replica_locks.side_effect = ((x for x in listReplicaLocksReturnValue), ) # list_replica_locks return generator
-    mock_Transfer.getIDFromLFN.return_value = '98f353b91ec84f0217da80bde84d6b520c0c6640f60ad9aabb7b20ca'
+    mock_Transfer.replicaLFN2IDMap = {
+        '/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1679671056/230324_151740/0000/output_9.root' : '98f353b91ec84f0217da80bde84d6b520c0c6640f60ad9aabb7b20ca'
+    }
+    mock_Transfer.replicasInContainer = {
+        '/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1679671056/230324_151740/0000/output_9.root' : '/GenericTTbar/tseethon-autotest-1679671056-94ba0e06145abd65ccb1d21786dc7e1d/USER#c9b28b96-5d16-41cd-89af-2678971132c9'
+    }
+    mock_Transfer.containerRuleID = 'b43a554244c54dba954aa29cb2fdde0a'
+    config.args = Namespace(max_file_per_dataset=1)
     m = MonitorLocksStatus(mock_Transfer, mock_rucioClient, Mock())
-    assert m.checkLocksStatus(listRuleIDs) == (outputAllOK, [], ["b43a554244c54dba954aa29cb2fdde0a"])
+    assert m.checkLocksStatus() == (outputAllOK, [])
 
 def test_checkLockStatus_all_replicating(mock_Transfer, mock_rucioClient):
     listRuleIDs = ['b43a554244c54dba954aa29cb2fdde0a']
