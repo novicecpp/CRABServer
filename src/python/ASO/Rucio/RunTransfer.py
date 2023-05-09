@@ -50,6 +50,7 @@ class RunTransfer:
     def _initRucioClient(self, username, proxypath=None):
         # maybe we can share with getNativeRucioClient
         rucioLogger = logging.getLogger('RucioTransfer.RucioClient')
+        rucioLogger.setLevel(logging.INFO)
         if os.environ.get('X509_USER_PROXY', None):
             creds = None
         else:
