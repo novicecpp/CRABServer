@@ -56,7 +56,7 @@ class BuildDBSDataset():
                     'name': self.transfer.publishname,
                     'type': "CONTAINER",
                 }
-                ruleID = self.rucioClient.add_replication_rule([containerDID], 1, self.transfer.destination)
+                ruleID = self.rucioClient.add_replication_rule([containerDID], 1, self.transfer.destination)[0]
                 self.transfer.updateContainerRuleID(ruleID)
                 # TODO: not sure if any other case make the rule duplicate beside script crash
             except DuplicateRule:
