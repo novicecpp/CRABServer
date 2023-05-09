@@ -23,7 +23,19 @@ class MonitorLocksStatus:
         okReplicas = []
         notOKReplicas = []
         replicasByDataset = {}
-        for replicaStatus in self.rucioClient.list_replica_locks(self.transfer.containerRuleID):
+        try:
+            listReplicasLocks = self.rucioClient.list_replica_locks(self.transfer.containerRuleID)
+        except TypeError:
+            # Current rucio-clients==1.29.10 will raise exception when it get
+            # None response from server. It will happen when we run
+            # list_replica_locks immediately after register replicas with
+            # replicas lock info is not available yet.
+            self.logger.info('TypeError has raised. Assume there is still no lock info available yet.')
+            listReplicasLocks = []
+        for replicaStatus in listReplicasLocks:
+            # Skip replicas that registered in the same run.
+            if not replicaStatus['name'] in self.transfer.replicasInContainer:
+                continue
             blockName = self.transfer.replicasInContainer[replicaStatus['name']]
             replica = {
                 'id': self.transfer.replicaLFN2IDMap[replicaStatus['name']],
@@ -41,7 +53,7 @@ class MonitorLocksStatus:
             replicasByDataset[blockName].append(replica)
         self.logger.debug(f'replicaByDataset dict: {replicasByDataset}')
         for k, v in replicasByDataset.items():
-            if len(v) == config.args.max_file_per_dataset \
+            if len(v) >= config.args.max_file_per_dataset \
                and all(x['state'] == 'OK' for x in v):
                 self.logger.debug(f'Dataset "{k}" is all OK.')
                 blockComplete = 'OK'

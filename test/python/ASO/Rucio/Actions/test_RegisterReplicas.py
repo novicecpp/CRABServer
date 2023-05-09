@@ -6,6 +6,8 @@ from argparse import Namespace
 from ASO.Rucio.Actions.RegisterReplicas import RegisterReplicas
 import ASO.Rucio.config as config
 
+# somehow register return [[item1,item2]] while it should return [item1, item2], but unittest fail to detect this
+
 # prepare_replicas
 # input is just transfers.txt start from last lines
 # {"id": "7e6d075f7434f1307a764d491d86ab1192554b76106d139846810834", "username": "tseethon", "taskname": "230227_174038:tseethon_crab_rucio_transfer_test12_20230227_184034", "start_time": 1677520683, "destination": "T2_CH_CERN", "destination_lfn": "/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1677519634/230227_174038/0000/output_2.root", "source": "T3_US_FNALLPC", "source_lfn": "/store/temp/user/tseethon.d6830fc3715ee01030105e83b81ff3068df7c8e0/tseethon/test-workflow/GenericTTbar/autotest-1677519634/230227_174038/0000/output_2.root", "filesize": 630710, "publish": 0, "transfer_state": "NEW", "publication_state": "NOT_REQUIRED", "job_id": "2", "job_retry_count": 1, "type": "output", "publishname": "autotest-1677519634-00000000000000000000000000000000", "checksums": {"adler32": "5cbf440e", "cksum": "3473488862"}, "outputdataset": "/GenericTTbar/tseethon-autotest-1677519634-94ba0e06145abd65ccb1d21786dc7e1d/USER"}

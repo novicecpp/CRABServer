@@ -1,7 +1,9 @@
 import shutil
+import re
 from contextlib import contextmanager
 
 from ServerUtilities import encodeRequest
+from ASO.Rucio.exception import RucioTransferException
 
 @contextmanager
 def writePath(path):
@@ -39,3 +41,20 @@ def updateDB(client, api, subresource, fileDoc, logger=None):
         api=api,
         data=encodeRequest(fileDoc)
     )
+
+def tfcLFN2PFN(lfn, tfc, proto, depth=0):
+    # Hardcode
+    MAX_CHAIN_DEPTH = 5
+    if depth > MAX_CHAIN_DEPTH:
+        raise RucioTransferException(f"Max depth reached matching lfn {lfn} and protocol {proto} with tfc {tfc}")
+    for rule in tfc:
+        if rule['proto'] == proto:
+            if 'chain' in rule:
+                import pdb; pdb.set_trace()
+                lfn = tfcLFN2PFN(lfn, tfc, rule['chain'], depth + 1)
+            regex = re.compile(rule['path'])
+            if regex.match(lfn):
+                return regex.sub(rule['out'].replace('$', '\\'), lfn)
+    if depth > 0:
+        return lfn
+    raise ValueError(f"lfn {lfn} with proto {proto} cannot be matched by tfc {tfc}")

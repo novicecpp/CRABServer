@@ -49,6 +49,9 @@ class Transfer:
         It needs to execute to following order because of dependency between
         method.
         """
+        # ensure task_process/transfers directory
+        if not os.path.exists('task_process/transfers'):
+            os.makedirs('task_process/transfers')
         self.readLastTransferLine()
         self.readTransferItems()
         self.buildReplica2IDMap()
@@ -73,6 +76,11 @@ class Transfer:
         except FileNotFoundError:
             self.logger.info(f'{path} not found. Assume it is first time it run.')
             self.lastTransferLine = 0
+
+    def updateLastTransferLine(self):
+        path = config.args.last_line_path
+        with writePath(path) as w:
+            w.write(str(self.lastTransferLine))
 
     def readTransferItems(self):
         """

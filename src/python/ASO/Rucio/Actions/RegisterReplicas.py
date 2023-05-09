@@ -7,7 +7,7 @@ from rucio.common.exception import FileAlreadyExists
 
 import ASO.Rucio.config as config
 from ASO.Rucio.exception import RucioTransferException
-from ASO.Rucio.utils import chunks, updateDB
+from ASO.Rucio.utils import chunks, updateDB, tfcLFN2PFN
 
 
 
@@ -21,12 +21,11 @@ class RegisterReplicas:
     def execute(self):
         start = self.transfer.lastTransferLine
         if config.args.force_total_files:
-            end = config.args.force_total_files
+            end = start + config.args.force_total_files
         else:
-            end = len(self.transfer.lastTransferLine)
+            end = len(self.transfer.transferItems)
         transferGenerator = itertools.islice(self.transfer.transferItems, start, end)
         preparedReplicasByRSE = self.prepare(transferGenerator)
-
         # Remove registered replicas
         replicasToRegisterByRSE, registeredReplicas = self.removeRegisteredReplicas(preparedReplicasByRSE)
         self.logger.debug(f'replicasToRegisterByRSE: {replicasToRegisterByRSE}')
@@ -42,6 +41,8 @@ class RegisterReplicas:
         if failReplicas:
             failFileDoc = self.prepareFailFileDoc(failReplicas)
             updateDB(self.crabRESTClient, 'filetransfers', 'updateTransfers', failFileDoc, self.logger)
+        self.transfer.lastTransferLine = end
+        self.transfer.updateLastTransferLine()
 
     def prepare(self, transfers):
         # create bucket rse
@@ -56,14 +57,16 @@ class RegisterReplicas:
         for rse in bucket:
             xdict = bucket[rse][0]
             # Need to remove '_Temp' suffix from rse to get proper PFN.
-            # FIXME: need ref for better explaination
+            # FIXME: need ref for better explaination.
             pfn = self.getSourcePFN(xdict["source_lfn"], rse.split('_Temp')[0], xdict["destination"])
-            pfnPrefix = pfn.split(xdict["source_lfn"])[0]
+            # Hardcode fix for T2_DE_DESY
+            if rse == 'T2_DE_DESY_Temp':
+                pfn = pfn.replace('/pnfs/desy.de/cms/tier2/temp', '/pnfs/desy.de/cms/tier2/store/temp')
             replicasByRSE[rse] = []
             for xdict in bucket[rse]:
                 replica = {
                     'scope': self.transfer.rucioScope,
-                    'pfn': f'{pfnPrefix}{xdict["source_lfn"]}',
+                    'pfn': self.LFNToPFNFromPFN(xdict["source_lfn"], pfn),
                     'name': xdict['destination_lfn'],
                     'bytes': xdict['filesize'],
                     # FIXME: not sure why we need str.rjust here
@@ -80,6 +83,8 @@ class RegisterReplicas:
         # Ii will treat as fail the whole chunks if one of replicas is fail.
         b = BuildDBSDataset(self.transfer, self.rucioClient)
         for rse, replicas in prepareReplicas.items():
+            self.logger.debug(f'Registering replicas from {rse}')
+            self.logger.debug(f'Replicas: {replicas}')
             for chunk in chunks(replicas, config.args.replicas_chunk_size):
                 try:
                     # remove 'id' from dict
@@ -88,22 +93,28 @@ class RegisterReplicas:
                         d = c.copy()
                         d.pop('id')
                         r.append(d)
-                    if not self.rucioClient.add_replicas(rse, r):
+                    # add_replicas with same dids will always return True, even
+                    # with changing metadata (e.g pfn), rucio will not update
+                    # new value.
+                    retAddReplicas = self.rucioClient.add_replicas(rse, r)
+                    if not retAddReplicas:
                         failItems = [{
                             'id': x['id'],
                             'dataset': '',
                         } for x in chunk]
-                        failReplicas.append(failItems)
+                        failReplicas += failItems
+                        continue
                 except Exception as ex:
-                    self.logger.info("files were already registered, going ahead.")
-                    raise RucioTransferException('getting proper exception') from ex
+                    # Note that 2 exceptions we encounter so far here is due to
+                    # LFN to PFN converstion and RSE protocols
+                    raise RucioTransferException('Something wrong with adding new replicas') from ex
                 dids = [{
                     'scope': self.transfer.rucioScope,
                     'type': "FILE",
                     'name': x["name"]
                 } for x in chunk]
-                # no need to try catch for duplicate content.
-                # not sure if restart process is enough for the case of connection error
+                # no need to try catch for duplicate content. Not sure if
+                # restart process is enough for the case of connection error
                 self.rucioClient.add_files_to_datasets([{
                         'scope': self.transfer.rucioScope,
                         'name': self.transfer.currentDataset,
@@ -114,8 +125,12 @@ class RegisterReplicas:
                     'id': x['id'],
                     'dataset': self.transfer.currentDataset
                 } for x in chunk]
-                successReplicas.append(successItems)
+                successReplicas += successItems
                 # TODO: close if update comes > 4h, or is it a Publisher task?
+                # FIXME: current algo add files whole chunk, so total number of
+                # file in dataset is depend on latest size before it reach
+                # max_file_per_datset plus replicas_chunk_size.
+                #
                 # check the current number of files in the dataset
                 num = len(list(self.rucioClient.list_content(self.transfer.rucioScope, self.transfer.currentDataset)))
                 if num >= config.args.max_file_per_dataset:
@@ -127,6 +142,7 @@ class RegisterReplicas:
         return successReplicas, failReplicas
 
     def getSourcePFN(self, sourceLFN, sourceRSE, destinationRSE):
+        self.logger.debug(f'Getting pfn for {sourceLFN} at {sourceRSE}')
         try:
             _, srcScheme, _, _ = find_matching_scheme(
                 {"protocols": self.rucioClient.get_protocols(destinationRSE)},
@@ -136,10 +152,29 @@ class RegisterReplicas:
             )
             did = f'{self.transfer.rucioScope}:{sourceLFN}'
             sourcePFNMap = self.rucioClient.lfns2pfns(sourceRSE, [did], operation="third_party_copy_read", scheme=srcScheme)
-            return sourcePFNMap[did]
+            pfn = sourcePFNMap[did]
+            self.logger.debug(f'PFN: {pfn}')
+            return pfn
         except Exception as ex:
             raise RucioTransferException("Failed to get source PFN") from ex
 
+    def getSourcePFN2(self, sourceLFN, sourceRSE):
+        self.logger.debug(f'Getting pfn for {sourceLFN} at {sourceRSE}')
+        rgx = self.rucioClient.get_protocols(
+            sourceRSE, protocol_domain='ALL', operation="read")[0]
+        didStr = f'{self.transfer.rucioScope}:{sourceLFN}'
+        if not rgx['extended_attributes'] or 'tfc' not in rgx['extended_attributes']:
+            pfn = self.rucioClient.lfns2pfns(
+                sourceRSE, [didStr], operation="read")[didStr]
+        else:
+            tfc = rgx['extended_attributes']['tfc']
+            tfc_proto = rgx['extended_attributes']['tfc_proto']
+            pfn = tfcLFN2PFN(sourceLFN, tfc, tfc_proto)
+
+        if sourceRSE == 'T2_DE_DESY':
+            pfn = pfn.replace('/pnfs/desy.de/cms/tier2/temp', '/pnfs/desy.de/cms/tier2/store/temp')
+        self.logger.debug(f'PFN2: {pfn}')
+        return pfn
 
     def removeRegisteredReplicas(self, replicasByRSE):
         """
@@ -161,6 +196,14 @@ class RegisterReplicas:
                     newV.append(v[i])
             notRegister[k] = newV
         return notRegister, registered
+
+    def LFNToPFNFromPFN(self, lfn, pfn):
+        pfnPrefix = '/'.join(pfn.split("/")[:-2])
+        if lfn.split("/")[-2] == 'log' :
+            fileid = '/'.join(lfn.split("/")[-3:])
+        else:
+            fileid = '/'.join(lfn.split("/")[-2:])
+        return f'{pfnPrefix}/{fileid}'
 
     def prepareSuccessFileDoc(self, replicas):
         num = len(replicas)
