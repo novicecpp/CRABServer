@@ -77,7 +77,8 @@ class Transfer:
             self.logger.info(f'{path} not found. Assume it is first time it run.')
             self.lastTransferLine = 0
 
-    def updateLastTransferLine(self):
+    def updateLastTransferLine(self, line):
+        self.lastTransferLine = line
         path = config.args.last_line_path
         with writePath(path) as w:
             w.write(str(self.lastTransferLine))
@@ -136,6 +137,9 @@ class Transfer:
         """
         Read containerRuleID from task_process/transfers/bookkeeping_rules.json
         """
+        # skip reading rule from bookkeeping in case rerun with new publishname.
+        if config.args.force_publishname:
+            return
         path = config.args.container_ruleid_path
         try:
             with open(path, 'r', encoding='utf-8') as r:
@@ -148,6 +152,7 @@ class Transfer:
         """
         update task_process/transfers/container_ruleid.txt
         """
+        self.containerRuleID = ruleID
         path = config.args.container_ruleid_path
         self.logger.info(f'Bookkeeping container rule ID [{ruleID}] to file: {path}')
         with writePath(path) as w:

@@ -41,8 +41,7 @@ class RegisterReplicas:
         if failReplicas:
             failFileDoc = self.prepareFailFileDoc(failReplicas)
             updateDB(self.crabRESTClient, 'filetransfers', 'updateTransfers', failFileDoc, self.logger)
-        self.transfer.lastTransferLine = end
-        self.transfer.updateLastTransferLine()
+        self.transfer.updateLastTransferLine(end)
 
     def prepare(self, transfers):
         # create bucket rse
