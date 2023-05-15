@@ -135,4 +135,9 @@ class BuildDBSDataset():
             self.logger.info(f'{datasetName} dataset has attached to {self.transfer.publishname}, doing nothing')
 
     def generateDatasetName(self):
+        """
+        Return a new dataset name.
+
+        :returns: string of dataset name.
+        """
         return f'{self.transfer.publishname}#{uuid.uuid4()}'
