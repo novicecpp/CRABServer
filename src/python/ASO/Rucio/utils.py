@@ -58,3 +58,12 @@ def tfcLFN2PFN(lfn, tfc, proto, depth=0):
     if depth > 0:
         return lfn
     raise ValueError(f"lfn {lfn} with proto {proto} cannot be matched by tfc {tfc}")
+
+
+def LFNToPFNFromPFN(lfn, pfn):
+    pfnPrefix = '/'.join(pfn.split("/")[:-2])
+    if lfn.split("/")[-2] == 'log' :
+        fileid = '/'.join(lfn.split("/")[-3:])
+    else:
+        fileid = '/'.join(lfn.split("/")[-2:])
+    return f'{pfnPrefix}/{fileid}'
