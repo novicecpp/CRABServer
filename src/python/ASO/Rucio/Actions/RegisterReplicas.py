@@ -70,8 +70,10 @@ class RegisterReplicas:
         PFN of Temp RSE from normal RSE (The RSE without `Temp` suffix).
 
         :param transfers: the iterable object which produce item of transfer.
+        :type transfers: iterator
 
-        :returns: dict map of `<site>_Temp` and list of dicts that replicas information.
+        :returns: map of `<site>_Temp` and list of dicts that replicas information.
+        :rtype: dict
         """
         # create bucket RSE
         bucket = {}
@@ -109,9 +111,11 @@ class RegisterReplicas:
         dataset exceeds `config.arg.max_file_per_datset`.
 
         :param prepareReplicas: dict return from `prepare()` method.
+        :type prepareReplicas: dict
 
-        :returns: tuple of a success list and fail list, the list contain dict
+        :returns: a success list and fail list, the list contain dict
             of infomation to create new entries in FILETRANSFERDB table in REST.
+        :rtype: tuple of list
         """
         successReplicas = []
         failReplicas = []
@@ -184,13 +188,17 @@ class RegisterReplicas:
         Get source PFN from `rucioClient.lfns2pfns()`.
 
         :param sourceLFN: source LFN
+        :type sourceLFN: string
         :param sourceRSE: source RSE where LFN is reside, but it must be normal
             RSE name (e.g. `T2_CH_CERN` without suffix `_Temp`). Otherwise, it
             will raise exception in `rucioClient.lfns2pfns()`.
-        :param destinationRSE: need it for select proper protocol for transfer
+        :type sourceRSE: string
+        :param destinationRSE: need for select proper protocol for transfer
             with `find_machine_scheme()`.
+        :type destinationRSE: string
 
-        :returns: string of PFN return from `lfns2pfns()`
+        :returns: PFN return from `lfns2pfns()`
+        :rtype: string
         """
         self.logger.debug(f'Getting pfn for {sourceLFN} at {sourceRSE}')
         try:
@@ -237,11 +245,13 @@ class RegisterReplicas:
         stored in `self.transfer.replicasInContainer`.
 
         :param replicasByRSE: dict return from `prepare()` method.
+        :type replicasByRSE: dict
 
-        :returns: tuple of list of unregistered replicas and list of registered
+        :returns: list of unregistered replicas and list of registered
             replicas. The unregistered replicas will have the same structure as
             `replicasByRSE` param, and the registered will have the same
             information and structure returned by `register()` method.
+        :rtype: tuple of list
         """
         notRegister = copy.deepcopy(replicasByRSE)
         registered = []
@@ -267,8 +277,10 @@ class RegisterReplicas:
 
         :param replicas: list of dict contains transferItems's ID and its
             information.
+        :type replicas: list
 
         :return: dict which use in `filetransfers` REST API.
+        :rtype: dict
         """
         num = len(replicas)
         fileDoc = {
@@ -292,8 +304,10 @@ class RegisterReplicas:
 
         :param replicas: list of dict contains transferItems's ID and its
             information.
+        :type replicas: list
 
         :return: dict which use in `filetransfers` REST API.
+        :rtype: dict
         """
         num = len(replicas)
         fileDoc = {
