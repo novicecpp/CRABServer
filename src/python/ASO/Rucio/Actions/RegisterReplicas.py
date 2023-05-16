@@ -90,6 +90,8 @@ class RegisterReplicas:
             # We determine PFN of Temp RSE from normal RSE.
             # Simply remove temp suffix before passing to getSourcePFN function.
             pfn = self.getSourcePFN(xdict["source_lfn"], rse.split('_Temp')[0], xdict["destination"])
+            if rse == 'T2_DE_DESY_Temp':
+                pfn = pfn.replace('/pnfs/desy.de/cms/tier2/temp', '/pnfs/desy.de/cms/tier2/store/temp')
             replicasByRSE[rse] = []
             for xdict in bucket[rse]:
                 replica = {

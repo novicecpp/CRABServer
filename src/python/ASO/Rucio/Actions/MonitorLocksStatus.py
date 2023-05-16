@@ -21,6 +21,7 @@ class MonitorLocksStatus:
         if notOKReplicas:
             notOKFileDoc = self.prepareNotOKFileDoc(notOKReplicas)
             updateDB(self.crabRESTClient, 'filetransfers', 'updateTransfers', notOKFileDoc, self.logger)
+        self.transfer.updateTransferOKReplicas([x['name'] for x in okReplicas])
 
     def checkLocksStatus(self):
         okReplicas = []
@@ -42,20 +43,21 @@ class MonitorLocksStatus:
             blockName = self.transfer.replicasInContainer[replicaStatus['name']]
             replica = {
                 'id': self.transfer.replicaLFN2IDMap[replicaStatus['name']],
+                'name': replicaStatus['name'],
                 'dataset': blockName,
                 'blockcomplete': 'NO',
                 'ruleid': self.transfer.containerRuleID,
                 'state': replicaStatus['state'],
             }
-            # Block complete state rely on `config.args.max_file_per_dataset`.
-            # Beware blockcomplete will alway "NO" if we rerun script while
-            # change max_file_per_dataset to bigger value when register
-            # replicas.
             if not blockName in replicasByDataset:
                 replicasByDataset[blockName] = []
             replicasByDataset[blockName].append(replica)
         self.logger.debug(f'replicaByDataset dict: {replicasByDataset}')
         for k, v in replicasByDataset.items():
+            # Block complete state rely on `config.args.max_file_per_dataset`.
+            # Beware blockcomplete will alway "NO" if we rerun script while
+            # change max_file_per_dataset to bigger value when register
+            # replicas.
             if len(v) >= config.args.max_file_per_dataset \
                and all(x['state'] == 'OK' for x in v):
                 self.logger.debug(f'Dataset "{k}" is all OK.')
@@ -64,7 +66,14 @@ class MonitorLocksStatus:
                 self.logger.debug(f'Dataset "{k}" is still replicating.')
                 blockComplete = 'NO'
             for replica in v:
-                # change blockcomplete to OK when all block
+                # skip if replicas transfer is in transferOKReplicas. No need to
+                # update status for transfer complete.
+                # Note that this will update `tm_block_complete` column to `OK`
+                # for some, but not all, replicas in the block. Besure checking
+                # block completion with `any` instead of `all` condition.
+                if replica['name'] in self.transfer.transferOKReplicas:
+                    continue
+
                 replica['blockcomplete'] = blockComplete
                 # remove unnecessary key
                 state = replica.pop('state')

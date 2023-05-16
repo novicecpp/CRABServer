@@ -44,6 +44,12 @@ def main():
     opt.add_argument("--container-ruleid-path", dest="container_ruleid_path",
                      default='task_process/transfers/container_ruleid.txt',
                      help="")
+    opt.add_argument("--transfer-ok-path", dest="transfer_ok_path",
+                     default='task_process/transfers/transfer_ok.txt',
+                     help="")
+    opt.add_argument("--ignore-transfer-ok", dest="ignore_transfer_ok",
+                     default=False, action='store_true',
+                     help="")
     opts = opt.parse_args()
 
     # Put args to config module to share variable across process.
