@@ -41,7 +41,7 @@ def chunks(l, n=1):
         yield l[i:i + n]
 
 
-def updateDB(client, api, subresource, fileDoc):
+def updateDB(client, api, subresource, fileDoc, logger=None):
     """
     Upload fileDoc to REST
 
