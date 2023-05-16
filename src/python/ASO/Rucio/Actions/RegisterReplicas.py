@@ -51,6 +51,7 @@ class RegisterReplicas:
         # Create new entry in REST in FILETRANSFERDB table
         if successReplicas:
             successFileDoc = self.prepareSuccessFileDoc(successReplicas)
+            updateDB(self.crabRESTClient, 'filetransfers', 'updateTransfers', successFileDoc, self.logger)
             updateDB(self.crabRESTClient, 'filetransfers', 'updateRucioInfo', successFileDoc, self.logger)
         if failReplicas:
             failFileDoc = self.prepareFailFileDoc(failReplicas)

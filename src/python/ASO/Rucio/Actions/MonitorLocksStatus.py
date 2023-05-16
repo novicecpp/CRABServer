@@ -12,8 +12,11 @@ class MonitorLocksStatus:
 
     def execute(self):
         okReplicas, notOKReplicas = self.checkLocksStatus()
+        self.logger.debug(f'okReplicas: {okReplicas}')
+        self.logger.debug(f'notOKReplicas: {notOKReplicas}')
         if okReplicas:
             okFileDoc = self.prepareOKFileDoc(okReplicas)
+            updateDB(self.crabRESTClient, 'filetransfers', 'updateTransfers', okFileDoc, self.logger)
             updateDB(self.crabRESTClient, 'filetransfers', 'updateRucioInfo', okFileDoc, self.logger)
         if notOKReplicas:
             notOKFileDoc = self.prepareNotOKFileDoc(notOKReplicas)
