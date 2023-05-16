@@ -7,11 +7,16 @@ from rucio.common.exception import FileAlreadyExists
 
 import ASO.Rucio.config as config
 from ASO.Rucio.exception import RucioTransferException
-from ASO.Rucio.utils import chunks, updateDB, tfcLFN2PFN
+from ASO.Rucio.utils import chunks, updateDB, tfcLFN2PFN, LFNToPFNFromPFN
 
 
 
 class RegisterReplicas:
+    """
+    RegisterReplicas action is responsible for registering new files in the temp
+    area to Rucio. The transferring is done by Rucio's side (by the rule we
+    created in BuildDBSDataset).
+    """
     def __init__(self, transfer, rucioClient, crabRESTClient):
         self.logger = logging.getLogger("RucioTransfer.Actions.RegisterReplicas")
         self.rucioClient = rucioClient
@@ -19,32 +24,58 @@ class RegisterReplicas:
         self.crabRESTClient = crabRESTClient
 
     def execute(self):
+        """
+        Main execution steps to register replicas to datasets.
+        """
+        # Generate generator for range of transferItems we want to register.
+        # This make it easier for do testing.
         start = self.transfer.lastTransferLine
         if config.args.force_total_files:
             end = start + config.args.force_total_files
         else:
             end = len(self.transfer.transferItems)
         transferGenerator = itertools.islice(self.transfer.transferItems, start, end)
+        # Prepare
         preparedReplicasByRSE = self.prepare(transferGenerator)
         # Remove registered replicas
         replicasToRegisterByRSE, registeredReplicas = self.removeRegisteredReplicas(preparedReplicasByRSE)
         self.logger.debug(f'replicasToRegisterByRSE: {replicasToRegisterByRSE}')
         self.logger.debug(f'registeredReplicas: {registeredReplicas}')
+        # Register only new transferItems
         successReplicasFromRegister, failReplicas = self.register(replicasToRegisterByRSE)
         self.logger.debug(f'successReplicasFromRegister: {successReplicasFromRegister}')
         self.logger.debug(f'failReplicas: {failReplicas}')
+        # Merge already registered replicas and newly registered replicas
         successReplicas = successReplicasFromRegister + registeredReplicas
         self.logger.debug(f'successReplicas: {successReplicas}')
+        # Create new entry in REST in FILETRANSFERDB table
         if successReplicas:
             successFileDoc = self.prepareSuccessFileDoc(successReplicas)
             updateDB(self.crabRESTClient, 'filetransfers', 'updateRucioInfo', successFileDoc, self.logger)
         if failReplicas:
             failFileDoc = self.prepareFailFileDoc(failReplicas)
             updateDB(self.crabRESTClient, 'filetransfers', 'updateTransfers', failFileDoc, self.logger)
+        # After everything is done, bookkeeping LastTransferLine.
         self.transfer.updateLastTransferLine(end)
 
     def prepare(self, transfers):
-        # create bucket rse
+        """
+        Convert a list of transfer items to a ready-to-use variable for
+        `register()` method. It receives Generator of `Transfer.transferItems`
+        and constructs dicts of replicas cotain information needed for
+        `rucioClient.add_replicas` function, grouped by source sites.
+
+        We still need to resolve PFN manually because Temp RSE is
+        non-deterministic. We rely on `rucioClient.lfn2pfns()` to determine the
+        PFN of Temp RSE from normal RSE (The RSE without `Temp` suffix).
+
+        :param transfers: the iterable object which produce item of transfer.
+        :type transfers: iterator
+
+        :returns: map of `<site>_Temp` and list of dicts that replicas information.
+        :rtype: dict
+        """
+        # create bucket RSE
         bucket = {}
         replicasByRSE = {}
         for xdict in transfers:
@@ -55,37 +86,47 @@ class RegisterReplicas:
             bucket[rse].append(xdict)
         for rse in bucket:
             xdict = bucket[rse][0]
-            # Need to remove '_Temp' suffix from rse to get proper PFN.
-            # FIXME: need ref for better explaination.
+            # We determine PFN of Temp RSE from normal RSE.
+            # Simply remove temp suffix before passing to getSourcePFN function.
             pfn = self.getSourcePFN(xdict["source_lfn"], rse.split('_Temp')[0], xdict["destination"])
-            # Hardcode fix for T2_DE_DESY
-            if rse == 'T2_DE_DESY_Temp':
-                pfn = pfn.replace('/pnfs/desy.de/cms/tier2/temp', '/pnfs/desy.de/cms/tier2/store/temp')
             replicasByRSE[rse] = []
             for xdict in bucket[rse]:
                 replica = {
                     'scope': self.transfer.rucioScope,
-                    'pfn': self.LFNToPFNFromPFN(xdict["source_lfn"], pfn),
+                    'pfn': LFNToPFNFromPFN(xdict["source_lfn"], pfn),
                     'name': xdict['destination_lfn'],
                     'bytes': xdict['filesize'],
-                    # FIXME: not sure why we need str.rjust here
                     'adler32': xdict['checksums']['adler32'].rjust(8, '0'),
-                    'id': xdict['id']
+                    # TODO: move id out of replicas info
+                    'id': xdict['id'],
                 }
                 replicasByRSE[rse].append(replica)
         return replicasByRSE
 
     def register(self, prepareReplicas):
+        """
+        Register replicas to datasets via `rucioClient.add_replicas()` in chunks
+        (chunk size is defined in `config.args.replicas_chunk_size`) and attach
+        it to the current dataset. It also creates a new dataset when the
+        dataset exceeds `config.arg.max_file_per_datset`.
+
+        :param prepareReplicas: dict return from `prepare()` method.
+        :type prepareReplicas: dict
+
+        :returns: a success list and fail list, the list contain dict
+            of infomation to create new entries in FILETRANSFERDB table in REST.
+        :rtype: tuple of list
+        """
         successReplicas = []
         failReplicas = []
         self.logger.debug(f'Prepare replicas: {prepareReplicas}')
-        # Ii will treat as fail the whole chunks if one of replicas is fail.
         b = BuildDBSDataset(self.transfer, self.rucioClient)
         for rse, replicas in prepareReplicas.items():
             self.logger.debug(f'Registering replicas from {rse}')
             self.logger.debug(f'Replicas: {replicas}')
             for chunk in chunks(replicas, config.args.replicas_chunk_size):
                 try:
+                    # TODO: remove id from dict we construct in prepare() method.
                     # remove 'id' from dict
                     r = []
                     for c in chunk:
@@ -93,8 +134,9 @@ class RegisterReplicas:
                         d.pop('id')
                         r.append(d)
                     # add_replicas with same dids will always return True, even
-                    # with changing metadata (e.g pfn), rucio will not update
-                    # new value.
+                    # with changing metadata (e.g pfn), rucio will not update to
+                    # the new value.
+                    # See https://github.com/dmwm/CMSRucio/issues/343#issuecomment-1543663323
                     retAddReplicas = self.rucioClient.add_replicas(rse, r)
                     if not retAddReplicas:
                         failItems = [{
@@ -105,8 +147,10 @@ class RegisterReplicas:
                         continue
                 except Exception as ex:
                     # Note that 2 exceptions we encounter so far here is due to
-                    # LFN to PFN converstion and RSE protocols
+                    # LFN to PFN converstion and RSE protocols.
+                    # https://github.com/dmwm/CRABServer/issues/7632
                     raise RucioTransferException('Something wrong with adding new replicas') from ex
+
                 dids = [{
                     'scope': self.transfer.rucioScope,
                     'type': "FILE",
@@ -125,15 +169,14 @@ class RegisterReplicas:
                     'dataset': self.transfer.currentDataset
                 } for x in chunk]
                 successReplicas += successItems
-                # TODO: close if update comes > 4h, or is it a Publisher task?
-                # FIXME: current algo add files whole chunk, so total number of
-                # file in dataset is depend on latest size before it reach
-                # max_file_per_datset plus replicas_chunk_size.
+                # Current algo will add files whole chunk, so total number of
+                # files in dataset is at most is max_file_per_datset+replicas_chunk_size.
                 #
                 # check the current number of files in the dataset
                 num = len(list(self.rucioClient.list_content(self.transfer.rucioScope, self.transfer.currentDataset)))
                 if num >= config.args.max_file_per_dataset:
-                    # -if everything full create new one
+                    # FIXME: close the last dataset when ALL Postjob has reach timeout.
+                    #        But, do we really need to close dataset?
                     self.rucioClient.close(self.transfer.rucioScope, self.transfer.currentDataset)
                     newDataset = b.generateDatasetName()
                     b.createDataset(newDataset)
@@ -141,6 +184,22 @@ class RegisterReplicas:
         return successReplicas, failReplicas
 
     def getSourcePFN(self, sourceLFN, sourceRSE, destinationRSE):
+        """
+        Get source PFN from `rucioClient.lfns2pfns()`.
+
+        :param sourceLFN: source LFN
+        :type sourceLFN: string
+        :param sourceRSE: source RSE where LFN is reside, but it must be normal
+            RSE name (e.g. `T2_CH_CERN` without suffix `_Temp`). Otherwise, it
+            will raise exception in `rucioClient.lfns2pfns()`.
+        :type sourceRSE: string
+        :param destinationRSE: need for select proper protocol for transfer
+            with `find_machine_scheme()`.
+        :type destinationRSE: string
+
+        :returns: PFN return from `lfns2pfns()`
+        :rtype: string
+        """
         self.logger.debug(f'Getting pfn for {sourceLFN} at {sourceRSE}')
         try:
             _, srcScheme, _, _ = find_matching_scheme(
@@ -158,6 +217,10 @@ class RegisterReplicas:
             raise RucioTransferException("Failed to get source PFN") from ex
 
     def getSourcePFN2(self, sourceLFN, sourceRSE):
+        """
+        Just for crosschecking with FTS algo we use in `getSourcePFN()`
+        Will remove it later.
+        """
         self.logger.debug(f'Getting pfn for {sourceLFN} at {sourceRSE}')
         rgx = self.rucioClient.get_protocols(
             sourceRSE, protocol_domain='ALL', operation="read")[0]
@@ -177,8 +240,18 @@ class RegisterReplicas:
 
     def removeRegisteredReplicas(self, replicasByRSE):
         """
-        It might better to get state from rest once at startup and just skip at
-        prepare.
+        Separate registered from unregistered replicas to prevent duplication of
+        replicas in the same container. The list of registered replicas is
+        stored in `self.transfer.replicasInContainer`.
+
+        :param replicasByRSE: dict return from `prepare()` method.
+        :type replicasByRSE: dict
+
+        :returns: list of unregistered replicas and list of registered
+            replicas. The unregistered replicas will have the same structure as
+            `replicasByRSE` param, and the registered will have the same
+            information and structure returned by `register()` method.
+        :rtype: tuple of list
         """
         notRegister = copy.deepcopy(replicasByRSE)
         registered = []
@@ -196,15 +269,19 @@ class RegisterReplicas:
             notRegister[k] = newV
         return notRegister, registered
 
-    def LFNToPFNFromPFN(self, lfn, pfn):
-        pfnPrefix = '/'.join(pfn.split("/")[:-2])
-        if lfn.split("/")[-2] == 'log' :
-            fileid = '/'.join(lfn.split("/")[-3:])
-        else:
-            fileid = '/'.join(lfn.split("/")[-2:])
-        return f'{pfnPrefix}/{fileid}'
-
     def prepareSuccessFileDoc(self, replicas):
+        """
+        Convert replicas info to fileDoc to upload file transfer information to
+        REST.
+        This method is for successfully registered replicas.
+
+        :param replicas: list of dict contains transferItems's ID and its
+            information.
+        :type replicas: list
+
+        :return: dict which use in `filetransfers` REST API.
+        :rtype: dict
+        """
         num = len(replicas)
         fileDoc = {
             'asoworker': 'rucio',
@@ -220,6 +297,18 @@ class RegisterReplicas:
         return fileDoc
 
     def prepareFailFileDoc(self, replicas):
+        """
+        Convert replicas info to fileDoc to upload file transfer information to
+        REST.
+        This method is for fail registered replicas.
+
+        :param replicas: list of dict contains transferItems's ID and its
+            information.
+        :type replicas: list
+
+        :return: dict which use in `filetransfers` REST API.
+        :rtype: dict
+        """
         num = len(replicas)
         fileDoc = {
             'asoworker': 'rucio',
