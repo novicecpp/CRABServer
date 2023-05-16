@@ -13,9 +13,9 @@ from ASO.Rucio.utils import chunks, updateDB, tfcLFN2PFN, LFNToPFNFromPFN
 
 class RegisterReplicas:
     """
-    RegisterReplicas action is responsible for register new files in temp area to Rucio,
-    close the current dataset and create new one when number of files is exceed `max_file_per_dataset`
-    The transfering stuff is done by Rucio side (by the rule we created in BuildDBSDataset).
+    RegisterReplicas action is responsible for registering new files in the temp
+    area to Rucio. The transferring is done by Rucio's side (by the rule we
+    created in BuildDBSDataset).
     """
     def __init__(self, transfer, rucioClient, crabRESTClient):
         self.logger = logging.getLogger("RucioTransfer.Actions.RegisterReplicas")
@@ -25,9 +25,7 @@ class RegisterReplicas:
 
     def execute(self):
         """
-        Register replicas to dataset. Read list of files to transfer from
-        self.transfer.transferItems, filter out, replicas that already registered in container.
-        then register the new one. and attach it to datasets.
+        Main execution steps to register replicas to datasets.
         """
         # Generate generator for range of transferItems we want to register.
         # This make it easier for do testing.
@@ -62,14 +60,16 @@ class RegisterReplicas:
 
     def prepare(self, transfers):
         """
-        Convert from transferItems to ready-to-use variable for `register()` method.
-        Receive generator of transferItems and construct replicas dictionary to register in Rucio.
-        Replicas will group by source sites and return it as key-value of site and list of dicts that contain infomation needed for rucioClient.add_replicas function.
+        Convert a list of transfer items to a ready-to-use variable for
+        `register()` method. It receives Generator of `Transfer.transferItems`
+        and constructs dicts of replicas cotain information needed for
+        `rucioClient.add_replicas` function, grouped by source sites.
 
-        The important thing is we still need resolve PFN manually because Temp RSE is declare as Non-deterministic.
-        We rely on `ruciClient.lfn2pfns()` to determine PFN by passing normal RSE to this function and use it for Temp RSSE.
+        We still need to resolve PFN manually because Temp RSE is
+        non-deterministic. We rely on `rucioClient.lfn2pfns()` to determine the
+        PFN of Temp RSE from normal RSE (The RSE without `Temp` suffix).
 
-        :param transfers: the Generator which return each items in the
+        :param transfers: the iterable object which produce item of transfer.
 
         :returns: dict map of `<site>_Temp` and list of dicts that replicas information.
         """
@@ -103,12 +103,15 @@ class RegisterReplicas:
 
     def register(self, prepareReplicas):
         """
-        Register replicas to dataset via `rucioClient.add_replicas()` in chunks (chunk size is defined in `config.args.replicas_chunk_size`) and attach it to current dataset.
-        Also, creating a new dataset when dataset has exceed `config.arg.max_file_per_datset`.
+        Register replicas to datasets via `rucioClient.add_replicas()` in chunks
+        (chunk size is defined in `config.args.replicas_chunk_size`) and attach
+        it to the current dataset. It also creates a new dataset when the
+        dataset exceeds `config.arg.max_file_per_datset`.
 
-        :param prepareReplicas: dict of `<site>_Temp` and list of dicts that replicas information return from `prepare()` method.
+        :param prepareReplicas: dict return from `prepare()` method.
 
-        :returns: tuple of success and fail replicas which contain dict of infomation to create new entries in FILETRANSFERDB table in REST.
+        :returns: tuple of a success list and fail list, the list contain dict
+            of infomation to create new entries in FILETRANSFERDB table in REST.
         """
         successReplicas = []
         failReplicas = []
@@ -181,10 +184,13 @@ class RegisterReplicas:
         Get source PFN from `rucioClient.lfns2pfns()`.
 
         :param sourceLFN: source LFN
-        :param sourceRSE: source RSE where LFN is reside, but it must be normal RSE name (e.g. `T2_CH_CERN` without suffix `_Temp`. Otherwise, it will raise exception in `lfns2pfns()`.
-        :param destinationRSE: need it for select proper protocol for transfer with find_machine_scheme()
+        :param sourceRSE: source RSE where LFN is reside, but it must be normal
+            RSE name (e.g. `T2_CH_CERN` without suffix `_Temp`). Otherwise, it
+            will raise exception in `rucioClient.lfns2pfns()`.
+        :param destinationRSE: need it for select proper protocol for transfer
+            with `find_machine_scheme()`.
 
-        :returns: string of PFN resolve from lfns2pfns
+        :returns: string of PFN return from `lfns2pfns()`
         """
         self.logger.debug(f'Getting pfn for {sourceLFN} at {sourceRSE}')
         try:
@@ -226,11 +232,16 @@ class RegisterReplicas:
 
     def removeRegisteredReplicas(self, replicasByRSE):
         """
-        Separate registered from unregister replicas. List of registered replicas are stored in `self.transfer.replicasInContainer`.
+        Separate registered from unregistered replicas to prevent duplication of
+        replicas in the same container. The list of registered replicas is
+        stored in `self.transfer.replicasInContainer`.
 
-        :returns: tuple of
-            - list of unregister replicas.
-            - list of registered replicas in the same information returned by successReplicas from `register()` method.
+        :param replicasByRSE: dict return from `prepare()` method.
+
+        :returns: tuple of list of unregistered replicas and list of registered
+            replicas. The unregistered replicas will have the same structure as
+            `replicasByRSE` param, and the registered will have the same
+            information and structure returned by `register()` method.
         """
         notRegister = copy.deepcopy(replicasByRSE)
         registered = []
@@ -250,11 +261,12 @@ class RegisterReplicas:
 
     def prepareSuccessFileDoc(self, replicas):
         """
-        This method is for successful registered replicas.
+        Convert replicas info to fileDoc to upload file transfer information to
+        REST.
+        This method is for successfully registered replicas.
 
-        Convert replicas info to fileDoc for store replicas infomation in REST.
-
-        :param replicas: list of dict contain transferItems's ID and its information.
+        :param replicas: list of dict contains transferItems's ID and its
+            information.
 
         :return: dict which use in `filetransfers` REST API.
         """
@@ -274,11 +286,12 @@ class RegisterReplicas:
 
     def prepareFailFileDoc(self, replicas):
         """
+        Convert replicas info to fileDoc to upload file transfer information to
+        REST.
         This method is for fail registered replicas.
 
-        convert replicas info to fileDoc for store replicas infomation in REST.
-
-        :param replicas: list of dict contain transferItems's ID and its information.
+        :param replicas: list of dict contains transferItems's ID and its
+            information.
 
         :return: dict which use in `filetransfers` REST API.
         """
