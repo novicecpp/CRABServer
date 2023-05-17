@@ -90,8 +90,15 @@ class RegisterReplicas:
             # We determine PFN of Temp RSE from normal RSE.
             # Simply remove temp suffix before passing to getSourcePFN function.
             pfn = self.getSourcePFN(xdict["source_lfn"], rse.split('_Temp')[0], xdict["destination"])
+            # hardcode fix for DESY temp,
             if rse == 'T2_DE_DESY_Temp':
                 pfn = pfn.replace('/pnfs/desy.de/cms/tier2/temp', '/pnfs/desy.de/cms/tier2/store/temp')
+            # hardcode fix for T2_UK_SGrid_Bristol
+            if rse == 'T2_UK_SGrid_Bristol_Temp':
+                proto = self.rucioClient.get_protocols('T2_UK_SGrid_Bristol_Temp')[0]
+                if proto['scheme'] != 'root':
+                    raise RucioTransferException('Expected protocol scheme "root" from T2_UK_SGrid_Bristol_Temp. (Hardcode fix)')
+                pfn = f'{proto["scheme"]}://{proto["hostname"]}{proto["prefix"]}{"/".join(xdict["source_lfn"].split("/")[3:])}'
             replicasByRSE[rse] = []
             for xdict in bucket[rse]:
                 replica = {
@@ -152,6 +159,7 @@ class RegisterReplicas:
                     # Note that 2 exceptions we encounter so far here is due to
                     # LFN to PFN converstion and RSE protocols.
                     # https://github.com/dmwm/CRABServer/issues/7632
+                    self.logger.error(f'add_replicas(rse, r): rse={rse} r={r}')
                     raise RucioTransferException('Something wrong with adding new replicas') from ex
 
                 dids = [{

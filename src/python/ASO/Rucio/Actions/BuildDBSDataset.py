@@ -38,23 +38,23 @@ class BuildDBSDataset():
         :returns: None
         """
 
-        self.logger.debug(f'Creating container "{self.transfer.rucioScope}:{self.transfer.publishname}')
+        self.logger.debug(f'Creating container "{self.transfer.rucioScope}:{self.transfer.transferContainerName}')
         try:
-            self.rucioClient.add_container(self.transfer.rucioScope, self.transfer.publishname)
-            self.logger.info(f"{self.transfer.publishname} container created")
+            self.rucioClient.add_container(self.transfer.rucioScope, self.transfer.transferContainerName)
+            self.logger.info(f"{self.transfer.transferContainerName} container created")
         except DataIdentifierAlreadyExists:
-            self.logger.info(f"{self.transfer.publishname} container already exists, doing nothing")
+            self.logger.info(f"{self.transfer.transferContainerName} container already exists, doing nothing")
         except Exception as ex:
             raise RucioTransferException('Failed to create container') from ex
 
-        self.logger.debug(f'Add replication rule to container "{self.transfer.rucioScope}:{self.transfer.publishname}')
+        self.logger.debug(f'Add replication rule to container "{self.transfer.rucioScope}:{self.transfer.transferContainerName}')
         if self.transfer.containerRuleID:
             self.logger.info("Rule already exists, doing nothing")
         else:
             try:
                 containerDID = {
                     'scope': self.transfer.rucioScope,
-                    'name': self.transfer.publishname,
+                    'name': self.transfer.transferContainerName,
                     'type': "CONTAINER",
                 }
                 ruleID = self.rucioClient.add_replication_rule([containerDID], 1, self.transfer.destination)[0]
@@ -63,7 +63,7 @@ class BuildDBSDataset():
             except DuplicateRule:
                 # TODO: it possible that someone will create the rule for container, need better filter rule to match rules we create
                 self.logger.info(f"Rule already exists. Get rule ID from Rucio.")
-                ruleID = list(self.rucioClient.list_did_rules(self.transfer.rucioScope, self.transfer.publishname))[0]['id']
+                ruleID = list(self.rucioClient.list_did_rules(self.transfer.rucioScope, self.transfer.transferContainerName))[0]['id']
                 self.transfer.updateContainerRuleID(ruleID)
 
     def getOrCreateDataset(self):
@@ -79,7 +79,7 @@ class BuildDBSDataset():
         :rtype: str
         """
 
-        datasets = self.rucioClient.list_content(self.transfer.rucioScope, self.transfer.publishname)
+        datasets = self.rucioClient.list_content(self.transfer.rucioScope, self.transfer.transferContainerName)
         # remove log dataset
         datasets = [ds for ds in datasets if not ds['name'].endswith('#LOGS')]
         self.logger.debug(f"datasets in container: {datasets}")
@@ -130,9 +130,9 @@ class BuildDBSDataset():
         dsDID = {'scope': self.transfer.rucioScope, 'type': "DATASET", 'name': datasetName}
         try:
         # attach dataset to the container
-            self.rucioClient.attach_dids(self.transfer.rucioScope, self.transfer.publishname, [dsDID])
+            self.rucioClient.attach_dids(self.transfer.rucioScope, self.transfer.transferContainerName, [dsDID])
         except DuplicateContent:
-            self.logger.info(f'{datasetName} dataset has attached to {self.transfer.publishname}, doing nothing')
+            self.logger.info(f'{datasetName} dataset has attached to {self.transfer.transferContainerName}, doing nothing')
 
     def generateDatasetName(self):
         """
@@ -140,4 +140,4 @@ class BuildDBSDataset():
 
         :returns: string of dataset name.
         """
-        return f'{self.transfer.publishname}#{uuid.uuid4()}'
+        return f'{self.transfer.transferContainerName}#{uuid.uuid4()}'

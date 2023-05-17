@@ -25,7 +25,8 @@ class Transfer:
         self.username = ''
         self.rucioScope = ''
         self.destination = ''
-        self.publishname = ''
+        self.publishContainerName = ''
+        self.transferContainerName = ''
         self.logsDataset = ''
 
         # dynamically change throughout the scripts
@@ -146,16 +147,16 @@ class Transfer:
         self.rucioScope = f'user.{self.username}'
         self.destination = info['destination']
         if config.args.force_publishname:
-            self.publishname = config.args.force_publishname
+            self.transferContainerName = config.args.force_publishname
         else:
-            self.publishname = info['outputdataset']
-        self.logsDataset = f'{self.publishname}#LOGS'
+            self.transferContainerName = info['outputdataset']
+        self.logsDataset = f'{self.transferContainerName}#LOGS'
 
     def readContainerRuleID(self):
         """
         Read containerRuleID from task_process/transfers/container_ruleid.txt
         """
-        # skip reading rule from bookkeeping in case rerun with new publishname.
+        # skip reading rule from bookkeeping in case rerun with new transferContainerName.
         if config.args.force_publishname:
             return
         path = config.args.container_ruleid_path
@@ -220,7 +221,7 @@ class Transfer:
         """
         replicasInContainer = {}
         datasetsInContainer = {}
-        datasets = rucioClient.list_content(self.rucioScope, self.publishname)
+        datasets = rucioClient.list_content(self.rucioScope, self.transferContainerName)
         for ds in datasets:
             files = rucioClient.list_content(self.rucioScope, ds['name'])
             for f in files:
@@ -234,3 +235,6 @@ class Transfer:
         self.replicasInContainer = replicasInContainer
         self.logger.debug(f'datasets info in container: {datasetsInContainer}')
         self.datasetsInContainer = datasetsInContainer
+
+    def getReplicasInPublishContainer(self, rucioClient):
+        pass

@@ -48,7 +48,7 @@ def main():
                      default='task_process/transfers/transfer_ok.txt',
                      help="")
     opt.add_argument("--ignore-transfer-ok", dest="ignore_transfer_ok",
-                     default=False, action='store_true',
+                     action='store_true',
                      help="")
     opts = opt.parse_args()
 
