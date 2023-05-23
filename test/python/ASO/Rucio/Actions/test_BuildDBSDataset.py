@@ -2,42 +2,55 @@ import re
 import pytest
 import uuid
 import datetime
+import json
 from unittest.mock import patch, Mock
 from ASO.Rucio.exception import RucioTransferException
 from rucio.common.exception import DataIdentifierAlreadyExists, InvalidObject, DuplicateRule, DuplicateContent
 
-from ASO.Rucio.Actions.BuildDBSDataset import BuildTaskDataset
+from ASO.Rucio.Actions.BuildDBSDataset import BuildDBSDataset
 
-# FIXME: class name is changed from BuildTaskDataset to BuildDBSDataset.
+# FIXME: class name is changed from BuildDBSDataset to BuildDBSDataset.
 # Need to fix on all test in this files
 
 @pytest.fixture
 def mock_Transfer():
-    username = 'cmscrab'
-    rucioScope = f'user.{username}'
-    publishname = '/TestPrimary/test-dataset/RAW'
-    currentDatasetUUID = 'c9b28b96-5d16-41cd-89af-2678971132c9'
-    currentDataset = f'{publishname}#{currentDatasetUUID}'
-    logsDataset = f'{publishname}#LOG'
-    return Mock(publishname=publishname, currentDataset=currentDataset, rucioScope=rucioScope, logsDataset=logsDataset, currentDatasetUUID=currentDatasetUUID, username=username)
-
+    transferObj = Mock()
+    transferObj.rucioScope = f'user.cmscrab'
+    transferObj.publishContainer = '/TestPrimary/test-dataset/USER'
+    transferObj.currentPublishDataset = f'{transferObj.publishContainer}#c9b28b96-5d16-41cd-89af-2678971132c9'
+    transferObj.transferContainer = '/TestPrimary/test-dataset_TRANSFER-bc8b2558/USER'
+    transferObj.currentTransferDataset = f'{transferObj.transferContainer}#c9b28b96-5d16-41cd-89af-26789711abcd'
+    transferObj.logsDataset = f'{transferObj.currentTransferDataset}#LOG'
+    return transferObj
 
 @pytest.fixture
 def mock_rucioClient():
     with patch('rucio.client.client.Client', autospec=True) as m_rucioClient:
         return m_rucioClient
 
+@pytest.fixture
+def loadDatasetContent():
+    with open('test/assets/dataset_content.json') as r:
+        return json.load(r)
+
+@pytest.fixture
+def loadDatasetMetadata():
+    with open('test/assets/dataset_metadata.json') as r:
+        return json.load(r)
+
 def test_checkOrCreateContainer_create_new_container(mock_rucioClient, mock_Transfer):
-    b = BuildTaskDataset(mock_Transfer, mock_rucioClient)
-    b.checkOrCreateContainer()
-    mock_rucioClient.add_container.assert_called_with(mock_Transfer.rucioScope, mock_Transfer.publishname)
+    b = BuildDBSDataset(mock_Transfer, mock_rucioClient)
+    containerName = 'testContainer'
+    b.checkOrCreateContainer(containerName)
+    mock_rucioClient.add_container.assert_called_with(mock_Transfer.rucioScope, containerName)
 
 def test_checkOrCreateContainer_container_exist(mock_rucioClient, mock_Transfer):
     def mock_raise_DataIdentifierAlreadyExists():
         raise DataIdentifierAlreadyExists
     mock_Transfer.add_container = mock_raise_DataIdentifierAlreadyExists
-    b = BuildTaskDataset(mock_Transfer, mock_rucioClient)
-    b.checkOrCreateContainer()
+    b = BuildDBSDataset(mock_Transfer, mock_rucioClient)
+    containerName = 'testContainer'
+    b.checkOrCreateContainer(containerName)
 
 
 # NOTE:
@@ -47,27 +60,27 @@ def test_checkOrCreateContainer_container_exist(mock_rucioClient, mock_Transfer)
 #    should we do it in integration test or in unittest?
 
 def test_createDataset(mock_Transfer, mock_rucioClient):
-    mock_Transfer.addNewRules = Mock()
-    b = BuildTaskDataset(mock_Transfer, mock_rucioClient)
-    b.createDataset(mock_Transfer.datasetName)
-    mock_rucioClient.add_dataset.assert_called_once()
-    mock_rucioClient.add_replication_rule.assert_called_once()
+    b = BuildDBSDataset(mock_Transfer, mock_rucioClient)
+    b.createDataset(mock_Transfer.transferContainer, mock_Transfer.currentTransferDataset)
+    mock_rucioClient.add_dataset.assert_called_once_with(mock_Transfer.rucioScope, mock_Transfer.currentTransferDataset)
     mock_rucioClient.attach_dids.assert_called_once()
+    callScope, callContainer, _ = mock_rucioClient.attach_dids.call_args.args
+    assert callScope == mock_Transfer.rucioScope
+    assert callContainer == mock_Transfer.transferContainer
 
 @pytest.mark.parametrize('methodName,exception', [
     ('add_dataset', DataIdentifierAlreadyExists),
-    ('add_replication_rule', DuplicateRule),
     ('attach_dids', DuplicateContent),
 ])
 def test_createDataset_raise_exception(mock_Transfer, mock_rucioClient, methodName, exception):
-    mock_Transfer.addNewRules = Mock()
     getattr(mock_rucioClient, methodName).side_effect = exception
-    b = BuildTaskDataset(mock_Transfer, mock_rucioClient)
-    b.createDataset(mock_Transfer.datasetName)
-    # too lazy to check args. maybe it should
-    mock_rucioClient.add_dataset.assert_called_once()
-    mock_rucioClient.add_replication_rule.assert_called_once()
+    b = BuildDBSDataset(mock_Transfer, mock_rucioClient)
+    b.createDataset(mock_Transfer.transferContainer, mock_Transfer.currentTransferDataset)
+    mock_rucioClient.add_dataset.assert_called_once_with(mock_Transfer.rucioScope, mock_Transfer.currentTransferDataset)
     mock_rucioClient.attach_dids.assert_called_once()
+    callScope, callContainer, _ = mock_rucioClient.attach_dids.call_args.args
+    assert callScope == mock_Transfer.rucioScope
+    assert callContainer == mock_Transfer.transferContainer
 
 # test getOrCreateDataset()
 # algo
@@ -91,7 +104,7 @@ def genContentAndMetadata(transfer, num, withLogsDataset=True):
 
     datasetTemplates = {
         'scope': transfer.rucioScope,
-        'name': f'{transfer.publishname}#{{uuidStr}}',
+        'name': f'{transfer.transferContainer}#{{uuidStr}}',
         'type': 'DATASET',
         'bytes': None,
         'adler32': None,
@@ -99,7 +112,7 @@ def genContentAndMetadata(transfer, num, withLogsDataset=True):
     }
     datasetMetadataTemplate = {
         'scope': transfer.rucioScope,
-        'name': f'{transfer.publishname}#{{uuidStr}}',
+        'name': f'{transfer.transferContainer}#{{uuidStr}}',
         'account': 'tseethon',
         'did_type': 'DATASET',
         'is_open': False,
@@ -124,64 +137,85 @@ def genContentAndMetadata(transfer, num, withLogsDataset=True):
     return dataset, datasetMetadata
 
 @pytest.mark.parametrize('nDataset', [0, 1, 5])
-def test_getOrCreateDataset_new_dataset(mock_Transfer, mock_rucioClient, nDataset):
-    datasetContent, datasetMetadataContent = genContentAndMetadata(mock_Transfer, nDataset)
+def test_getOrCreateDataset_new_dataset(mock_Transfer, mock_rucioClient, loadDatasetContent, loadDatasetMetadata, nDataset):
+    datasetContent = loadDatasetContent[:nDataset+1]
+    datasetMetadata = loadDatasetMetadata[:nDataset]
     mock_rucioClient.list_content.return_value = datasetContent
     # we cannot use get_metadata_bulk right now because even recent dataset,
     # bytes from rucioClient.list_client still None
     mock_rucioClient.get_metadata_bulk.side_effect = InvalidObject
-    def mock_get_metadata(scope, name):
-        for i in datasetMetadataContent:
-            if i['name'] == name:
-                return i
-        return None
-    mock_rucioClient.get_metadata.side_effect = mock_get_metadata
-    b = BuildTaskDataset(mock_Transfer, mock_rucioClient)
+    mock_rucioClient.get_metadata.side_effect = datasetMetadata
+    uuidstr = '5b8794fb-fe8f-479b-b2f8-d2d76a8ca370'
+    b = BuildDBSDataset(mock_Transfer, mock_rucioClient)
     b.createDataset = Mock()
-    newDatasetName = f'{mock_Transfer.publishname}#{mock_Transfer.currentDatasetUUID}'
-    with patch('uuid.uuid4', autospec=True) as mock_uuid4:
-        mock_uuid4.return_value = uuid.UUID(mock_Transfer.currentDatasetUUID)
-        ret = b.getOrCreateDataset()
-    assert ret == newDatasetName
-    b.createDataset.assert_called_once_with(newDatasetName)
+    b.generateDatasetName = Mock()
+    newDatasetName = f'{mock_Transfer.transferContainer}#{uuidstr}'
+    b.generateDatasetName.return_value = newDatasetName
+    assert b.getOrCreateDataset(mock_Transfer.transferContainer) == newDatasetName
+    b.createDataset.assert_called_once()
 
 
-def test_getOrCreateDataset_one_open_dataset(mock_Transfer, mock_rucioClient):
-    datasetContent, datasetMetadataContent = genContentAndMetadata(mock_Transfer, 5)
-    datasetMetadataContent[1]['is_open'] = True
+def test_getOrCreateDataset_one_open_dataset(mock_Transfer, mock_rucioClient, loadDatasetContent, loadDatasetMetadata):
+    datasetContent = loadDatasetContent
+    datasetMetadata = loadDatasetMetadata
+    datasetMetadata[1]['is_open'] = True
     mock_rucioClient.list_content.return_value = datasetContent
     # we cannot use get_metadata_bulk right now because even recent dataset,
     # bytes from rucioClient.list_client still None
     mock_rucioClient.get_metadata_bulk.side_effect = InvalidObject
-    def mock_get_metadata(scope, name):
-        for i in datasetMetadataContent:
-            if i['name'] == name:
-                return i
-        return None
-    mock_rucioClient.get_metadata.side_effect = mock_get_metadata
-    b = BuildTaskDataset(mock_Transfer, mock_rucioClient)
+    mock_rucioClient.get_metadata.side_effect = datasetMetadata
+    uuidstr = '5b8794fb-fe8f-479b-b2f8-d2d76a8ca370'
+    b = BuildDBSDataset(mock_Transfer, mock_rucioClient)
     b.createDataset = Mock()
-    newDatasetName = f'{datasetContent[1]["name"]}'
-    assert b.getOrCreateDataset() == newDatasetName
-    b.createDataset.assert_called_once_with(newDatasetName)
+    b.generateDatasetName = Mock()
+    newDatasetName = f'{mock_Transfer.transferContainer}#{uuidstr}'
+    b.generateDatasetName.return_value = newDatasetName
+    assert b.getOrCreateDataset(mock_Transfer.transferContainer) == datasetMetadata[1]['name']
+    b.createDataset.assert_called_once()
 
 
-def test_getOrCreateDataset_two_open_dataset(mock_Transfer, mock_rucioClient):
-    datasetContent, datasetMetadataContent = genContentAndMetadata(mock_Transfer, 5)
-    datasetMetadataContent[1]['is_open'] = True
-    datasetMetadataContent[4]['is_open'] = True
+def test_getOrCreateDataset_two_open_dataset(mock_Transfer, mock_rucioClient, loadDatasetContent, loadDatasetMetadata):
+    datasetContent = loadDatasetContent
+    datasetMetadata = loadDatasetMetadata
+    datasetMetadata[1]['is_open'] = True
+    datasetMetadata[4]['is_open'] = True
     mock_rucioClient.list_content.return_value = datasetContent
     # we cannot use get_metadata_bulk right now because even recent dataset,
     # bytes from rucioClient.list_client still None
     mock_rucioClient.get_metadata_bulk.side_effect = InvalidObject
-    def mock_get_metadata(scope, name):
-        for i in datasetMetadataContent:
-            if i['name'] == name:
-                return i
-        return None
-    mock_rucioClient.get_metadata.side_effect = mock_get_metadata
-    b = BuildTaskDataset(mock_Transfer, mock_rucioClient)
+    mock_rucioClient.get_metadata.side_effect = datasetMetadata
+    uuidstr = '5b8794fb-fe8f-479b-b2f8-d2d76a8ca370'
+    b = BuildDBSDataset(mock_Transfer, mock_rucioClient)
     b.createDataset = Mock()
-    newDatasetName = f'{datasetContent[1]["name"]}'
-    assert b.getOrCreateDataset() == newDatasetName
-    b.createDataset.assert_called_once_with(newDatasetName)
+    b.generateDatasetName = Mock()
+    newDatasetName = f'{mock_Transfer.transferContainer}#{uuidstr}'
+    b.generateDatasetName.return_value = newDatasetName
+    assert b.getOrCreateDataset(mock_Transfer.transferContainer) == datasetMetadata[1]['name']
+    b.createDataset.assert_called_once()
+
+
+def test_createTransferContainer_add_rule(mock_Transfer, mock_rucioClient):
+    b = BuildDBSDataset(mock_Transfer, mock_rucioClient)
+    b.checkOrCreateContainer = Mock()
+    ruleID = '4c7a5025378d420288b418017fc23f18'
+    mock_Transfer.containerRuleID = ''
+    mock_rucioClient.add_replication_rule.return_value = [ruleID]
+    b.createTransferContainer(mock_Transfer.transferContainer)
+    mock_rucioClient.add_replication_rule.assert_called_once()
+    mock_rucioClient.list_did_rules.assert_not_called()
+    mock_Transfer.updateContainerRuleID.assert_called_once_with(ruleID)
+
+def test_createTransferContainer_add_duplicate(mock_Transfer, mock_rucioClient):
+    b = BuildDBSDataset(mock_Transfer, mock_rucioClient)
+    b.checkOrCreateContainer = Mock()
+    ruleID = '4c7a5025378d420288b418017fc23f18'
+    mock_Transfer.containerRuleID = ''
+    mock_rucioClient.add_replication_rule.side_effect = DuplicateRule
+    mock_rucioClient.list_did_rules.return_value = [{'id': ruleID}]
+    b.createTransferContainer(mock_Transfer.transferContainer)
+    # assert
+    mock_rucioClient.add_replication_rule.assert_called_once()
+    mock_rucioClient.list_did_rules.assert_called_once()
+    mock_Transfer.updateContainerRuleID.assert_called_once_with(ruleID)
+
+#def test_createTransferContainer_bookkeeping(mock_Transfer, mock_rucioClient):

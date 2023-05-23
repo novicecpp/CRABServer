@@ -1,6 +1,7 @@
 import logging
 import json
 import os
+import hashlib
 
 from ASO.Rucio.exception import RucioTransferException
 from ASO.Rucio.utils import writePath
@@ -147,9 +148,14 @@ class Transfer:
         self.rucioScope = f'user.{self.username}'
         self.destination = info['destination']
         if config.args.force_publishname:
-            self.transferContainerName = config.args.force_publishname
+            containerName = config.args.force_publishname
         else:
-            self.transferContainerName = info['outputdataset']
+            containerName = info["outputdataset"]
+        self.publishContainerName = containerName
+        tmp = containerName.split('/')
+        taskNameHash = hashlib.md5(info['taskname'].encode()).hexdigest()[:8]
+        tmp[2] += f'_TRANSFER-{taskNameHash}'
+        self.transferContainerName = '/'.join(tmp)
         self.logsDataset = f'{self.transferContainerName}#LOGS'
 
     def readContainerRuleID(self):
