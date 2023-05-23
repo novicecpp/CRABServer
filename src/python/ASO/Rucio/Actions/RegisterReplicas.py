@@ -42,9 +42,9 @@ class RegisterReplicas:
         self.logger.debug(f'replicasToRegisterByRSE: {replicasToRegisterByRSE}')
         self.logger.debug(f'registeredReplicas: {registeredReplicas}')
         # Register only new transferItems
-        successReplicasFromRegister, failReplicas = self.register(replicasToRegisterByRSE)
+        replicasToAddToDataset = self.addFilesToRucio(replicasToRegisterByRSE)
+        successReplicasFromRegister = self.addReplicasToDataset(replicasToAddToDataset, self.transfer.transferContainer)
         self.logger.debug(f'successReplicasFromRegister: {successReplicasFromRegister}')
-        self.logger.debug(f'failReplicas: {failReplicas}')
         # Merge already registered replicas and newly registered replicas
         successReplicas = successReplicasFromRegister + registeredReplicas
         self.logger.debug(f'successReplicas: {successReplicas}')
@@ -53,9 +53,6 @@ class RegisterReplicas:
             successFileDoc = self.prepareSuccessFileDoc(successReplicas)
             updateDB(self.crabRESTClient, 'filetransfers', 'updateTransfers', successFileDoc, self.logger)
             updateDB(self.crabRESTClient, 'filetransfers', 'updateRucioInfo', successFileDoc, self.logger)
-        if failReplicas:
-            failFileDoc = self.prepareFailFileDoc(failReplicas)
-            updateDB(self.crabRESTClient, 'filetransfers', 'updateTransfers', failFileDoc, self.logger)
         # After everything is done, bookkeeping LastTransferLine.
         self.transfer.updateLastTransferLine(end)
 
@@ -193,6 +190,76 @@ class RegisterReplicas:
                     b.createDataset(newDataset)
                     self.transfer.currentDataset = newDataset
         return successReplicas, failReplicas
+
+    def addFilesToRucio(self, prepareReplicas):
+        """
+        """
+        ret = []
+        self.logger.debug(f'Prepare replicas: {prepareReplicas}')
+        for rse, replicas in prepareReplicas.items():
+            self.logger.debug(f'Registering replicas from {rse}')
+            self.logger.debug(f'Replicas: {replicas}')
+            for chunk in chunks(replicas, config.args.replicas_chunk_size):
+                try:
+                    # TODO: remove id from dict we construct in prepare() method.
+                    # remove 'id' from dict
+                    r = []
+                    for c in chunk:
+                        d = c.copy()
+                        d.pop('id')
+                        r.append(d)
+                    # add_replicas with same dids will always return True, even
+                    # with changing metadata (e.g pfn), rucio will not update to
+                    # the new value.
+                    # See https://github.com/dmwm/CMSRucio/issues/343#issuecomment-1543663323
+                    self.rucioClient.add_replicas(rse, r)
+                except Exception as ex:
+                    # Note that 2 exceptions we encounter so far here is due to
+                    # LFN to PFN converstion and RSE protocols.
+                    # https://github.com/dmwm/CRABServer/issues/7632
+                    self.logger.error(f'add_replicas(rse, r): rse={rse} r={r}')
+                    raise RucioTransferException('Something wrong with adding new replicas') from ex
+                success = [{'id': x['id'], 'name': x['name']} for x in chunk]
+                ret += success
+        return ret
+
+    def addReplicasToDataset(self, replicas, container):
+        successReplicas = []
+        b = BuildDBSDataset(self.transfer, self.rucioClient)
+        currentDataset = b.getOrCreateDataset(container)
+        self.logger.debug(f'currentDataset: {currentDataset}')
+        for chunk in chunks(replicas, config.args.max_file_per_dataset):
+            dids = [{
+                'scope': self.transfer.rucioScope,
+                'type': "FILE",
+                'name': x["name"]
+            } for x in chunk]
+            # no need to try catch for duplicate content. Not sure if
+            # restart process is enough for the case of connection error
+            attachments = [{
+                'scope': self.transfer.rucioScope,
+                'name': currentDataset,
+                'dids': dids
+            }]
+            self.rucioClient.add_files_to_datasets(attachments, ignore_duplicate=True)
+            successItems = [{
+                'id': x['id'],
+                'name': x['name'],
+                'dataset': currentDataset,
+            } for x in chunk]
+            successReplicas += successItems
+            # Current algo will add files whole chunk, so total number of
+            # files in dataset is at most is max_file_per_datset+replicas_chunk_size.
+            #
+            # check the current number of files in the dataset
+            num = len(list(self.rucioClient.list_content(self.transfer.rucioScope, currentDataset)))
+            if num >= config.args.max_file_per_dataset:
+                # FIXME: close the last dataset when ALL Postjob has reach timeout.
+                #        But, do we really need to close dataset?
+                self.rucioClient.close(self.transfer.rucioScope, currentDataset)
+                currentDataset = b.generateDatasetName(container)
+                b.createDataset(container, currentDataset)
+        return successReplicas
 
     def getSourcePFN(self, sourceLFN, sourceRSE, destinationRSE):
         """

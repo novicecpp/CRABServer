@@ -25,9 +25,9 @@ class BuildDBSDataset():
         Rucio dataset to it.
         """
         # create publishContainer
-        self.checkOrCreateContainer(self.transfer.publishContainerName)
+        self.checkOrCreateContainer(self.transfer.publishContainer)
         # create transfer container and create rule id
-        self.createTransferContainer()
+        self.createTransferContainer(self.transfer.transferContainer)
         # create log dataset
         self.createDataset(self.transfer.logsDataset, self.transfer.transferContainerName)
         # Get the dataset for register replicas
@@ -102,7 +102,7 @@ class BuildDBSDataset():
         self.logger.debug(f"open datasets: {datasets}")
         if len(openDatasets) == 0:
             self.logger.info("No dataset available yet, creating one")
-            currentDatasetName = self.generateDatasetName()
+            currentDatasetName = self.generateDatasetName(containerName)
         elif len(openDatasets) == 1:
             currentDatasetName = openDatasets[0]
             self.logger.info(f"Found exactly one open dataset: {currentDatasetName}")
