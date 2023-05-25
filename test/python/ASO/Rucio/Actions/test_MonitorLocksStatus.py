@@ -171,3 +171,15 @@ def test_prepareNotOKFileDoc(mock_Transfer):
     ]
     m = MonitorLocksStatus(mock_Transfer, Mock(), Mock())
     assert notOKFileDoc == m.prepareNotOKFileDoc(outputNotOK)
+
+def test_addReplicasToPublishContainer():
+    outputOK = [
+        {
+            "id": "98f353b91ec84f0217da80bde84d6b520c0c6640f60ad9aabb7b20ca",
+            "dataset": '/TestDataset/cmscrab-unittest-1/USER#c9b28b96-5d16-41cd-89af-2678971132ca',
+            "blockcomplete": 'NO',
+            "ruleid": "b43a554244c54dba954aa29cb2fdde0a",
+        }
+    ]
+    m = MonitorLocksStatus(mock_Transfer, mock_rucioClient, Mock())
+    m.addReplicasToPublishContainer(outputOK)

@@ -26,8 +26,8 @@ class Transfer:
         self.username = ''
         self.rucioScope = ''
         self.destination = ''
-        self.publishContainerName = ''
-        self.transferContainerName = ''
+        self.publishContainer = ''
+        self.transferContainer = ''
         self.logsDataset = ''
 
         # dynamically change throughout the scripts
@@ -40,7 +40,6 @@ class Transfer:
 
         # info from rucio
         self.replicasInContainer = None
-        self.datasetsInContainer = None
 
         # map lf2 to id
         self.replicaLFN2IDMap = None
@@ -226,21 +225,15 @@ class Transfer:
         :type rucioClient: rucio.client.client.Client
         """
         replicasInContainer = {}
-        datasetsInContainer = {}
-        datasets = rucioClient.list_content(self.rucioScope, self.transferContainerName)
+        replicasInContainer[self.transferContainer] = self.getReplicasToDatasetMap(self.transferContainer, rucioClient)
+        replicasInContainer[self.publishContainer] = self.getReplicasToDatasetMap(self.publishContainer, rucioClient)
+        self.replicasInContainer = replicasInContainer
+
+    def getReplicasToDatasetMap(self, container, rucioClient):
+        replicasInContainer = {}
+        datasets = rucioClient.list_content(self.rucioScope, container)
         for ds in datasets:
             files = rucioClient.list_content(self.rucioScope, ds['name'])
             for f in files:
-                if not f['name'] in replicasInContainer:
-                    replicasInContainer[f['name']] = ds['name']
-            dsMetadata = rucioClient.get_metadata(self.rucioScope, ds['name'])
-            datasetsInContainer[ds['name']] = {
-                'is_open': dsMetadata['is_open']
-            }
-        self.logger.debug(f'all replicas in container: {replicasInContainer}')
-        self.replicasInContainer = replicasInContainer
-        self.logger.debug(f'datasets info in container: {datasetsInContainer}')
-        self.datasetsInContainer = datasetsInContainer
-
-    def getReplicasInPublishContainer(self, rucioClient):
-        pass
+                replicasInContainer[f['name']] = ds['name']
+        return replicasInContainer

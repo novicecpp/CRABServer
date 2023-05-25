@@ -38,15 +38,15 @@ class RegisterReplicas:
         # Prepare
         preparedReplicasByRSE = self.prepare(transferGenerator)
         # Remove registered replicas
-        replicasToRegisterByRSE, registeredReplicas = self.removeRegisteredReplicas(preparedReplicasByRSE)
-        self.logger.debug(f'replicasToRegisterByRSE: {replicasToRegisterByRSE}')
-        self.logger.debug(f'registeredReplicas: {registeredReplicas}')
+        #replicasToRegisterByRSE, registeredReplicas = self.removeRegisteredReplicas(preparedReplicasByRSE)
+        #self.logger.debug(f'replicasToRegisterByRSE: {replicasToRegisterByRSE}')
+        #self.logger.debug(f'registeredReplicas: {registeredReplicas}')
         # Register only new transferItems
-        replicasToAddToDataset = self.addFilesToRucio(replicasToRegisterByRSE)
+        replicasToAddToDataset = self.addFilesToRucio(preparedReplicasByRSE)
         successReplicasFromRegister = self.addReplicasToDataset(replicasToAddToDataset, self.transfer.transferContainer)
         self.logger.debug(f'successReplicasFromRegister: {successReplicasFromRegister}')
         # Merge already registered replicas and newly registered replicas
-        successReplicas = successReplicasFromRegister + registeredReplicas
+        successReplicas = successReplicasFromRegister #+ registeredReplicas
         self.logger.debug(f'successReplicas: {successReplicas}')
         # Create new entry in REST in FILETRANSFERDB table
         if successReplicas:
@@ -225,10 +225,23 @@ class RegisterReplicas:
 
     def addReplicasToDataset(self, replicas, container):
         successReplicas = []
+
+        newReplicas = []
+        # filter out duplicated replicas
+        replicasInContainer = self.transfer.replicasInContainer[container]
+        for r in replicas:
+            if r['name'] in replicasInContainer:
+                success = r.copy()
+                success['dataset'] = replicasInContainer[r['name']]
+                successReplicas.append(success)
+            else:
+                newReplicas.append(r)
+        replicas = [x for x in replicas if x['name'] in replicasInContainer]
+
         b = BuildDBSDataset(self.transfer, self.rucioClient)
         currentDataset = b.getOrCreateDataset(container)
         self.logger.debug(f'currentDataset: {currentDataset}')
-        for chunk in chunks(replicas, config.args.max_file_per_dataset):
+        for chunk in chunks(newReplicas, config.args.replicas_chunk_size):
             dids = [{
                 'scope': self.transfer.rucioScope,
                 'type': "FILE",

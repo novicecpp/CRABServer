@@ -2,6 +2,7 @@ import logging
 
 import ASO.Rucio.config as config
 from ASO.Rucio.utils import updateDB
+from ASO.Rucio.Actions.RegisterReplicas import RegisterReplicas
 
 class MonitorLocksStatus:
     def __init__(self, transfer, rucioClient, crabRESTClient):
@@ -14,14 +15,18 @@ class MonitorLocksStatus:
         okReplicas, notOKReplicas = self.checkLocksStatus()
         self.logger.debug(f'okReplicas: {okReplicas}')
         self.logger.debug(f'notOKReplicas: {notOKReplicas}')
-        if okReplicas:
-            okFileDoc = self.prepareOKFileDoc(okReplicas)
-            updateDB(self.crabRESTClient, 'filetransfers', 'updateTransfers', okFileDoc, self.logger)
-            updateDB(self.crabRESTClient, 'filetransfers', 'updateRucioInfo', okFileDoc, self.logger)
+        # update db
         if notOKReplicas:
             notOKFileDoc = self.prepareNotOKFileDoc(notOKReplicas)
             updateDB(self.crabRESTClient, 'filetransfers', 'updateTransfers', notOKFileDoc, self.logger)
+        # register okReplicas in publishContainer
+        r = RegisterReplicas(self.transfer, self.rucioClient, None)
+        r.addReplicasToDataset(okReplicas, self.transfer.publishContainer)
         self.transfer.updateTransferOKReplicas([x['name'] for x in okReplicas])
+        if okReplicas:
+            okFileDoc = self.prepareOKFileDoc(okReplicas)
+            updateDB(self.crabRESTClient, 'filetransfers', 'updateRucioInfo', okFileDoc, self.logger)
+            updateDB(self.crabRESTClient, 'filetransfers', 'updateTransfers', okFileDoc, self.logger)
 
     def checkLocksStatus(self):
         okReplicas = []

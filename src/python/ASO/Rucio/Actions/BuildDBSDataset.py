@@ -21,17 +21,14 @@ class BuildDBSDataset():
 
     def execute(self):
         """
-        Creating DBS Dataset by create a new Rucio container and add a new
-        Rucio dataset to it.
+        Creating DBS Dataset by create a new Rucio container and add a LOGS datasets.
         """
         # create publishContainer
         self.checkOrCreateContainer(self.transfer.publishContainer)
         # create transfer container and create rule id
         self.createTransferContainer(self.transfer.transferContainer)
         # create log dataset
-        self.createDataset(self.transfer.logsDataset, self.transfer.transferContainerName)
-        # Get the dataset for register replicas
-        self.transfer.currentTransferDataset = self.getOrCreateDataset(self.transfer.transferContainerName)
+        self.createDataset(self.transfer.logsDataset, self.transfer.transferContainer)
 
     def checkOrCreateContainer(self, containerName):
         self.logger.debug(f'Creating container "{self.transfer.rucioScope}:{containerName}')
@@ -137,7 +134,7 @@ class BuildDBSDataset():
         # attach dataset to the container
             self.rucioClient.attach_dids(self.transfer.rucioScope, containerName, [dsDID])
         except DuplicateContent:
-            self.logger.info(f'{datasetName} dataset has attached to {self.transfer.transferContainerName}, doing nothing')
+            self.logger.info(f'{datasetName} dataset has attached to {containerName}, doing nothing')
 
     def generateDatasetName(self, containerName):
         """

@@ -273,12 +273,7 @@ def test_addFilesToRucio(mock_rucioClient):
             }
         ]
     }
-    expectedReturn = [
-        {
-            "id": "98f353b91ec84f0217da80bde84d6b520c0c6640f60ad9aabb7b20ca",
-            "name": "/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1679671056/230324_151740/0000/output_9.root",
-        }
-    ]
+    expectedReturn = []
 
     config.args = Namespace(replicas_chunk_size=2)
     r = RegisterReplicas(Mock(), mock_rucioClient, Mock())
@@ -292,6 +287,9 @@ def test_addReplicasToDataset(mock_Transfer, mock_rucioClient):
             "name": "/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1679671056/230324_151740/0000/output_9.root",
         }
     ]
+    replicasInContainer = {
+        '/TestPrimary/test-dataset_TRANSFER-bc8b2558/USER': {}
+    }
     expectedOutput = [
         {
             "id": "98f353b91ec84f0217da80bde84d6b520c0c6640f60ad9aabb7b20ca",
@@ -299,8 +297,52 @@ def test_addReplicasToDataset(mock_Transfer, mock_rucioClient):
             "dataset": '/TestPrimary/test-dataset_TRANSFER-bc8b2558/USER#c3800048-d946-45f7-9e83-1f420b4fc32e',
         }
     ]
-    config.args = Namespace(max_file_per_dataset=9)
+
+    config.args = Namespace(replicas_chunk_size=2, max_file_per_dataset=10)
     with patch('ASO.Rucio.Actions.RegisterReplicas.BuildDBSDataset') as mock_BuildDBSDatasetObject:
+        mock_Transfer.replicasInContainer = replicasInContainer
+        mock_BuildDBSDataset = mock_BuildDBSDatasetObject.return_value
+        mock_BuildDBSDataset.getOrCreateDataset.return_value = expectedOutput[0]['dataset']
+        #mock_BuildDBSDataset.generateDatasetName.return_value = '/TestPrimary/test-dataset_TRANSFER-bc8b2558/USER#64aa3d0f-4f53-44df-add1-921e0f54f7c5'
+        r = RegisterReplicas(mock_Transfer, mock_rucioClient, Mock())
+        assert r.addReplicasToDataset(replicas, mock_Transfer.transferContainer) == expectedOutput
+        mock_rucioClient.add_files_to_datasets.assert_called()
+
+
+def test_addReplicasToDataset_with_some_replicas_in_container(mock_Transfer, mock_rucioClient):
+    replicas = [
+        {
+            "id": "98f353b91ec84f0217da80bde84d6b520c0c6640f60ad9aabb7b20ca",
+            "name": "/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1679671056/230324_151740/0000/output_9.root",
+        },
+        {
+            "id": "3536081b9c3562e324a70ae603dd6eab12c690a75159d490d5419970",
+            "name": "/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1679671056/230324_151740/0000/output_10.root",
+        },
+    ]
+    replicasInContainer = {
+        '/TestPrimary/test-dataset_TRANSFER-bc8b2558/USER':
+        {
+            '/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1679671056/230324_151740/0000/output_9.root':
+            '/TestPrimary/test-dataset_TRANSFER-bc8b2558/USER#c3800048-d946-45f7-9e83-1f420b4fc32e'
+        }
+    }
+
+    expectedOutput = [
+        {
+            "id": "98f353b91ec84f0217da80bde84d6b520c0c6640f60ad9aabb7b20ca",
+            "name": "/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1679671056/230324_151740/0000/output_9.root",
+            "dataset": '/TestPrimary/test-dataset_TRANSFER-bc8b2558/USER#c3800048-d946-45f7-9e83-1f420b4fc32e',
+        },
+        {
+            "id": "3536081b9c3562e324a70ae603dd6eab12c690a75159d490d5419970",
+            "name": "/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1679671056/230324_151740/0000/output_10.root",
+            "dataset": '/TestPrimary/test-dataset_TRANSFER-bc8b2558/USER#c3800048-d946-45f7-9e83-1f420b4fc32e',
+        },
+    ]
+    config.args = Namespace(replicas_chunk_size=2, max_file_per_dataset=10)
+    with patch('ASO.Rucio.Actions.RegisterReplicas.BuildDBSDataset') as mock_BuildDBSDatasetObject:
+        mock_Transfer.replicasInContainer = replicasInContainer
         mock_BuildDBSDataset = mock_BuildDBSDatasetObject.return_value
         mock_BuildDBSDataset.getOrCreateDataset.return_value = expectedOutput[0]['dataset']
         #mock_BuildDBSDataset.generateDatasetName.return_value = '/TestPrimary/test-dataset_TRANSFER-bc8b2558/USER#64aa3d0f-4f53-44df-add1-921e0f54f7c5'
