@@ -28,7 +28,7 @@ class BuildDBSDataset():
         # create transfer container and create rule id
         self.createTransferContainer(self.transfer.transferContainer)
         # create log dataset
-        self.createDataset(self.transfer.logsDataset, self.transfer.transferContainer)
+        self.createDataset(self.transfer.transferContainer, self.transfer.logsDataset)
 
     def checkOrCreateContainer(self, containerName):
         self.logger.debug(f'Creating container "{self.transfer.rucioScope}:{containerName}')
@@ -111,7 +111,7 @@ class BuildDBSDataset():
             # so far we take the first and then let the Publisher close the dataset when task completed
             currentDatasetName = openDatasets[0]
         # always execute createDataset() again in case replication rule is not create and the dids is not attach to root container
-        self.createDataset(currentDatasetName, containerName)
+        self.createDataset(containerName, currentDatasetName)
         return currentDatasetName
 
     def createDataset(self, containerName, datasetName):
