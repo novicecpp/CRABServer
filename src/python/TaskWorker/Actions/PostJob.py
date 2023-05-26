@@ -1037,6 +1037,8 @@ class ASOServerJob(object):
         query_view = False
         if not os.path.exists("aso_status.json"):
             query_view = True
+        # query rdbms every time
+        query_view = True
         aso_info = {}
         if not query_view:
             query_view = True
