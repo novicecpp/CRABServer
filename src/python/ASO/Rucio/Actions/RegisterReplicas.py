@@ -38,23 +38,21 @@ class RegisterReplicas:
         # Prepare
         preparedReplicasByRSE = self.prepare(transferGenerator)
         # Remove registered replicas
-        replicasToRegisterByRSE, registeredReplicas = self.removeRegisteredReplicas(preparedReplicasByRSE)
-        self.logger.debug(f'replicasToRegisterByRSE: {replicasToRegisterByRSE}')
-        self.logger.debug(f'registeredReplicas: {registeredReplicas}')
+        #replicasToRegisterByRSE, registeredReplicas = self.removeRegisteredReplicas(preparedReplicasByRSE)
+        #self.logger.debug(f'replicasToRegisterByRSE: {replicasToRegisterByRSE}')
+        #self.logger.debug(f'registeredReplicas: {registeredReplicas}')
         # Register only new transferItems
-        successReplicasFromRegister, failReplicas = self.register(replicasToRegisterByRSE)
+        replicasToAddToDataset = self.addFilesToRucio(preparedReplicasByRSE)
+        successReplicasFromRegister = self.addReplicasToDataset(replicasToAddToDataset, self.transfer.transferContainer)
         self.logger.debug(f'successReplicasFromRegister: {successReplicasFromRegister}')
-        self.logger.debug(f'failReplicas: {failReplicas}')
         # Merge already registered replicas and newly registered replicas
-        successReplicas = successReplicasFromRegister + registeredReplicas
-        self.logger.debug(f'successReplicas: {successReplicas}')
+        successReplicas = successReplicasFromRegister #+ registeredReplicas
+        #self.logger.debug(f'successReplicas: {successReplicas}')
         # Create new entry in REST in FILETRANSFERDB table
         if successReplicas:
             successFileDoc = self.prepareSuccessFileDoc(successReplicas)
+            updateDB(self.crabRESTClient, 'filetransfers', 'updateTransfers', successFileDoc, self.logger)
             updateDB(self.crabRESTClient, 'filetransfers', 'updateRucioInfo', successFileDoc, self.logger)
-        if failReplicas:
-            failFileDoc = self.prepareFailFileDoc(failReplicas)
-            updateDB(self.crabRESTClient, 'filetransfers', 'updateTransfers', failFileDoc, self.logger)
         # After everything is done, bookkeeping LastTransferLine.
         self.transfer.updateLastTransferLine(end)
 
@@ -89,6 +87,15 @@ class RegisterReplicas:
             # We determine PFN of Temp RSE from normal RSE.
             # Simply remove temp suffix before passing to getSourcePFN function.
             pfn = self.getSourcePFN(xdict["source_lfn"], rse.split('_Temp')[0], xdict["destination"])
+            # hardcode fix for DESY temp,
+            if rse == 'T2_DE_DESY_Temp':
+                pfn = pfn.replace('/pnfs/desy.de/cms/tier2/temp', '/pnfs/desy.de/cms/tier2/store/temp')
+            # hardcode fix for T2_UK_SGrid_Bristol
+            if rse == 'T2_UK_SGrid_Bristol_Temp':
+                proto = self.rucioClient.get_protocols('T2_UK_SGrid_Bristol_Temp')[0]
+                if proto['scheme'] != 'root':
+                    raise RucioTransferException('Expected protocol scheme "root" from T2_UK_SGrid_Bristol_Temp. (Hardcode fix)')
+                pfn = f'{proto["scheme"]}://{proto["hostname"]}{proto["prefix"]}{"/".join(xdict["source_lfn"].split("/")[3:])}'
             replicasByRSE[rse] = []
             for xdict in bucket[rse]:
                 replica = {
@@ -149,6 +156,7 @@ class RegisterReplicas:
                     # Note that 2 exceptions we encounter so far here is due to
                     # LFN to PFN converstion and RSE protocols.
                     # https://github.com/dmwm/CRABServer/issues/7632
+                    self.logger.error(f'add_replicas(rse, r): rse={rse} r={r}')
                     raise RucioTransferException('Something wrong with adding new replicas') from ex
 
                 dids = [{
@@ -182,6 +190,89 @@ class RegisterReplicas:
                     b.createDataset(newDataset)
                     self.transfer.currentDataset = newDataset
         return successReplicas, failReplicas
+
+    def addFilesToRucio(self, prepareReplicas):
+        """
+        """
+        ret = []
+        self.logger.debug(f'Prepare replicas: {prepareReplicas}')
+        for rse, replicas in prepareReplicas.items():
+            self.logger.debug(f'Registering replicas from {rse}')
+            self.logger.debug(f'Replicas: {replicas}')
+            for chunk in chunks(replicas, config.args.replicas_chunk_size):
+                try:
+                    # TODO: remove id from dict we construct in prepare() method.
+                    # remove 'id' from dict
+                    r = []
+                    for c in chunk:
+                        d = c.copy()
+                        d.pop('id')
+                        r.append(d)
+                    # add_replicas with same dids will always return True, even
+                    # with changing metadata (e.g pfn), rucio will not update to
+                    # the new value.
+                    # See https://github.com/dmwm/CMSRucio/issues/343#issuecomment-1543663323
+                    self.rucioClient.add_replicas(rse, r)
+                except Exception as ex:
+                    # Note that 2 exceptions we encounter so far here is due to
+                    # LFN to PFN converstion and RSE protocols.
+                    # https://github.com/dmwm/CRABServer/issues/7632
+                    self.logger.error(f'add_replicas(rse, r): rse={rse} r={r}')
+                    raise RucioTransferException('Something wrong with adding new replicas') from ex
+                success = [{'id': x['id'], 'name': x['name']} for x in chunk]
+                ret += success
+        return ret
+
+    def addReplicasToDataset(self, replicas, container):
+        successReplicas = []
+
+        newReplicas = []
+        # filter out duplicated replicas
+        replicasInContainer = self.transfer.replicasInContainer[container]
+        for r in replicas:
+            if r['name'] in replicasInContainer:
+                success = r.copy()
+                success['dataset'] = replicasInContainer[r['name']]
+                successReplicas.append(success)
+            else:
+                newReplicas.append(r)
+        replicas = [x for x in replicas if x['name'] in replicasInContainer]
+
+        b = BuildDBSDataset(self.transfer, self.rucioClient)
+        currentDataset = b.getOrCreateDataset(container)
+        self.logger.debug(f'currentDataset: {currentDataset}')
+        for chunk in chunks(newReplicas, config.args.replicas_chunk_size):
+            dids = [{
+                'scope': self.transfer.rucioScope,
+                'type': "FILE",
+                'name': x["name"]
+            } for x in chunk]
+            # no need to try catch for duplicate content. Not sure if
+            # restart process is enough for the case of connection error
+            attachments = [{
+                'scope': self.transfer.rucioScope,
+                'name': currentDataset,
+                'dids': dids
+            }]
+            self.rucioClient.add_files_to_datasets(attachments, ignore_duplicate=True)
+            successItems = [{
+                'id': x['id'],
+                'name': x['name'],
+                'dataset': currentDataset,
+            } for x in chunk]
+            successReplicas += successItems
+            # Current algo will add files whole chunk, so total number of
+            # files in dataset is at most is max_file_per_datset+replicas_chunk_size.
+            #
+            # check the current number of files in the dataset
+            num = len(list(self.rucioClient.list_content(self.transfer.rucioScope, currentDataset)))
+            if num >= config.args.max_file_per_dataset:
+                # FIXME: close the last dataset when ALL Postjob has reach timeout.
+                #        But, do we really need to close dataset?
+                self.rucioClient.close(self.transfer.rucioScope, currentDataset)
+                currentDataset = b.generateDatasetName(container)
+                b.createDataset(container, currentDataset)
+        return successReplicas
 
     def getSourcePFN(self, sourceLFN, sourceRSE, destinationRSE):
         """

@@ -21,16 +21,26 @@ class BuildDBSDataset():
 
     def execute(self):
         """
-        Creating DBS Dataset by create a new Rucio container and add a new
-        Rucio dataset to it.
+        Creating DBS Dataset by create a new Rucio container and add a LOGS datasets.
         """
-        self.checkOrCreateContainer()
+        # create publishContainer
+        self.checkOrCreateContainer(self.transfer.publishContainer)
+        # create transfer container and create rule id
+        self.createTransferContainer(self.transfer.transferContainer)
         # create log dataset
-        self.createDataset(self.transfer.logsDataset)
-        # Get the dataset for register replicas
-        self.transfer.currentDataset = self.getOrCreateDataset()
+        self.createDataset(self.transfer.transferContainer, self.transfer.logsDataset)
 
-    def checkOrCreateContainer(self):
+    def checkOrCreateContainer(self, containerName):
+        self.logger.debug(f'Creating container "{self.transfer.rucioScope}:{containerName}')
+        try:
+            self.rucioClient.add_container(self.transfer.rucioScope, containerName)
+            self.logger.info(f"{containerName} container created")
+        except DataIdentifierAlreadyExists:
+            self.logger.info(f"{containerName} container already exists, doing nothing")
+        except Exception as ex:
+            raise RucioTransferException('Failed to create container') from ex
+
+    def createTransferContainer(self, container):
         """
         Creating Rucio container for files transfer and add replication rule to
         it. Do nothing if container and rule are already created.
@@ -38,35 +48,27 @@ class BuildDBSDataset():
         :returns: None
         """
 
-        self.logger.debug(f'Creating container "{self.transfer.rucioScope}:{self.transfer.publishname}')
-        try:
-            self.rucioClient.add_container(self.transfer.rucioScope, self.transfer.publishname)
-            self.logger.info(f"{self.transfer.publishname} container created")
-        except DataIdentifierAlreadyExists:
-            self.logger.info(f"{self.transfer.publishname} container already exists, doing nothing")
-        except Exception as ex:
-            raise RucioTransferException('Failed to create container') from ex
+        self.checkOrCreateContainer(container)
 
-        self.logger.debug(f'Add replication rule to container "{self.transfer.rucioScope}:{self.transfer.publishname}')
+        self.logger.debug(f'Add replication rule to container "{self.transfer.rucioScope}:{container}')
         if self.transfer.containerRuleID:
             self.logger.info("Rule already exists, doing nothing")
         else:
             try:
                 containerDID = {
                     'scope': self.transfer.rucioScope,
-                    'name': self.transfer.publishname,
+                    'name': container,
                     'type': "CONTAINER",
                 }
                 ruleID = self.rucioClient.add_replication_rule([containerDID], 1, self.transfer.destination)[0]
-                self.transfer.updateContainerRuleID(ruleID)
                 # TODO: not sure if any other case make the rule duplicate beside script crash
             except DuplicateRule:
                 # TODO: it possible that someone will create the rule for container, need better filter rule to match rules we create
                 self.logger.info(f"Rule already exists. Get rule ID from Rucio.")
-                ruleID = list(self.rucioClient.list_did_rules(self.transfer.rucioScope, self.transfer.publishname))[0]['id']
-                self.transfer.updateContainerRuleID(ruleID)
+                ruleID = list(self.rucioClient.list_did_rules(self.transfer.rucioScope, container))[0]['id']
+            self.transfer.updateContainerRuleID(ruleID)
 
-    def getOrCreateDataset(self):
+    def getOrCreateDataset(self, containerName):
         """
         Get or create new dataset.
         - If open more than 2, choose one and close other.
@@ -79,7 +81,7 @@ class BuildDBSDataset():
         :rtype: str
         """
 
-        datasets = self.rucioClient.list_content(self.transfer.rucioScope, self.transfer.publishname)
+        datasets = self.rucioClient.list_content(self.transfer.rucioScope, containerName)
         # remove log dataset
         datasets = [ds for ds in datasets if not ds['name'].endswith('#LOGS')]
         self.logger.debug(f"datasets in container: {datasets}")
@@ -97,7 +99,7 @@ class BuildDBSDataset():
         self.logger.debug(f"open datasets: {datasets}")
         if len(openDatasets) == 0:
             self.logger.info("No dataset available yet, creating one")
-            currentDatasetName = self.generateDatasetName()
+            currentDatasetName = self.generateDatasetName(containerName)
         elif len(openDatasets) == 1:
             currentDatasetName = openDatasets[0]
             self.logger.info(f"Found exactly one open dataset: {currentDatasetName}")
@@ -109,10 +111,10 @@ class BuildDBSDataset():
             # so far we take the first and then let the Publisher close the dataset when task completed
             currentDatasetName = openDatasets[0]
         # always execute createDataset() again in case replication rule is not create and the dids is not attach to root container
-        self.createDataset(currentDatasetName)
+        self.createDataset(containerName, currentDatasetName)
         return currentDatasetName
 
-    def createDataset(self, datasetName):
+    def createDataset(self, containerName, datasetName):
         """
         Creating Rucio dataset, add replication rule, attach to container.
         Ignore error if it already done.
@@ -130,9 +132,14 @@ class BuildDBSDataset():
         dsDID = {'scope': self.transfer.rucioScope, 'type': "DATASET", 'name': datasetName}
         try:
         # attach dataset to the container
-            self.rucioClient.attach_dids(self.transfer.rucioScope, self.transfer.publishname, [dsDID])
+            self.rucioClient.attach_dids(self.transfer.rucioScope, containerName, [dsDID])
         except DuplicateContent:
-            self.logger.info(f'{datasetName} dataset has attached to {self.transfer.publishname}, doing nothing')
+            self.logger.info(f'{datasetName} dataset has attached to {containerName}, doing nothing')
 
-    def generateDatasetName(self):
-        return f'{self.transfer.publishname}#{uuid.uuid4()}'
+    def generateDatasetName(self, containerName):
+        """
+        Return a new dataset name.
+
+        :returns: string of dataset name.
+        """
+        return f'{containerName}#{uuid.uuid4()}'

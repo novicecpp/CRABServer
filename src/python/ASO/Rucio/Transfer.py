@@ -1,6 +1,7 @@
 import logging
 import json
 import os
+import hashlib
 
 from ASO.Rucio.exception import RucioTransferException
 from ASO.Rucio.utils import writePath
@@ -25,7 +26,8 @@ class Transfer:
         self.username = ''
         self.rucioScope = ''
         self.destination = ''
-        self.publishname = ''
+        self.publishContainer = ''
+        self.transferContainer = ''
         self.logsDataset = ''
 
         # dynamically change throughout the scripts
@@ -33,11 +35,10 @@ class Transfer:
 
         # bookkeeping
         self.lastTransferLine = 0
-
-        # rule bookkeeping
         self.containerRuleID = ''
+        self.transferOKReplicas = None
 
-        # all replicas from rucio
+        # info from rucio
         self.replicasInContainer = None
 
         # map lf2 to id
@@ -59,6 +60,7 @@ class Transfer:
         self.readRESTInfo()
         self.readInfoFromTransferItems()
         self.readContainerRuleID()
+        self.readTransferOKReplicas()
 
     def readInfoFromRucio(self, rucioClient):
         """
@@ -145,16 +147,21 @@ class Transfer:
         self.rucioScope = f'user.{self.username}'
         self.destination = info['destination']
         if config.args.force_publishname:
-            self.publishname = config.args.force_publishname
+            containerName = config.args.force_publishname
         else:
-            self.publishname = info['outputdataset']
-        self.logsDataset = f'{self.publishname}#LOGS'
+            containerName = info["outputdataset"]
+        self.publishContainer = containerName
+        tmp = containerName.split('/')
+        taskNameHash = hashlib.md5(info['taskname'].encode()).hexdigest()[:8]
+        tmp[2] += f'_TRANSFER.{taskNameHash}'
+        self.transferContainer = '/'.join(tmp)
+        self.logsDataset = f'{self.transferContainer}#LOGS'
 
     def readContainerRuleID(self):
         """
-        Read containerRuleID from task_process/transfers/bookkeeping_rules.json
+        Read containerRuleID from task_process/transfers/container_ruleid.txt
         """
-        # skip reading rule from bookkeeping in case rerun with new publishname.
+        # skip reading rule from bookkeeping in case rerun with new transferContainerName.
         if config.args.force_publishname:
             return
         path = config.args.container_ruleid_path
@@ -167,13 +174,46 @@ class Transfer:
 
     def updateContainerRuleID(self, ruleID):
         """
-        update task_process/transfers/container_ruleid.txt
+        update containerRuleID to task_process/transfers/container_ruleid.txt
         """
         self.containerRuleID = ruleID
         path = config.args.container_ruleid_path
         self.logger.info(f'Bookkeeping container rule ID [{ruleID}] to file: {path}')
         with writePath(path) as w:
             w.write(ruleID)
+
+    def readTransferOKReplicas(self):
+        """
+        Read transferOKReplicas from task_process/transfers/transfers_ok.txt
+        """
+        if config.args.ignore_transfer_ok:
+            self.transferOKReplicas = []
+            return
+        path = config.args.transfer_ok_path
+        try:
+            with open(path, 'r', encoding='utf-8') as r:
+                self.transferOKReplicas = r.read().splitlines()
+                self.logger.info(f'Got list of transfer status "OK" from bookkeeping: {self.transferOKReplicas}')
+        except FileNotFoundError:
+            self.transferOKReplicas = []
+            self.logger.info(f'Bookkeeping transfer status OK from path "{path}" does not exist. Assume this is first time it run.')
+
+    def updateTransferOKReplicas(self, newReplicas):
+        """
+        update transferOKReplicas to task_process/transfers/transfers_ok.txt
+
+        :param newReplicas: list of LFN
+        :type newReplicas: list of string
+        """
+        self.transferOKReplicas += newReplicas
+        if config.args.ignore_transfer_ok:
+            return
+        path = config.args.transfer_ok_path
+        self.logger.info(f'Bookkeeping transfer status OK: {self.transferOKReplicas}')
+        self.logger.info(f'to file: {path}')
+        with writePath(path) as w:
+            for l in self.transferOKReplicas:
+                w.write(f'{l}\n')
 
     def getReplicasInContainer(self, rucioClient):
         """
@@ -185,11 +225,15 @@ class Transfer:
         :type rucioClient: rucio.client.client.Client
         """
         replicasInContainer = {}
-        datasets = rucioClient.list_content(self.rucioScope, self.publishname)
+        replicasInContainer[self.transferContainer] = self.getReplicasToDatasetMap(self.transferContainer, rucioClient)
+        replicasInContainer[self.publishContainer] = self.getReplicasToDatasetMap(self.publishContainer, rucioClient)
+        self.replicasInContainer = replicasInContainer
+
+    def getReplicasToDatasetMap(self, container, rucioClient):
+        replicasInContainer = {}
+        datasets = rucioClient.list_content(self.rucioScope, container)
         for ds in datasets:
             files = rucioClient.list_content(self.rucioScope, ds['name'])
             for f in files:
-                if not f['name'] in replicasInContainer:
-                    replicasInContainer[f['name']] = ds['name']
-        self.logger.debug(f'all replicas in container: {replicasInContainer}')
-        self.replicasInContainer = replicasInContainer
+                replicasInContainer[f['name']] = ds['name']
+        return replicasInContainer
