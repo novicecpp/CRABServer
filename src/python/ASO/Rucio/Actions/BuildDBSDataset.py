@@ -25,27 +25,34 @@ class BuildDBSDataset():
         """
         # create publishContainer
         self.checkOrCreateContainer(self.transfer.publishContainer)
-        # create transfer container and create rule id
+        # create transfer container and attach rule id
         self.createTransferContainer(self.transfer.transferContainer)
         # create log dataset
         self.createDataset(self.transfer.transferContainer, self.transfer.logsDataset)
 
-    def checkOrCreateContainer(self, containerName):
-        self.logger.debug(f'Creating container "{self.transfer.rucioScope}:{containerName}')
+    def checkOrCreateContainer(self, container):
+        """
+        Creating container, ignore if it already exists.
+
+        :param container: container name
+        :param type: str
+        """
+        self.logger.debug(f'Creating container "{self.transfer.rucioScope}:{container}')
         try:
-            self.rucioClient.add_container(self.transfer.rucioScope, containerName)
-            self.logger.info(f"{containerName} container created")
+            self.rucioClient.add_container(self.transfer.rucioScope, container)
+            self.logger.info(f"{container} container created")
         except DataIdentifierAlreadyExists:
-            self.logger.info(f"{containerName} container already exists, doing nothing")
+            self.logger.info(f"{container} container already exists, doing nothing")
         except Exception as ex:
             raise RucioTransferException('Failed to create container') from ex
 
     def createTransferContainer(self, container):
         """
-        Creating Rucio container for files transfer and add replication rule to
-        it. Do nothing if container and rule are already created.
+        Creating container for files transfer and add replication rule to it.
+        Do nothing if container and rule are already created.
 
-        :returns: None
+        :param container: container name
+        :param type: str
         """
 
         self.checkOrCreateContainer(container)
@@ -68,7 +75,7 @@ class BuildDBSDataset():
                 ruleID = list(self.rucioClient.list_did_rules(self.transfer.rucioScope, container))[0]['id']
             self.transfer.updateContainerRuleID(ruleID)
 
-    def getOrCreateDataset(self, containerName):
+    def getOrCreateDataset(self, container):
         """
         Get or create new dataset.
         - If open more than 2, choose one and close other.
@@ -77,11 +84,13 @@ class BuildDBSDataset():
         Note that this method always call createDataset() to ensure that datasets
         are attached to container.
 
+        :param container: container name
+        :param type: str
         :returns: dataset name
         :rtype: str
         """
 
-        datasets = self.rucioClient.list_content(self.transfer.rucioScope, containerName)
+        datasets = self.rucioClient.list_content(self.transfer.rucioScope, container)
         # remove log dataset
         datasets = [ds for ds in datasets if not ds['name'].endswith('#LOGS')]
         self.logger.debug(f"datasets in container: {datasets}")
@@ -99,7 +108,7 @@ class BuildDBSDataset():
         self.logger.debug(f"open datasets: {datasets}")
         if len(openDatasets) == 0:
             self.logger.info("No dataset available yet, creating one")
-            currentDatasetName = self.generateDatasetName(containerName)
+            currentDatasetName = self.generateDatasetName(container)
         elif len(openDatasets) == 1:
             currentDatasetName = openDatasets[0]
             self.logger.info(f"Found exactly one open dataset: {currentDatasetName}")
@@ -111,35 +120,35 @@ class BuildDBSDataset():
             # so far we take the first and then let the Publisher close the dataset when task completed
             currentDatasetName = openDatasets[0]
         # always execute createDataset() again in case replication rule is not create and the dids is not attach to root container
-        self.createDataset(containerName, currentDatasetName)
+        self.createDataset(container, currentDatasetName)
         return currentDatasetName
 
-    def createDataset(self, containerName, datasetName):
+    def createDataset(self, container, dataset):
         """
         Creating Rucio dataset, add replication rule, attach to container.
         Ignore error if it already done.
 
-        :param datasetName: dataset name to create.
-        :returns: None
-        :raises RucioTransferException: wrapping generic Exception and add
-            message.
+        :param dataset: container name dataset need to attach to.
+        :param type: str
+        :param dataset: dataset name to create.
+        :param type: str
         """
-        self.logger.debug(f'Creating dataset {datasetName}')
+        self.logger.debug(f'Creating dataset {dataset}')
         try:
-            self.rucioClient.add_dataset(self.transfer.rucioScope, datasetName)
+            self.rucioClient.add_dataset(self.transfer.rucioScope, dataset)
         except DataIdentifierAlreadyExists:
-            self.logger.info(f"{datasetName} dataset already exists, doing nothing")
-        dsDID = {'scope': self.transfer.rucioScope, 'type': "DATASET", 'name': datasetName}
+            self.logger.info(f"{dataset} dataset already exists, doing nothing")
+        dsDID = {'scope': self.transfer.rucioScope, 'type': "DATASET", 'name': dataset}
         try:
         # attach dataset to the container
-            self.rucioClient.attach_dids(self.transfer.rucioScope, containerName, [dsDID])
+            self.rucioClient.attach_dids(self.transfer.rucioScope, container, [dsDID])
         except DuplicateContent:
-            self.logger.info(f'{datasetName} dataset has attached to {containerName}, doing nothing')
+            self.logger.info(f'{dataset} dataset has attached to {container}, doing nothing')
 
-    def generateDatasetName(self, containerName):
+    def generateDatasetName(self, container):
         """
         Return a new dataset name.
 
         :returns: string of dataset name.
         """
-        return f'{containerName}#{uuid.uuid4()}'
+        return f'{container}#{uuid.uuid4()}'

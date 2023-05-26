@@ -41,7 +41,7 @@ class Transfer:
         # info from rucio
         self.replicasInContainer = None
 
-        # map lf2 to id
+        # map lfn to id
         self.replicaLFN2IDMap = None
 
     def readInfo(self):
@@ -116,8 +116,8 @@ class Transfer:
 
     def buildLFN2IDMap(self):
         """
-        Create `self.replicaLFN2IDMap` for map from LFN to ID of REST file
-        trasnfer.
+        Create `self.replicaLFN2IDMap` map from LFN to REST ID using using info
+        in self.transferItems
         """
         self.replicaLFN2IDMap = {}
         for x in self.transferItems:
@@ -215,21 +215,33 @@ class Transfer:
             for l in self.transferOKReplicas:
                 w.write(f'{l}\n')
 
-    def getReplicasInContainer(self, rucioClient):
+    def initReplicasInContainer(self, rucioClient):
         """
-        Get the list of replicas in the container and store it as key-value pair
-        in `self.replicasInContainer`, as a map of LFN to the dataset name it
-        attaches to.
+        Get replicas from transfer and publish container and assign it to
+        self.replicasInContainer as key-value pare of containerName and map of
+        LFN2Dataset.
 
         :param rucioClient: Rucio Client
         :type rucioClient: rucio.client.client.Client
         """
         replicasInContainer = {}
-        replicasInContainer[self.transferContainer] = self.getReplicasToDatasetMap(self.transferContainer, rucioClient)
-        replicasInContainer[self.publishContainer] = self.getReplicasToDatasetMap(self.publishContainer, rucioClient)
+        replicasInContainer[self.transferContainer] = self.populateLFN2DatasetMap(self.transferContainer, rucioClient)
+        replicasInContainer[self.publishContainer] = self.populateLFN2DatasetMap(self.publishContainer, rucioClient)
         self.replicasInContainer = replicasInContainer
 
-    def getReplicasToDatasetMap(self, container, rucioClient):
+    def populateLFN2DatasetMap(self, container, rucioClient):
+        """
+        Get the list of replicas in the container and return as key-value pair
+        in `self.replicasInContainer` as a map of LFN to the dataset name it
+        attaches to.
+
+        :param container: container name
+        :type: str
+        :param rucioClient: Rucio client object
+        :type rucioClient: rucio.client.client.Client
+        :returns:
+        :rtype:
+        """
         replicasInContainer = {}
         datasets = rucioClient.list_content(self.rucioScope, container)
         for ds in datasets:
