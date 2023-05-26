@@ -150,12 +150,12 @@ class Transfer:
             containerName = config.args.force_publishname
         else:
             containerName = info["outputdataset"]
-        self.publishContainerName = containerName
+        self.publishContainer = containerName
         tmp = containerName.split('/')
         taskNameHash = hashlib.md5(info['taskname'].encode()).hexdigest()[:8]
-        tmp[2] += f'_TRANSFER-{taskNameHash}'
-        self.transferContainerName = '/'.join(tmp)
-        self.logsDataset = f'{self.transferContainerName}#LOGS'
+        tmp[2] += f'_TRANSFER.{taskNameHash}'
+        self.transferContainer = '/'.join(tmp)
+        self.logsDataset = f'{self.transferContainer}#LOGS'
 
     def readContainerRuleID(self):
         """
