@@ -43,9 +43,9 @@ class RunTransfer:
         # build dataset
         BuildDBSDataset(self.transfer, self.rucioClient).execute()
         # do 1
-        #RegisterReplicas(self.transfer, self.rucioClient, self.crabRESTClient).execute()
+        RegisterReplicas(self.transfer, self.rucioClient, self.crabRESTClient).execute()
         # do 2
-        #MonitorLocksStatus(self.transfer, self.rucioClient, self.crabRESTClient).execute()
+        MonitorLocksStatus(self.transfer, self.rucioClient, self.crabRESTClient).execute()
 
     def _initRucioClient(self, username, proxypath=None):
         # maybe we can share with getNativeRucioClient

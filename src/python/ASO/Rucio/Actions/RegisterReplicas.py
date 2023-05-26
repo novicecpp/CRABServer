@@ -47,7 +47,7 @@ class RegisterReplicas:
         self.logger.debug(f'successReplicasFromRegister: {successReplicasFromRegister}')
         # Merge already registered replicas and newly registered replicas
         successReplicas = successReplicasFromRegister #+ registeredReplicas
-        self.logger.debug(f'successReplicas: {successReplicas}')
+        #self.logger.debug(f'successReplicas: {successReplicas}')
         # Create new entry in REST in FILETRANSFERDB table
         if successReplicas:
             successFileDoc = self.prepareSuccessFileDoc(successReplicas)

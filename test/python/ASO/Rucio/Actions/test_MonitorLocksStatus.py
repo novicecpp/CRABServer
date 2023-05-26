@@ -10,7 +10,7 @@
 # outputs are
 # 1. replicas state is ok: same as ReegisterReplicas.register(), but plus blockCompletes for rule state is ok
 # 2. replicas state is replication: need rule id and id (no need for dataset)
-
+import json
 import pytest
 import datetime
 from argparse import Namespace
@@ -18,6 +18,7 @@ from unittest.mock import patch, Mock, call
 
 import ASO.Rucio.config as config
 from ASO.Rucio.Actions.MonitorLocksStatus import MonitorLocksStatus
+from ASO.Rucio.Actions.RegisterReplicas import RegisterReplicas
 
 @pytest.fixture
 def mock_Transfer():
@@ -34,6 +35,10 @@ def mock_rucioClient():
     with patch('rucio.client.client.Client', autospec=True) as m_rucioClient:
         return m_rucioClient
 
+@pytest.fixture
+def loadDatasetMetadata():
+    with open('test/assets/dataset_metadata.json') as r:
+        return json.load(r)
 
 def test_checkLockStatus_all_ok(mock_Transfer, mock_rucioClient):
     listRuleIDs = ['b43a554244c54dba954aa29cb2fdde0a']
@@ -183,3 +188,74 @@ def test_addReplicasToPublishContainer():
     ]
     m = MonitorLocksStatus(mock_Transfer, mock_rucioClient, Mock())
     m.addReplicasToPublishContainer(outputOK)
+
+
+@patch.object(RegisterReplicas, 'addReplicasToDataset')
+def test_updateBlockCompleteStatus(mock_addReplicasToDataset, mock_Transfer, mock_rucioClient, loadDatasetMetadata):
+    outputOK = [
+        {
+            "id": "98f353b91ec84f0217da80bde84d6b520c0c6640f60ad9aabb7b20ca",
+            "dataset": None,
+            "blockcomplete": 'NO',
+            "ruleid": "b43a554244c54dba954aa29cb2fdde0a",
+        },
+        {
+            "id": "98f353b91ec84f0217da80bde84d6b520c0c6640f60ad9aabb7b20cb",
+            "dataset": None,
+            "blockcomplete": 'NO',
+            "ruleid": "b43a554244c54dba954aa29cb2fdde0a",
+        },
+        {
+            "id": "98f353b91ec84f0217da80bde84d6b520c0c6640f60ad9aabb7b20cc",
+            "dataset": None,
+            "blockcomplete": 'NO',
+            "ruleid": "b43a554244c54dba954aa29cb2fdde0a",
+        },
+    ]
+    retAddReplicasToDataset = [
+        {
+            "id": "98f353b91ec84f0217da80bde84d6b520c0c6640f60ad9aabb7b20ca",
+            "dataset": '/TestPrimary/test-dataset_TRANSFER-bc8b2558/USER#c3800048-d946-45f7-9e83-1f420b4fc32e',
+            "blockcomplete": 'NO',
+            "ruleid": "b43a554244c54dba954aa29cb2fdde0a",
+        },
+        {
+            "id": "98f353b91ec84f0217da80bde84d6b520c0c6640f60ad9aabb7b20cb",
+            "dataset": '/TestPrimary/test-dataset_TRANSFER-bc8b2558/USER#c3800048-d946-45f7-9e83-1f420b4fc32e',
+            "blockcomplete": 'NO',
+            "ruleid": "b43a554244c54dba954aa29cb2fdde0a",
+        },
+        {
+            "id": "98f353b91ec84f0217da80bde84d6b520c0c6640f60ad9aabb7b20cc",
+            "dataset": '/TestPrimary/test-dataset_TRANSFER-bc8b2558/USER#b74d9bde-9a36-4e40-af17-3d614f19d380',
+            "blockcomplete": 'NO',
+            "ruleid": "b43a554244c54dba954aa29cb2fdde0a",
+        },
+    ]
+    expectedOutput = [
+        {
+            "id": "98f353b91ec84f0217da80bde84d6b520c0c6640f60ad9aabb7b20ca",
+            "dataset": '/TestPrimary/test-dataset_TRANSFER-bc8b2558/USER#c3800048-d946-45f7-9e83-1f420b4fc32e',
+            "blockcomplete": 'OK',
+            "ruleid": "b43a554244c54dba954aa29cb2fdde0a",
+        },
+        {
+            "id": "98f353b91ec84f0217da80bde84d6b520c0c6640f60ad9aabb7b20cb",
+            "dataset": '/TestPrimary/test-dataset_TRANSFER-bc8b2558/USER#c3800048-d946-45f7-9e83-1f420b4fc32e',
+            "blockcomplete": 'OK',
+            "ruleid": "b43a554244c54dba954aa29cb2fdde0a",
+        },
+        {
+            "id": "98f353b91ec84f0217da80bde84d6b520c0c6640f60ad9aabb7b20cc",
+            "dataset": '/TestPrimary/test-dataset_TRANSFER-bc8b2558/USER#b74d9bde-9a36-4e40-af17-3d614f19d380',
+            "blockcomplete": 'NO',
+            "ruleid": "b43a554244c54dba954aa29cb2fdde0a",
+        },
+    ]
+    mock_addReplicasToDataset.return_value = retAddReplicasToDataset
+    datasetMetadata = loadDatasetMetadata[:2]
+    datasetMetadata[0]['is_open'] = False
+    datasetMetadata[1]['is_open'] = True
+    mock_rucioClient.get_metadata.side_effect = datasetMetadata
+    m = MonitorLocksStatus(mock_Transfer, mock_rucioClient, Mock())
+    assert m.updateBlockCompleteStatus(outputOK) == expectedOutput

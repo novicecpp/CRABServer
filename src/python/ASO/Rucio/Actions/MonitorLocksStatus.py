@@ -21,17 +21,19 @@ class MonitorLocksStatus:
             updateDB(self.crabRESTClient, 'filetransfers', 'updateTransfers', notOKFileDoc, self.logger)
         # register okReplicas in publishContainer
         r = RegisterReplicas(self.transfer, self.rucioClient, None)
-        r.addReplicasToDataset(okReplicas, self.transfer.publishContainer)
+        okReplicas = r.addReplicasToDataset(okReplicas, self.transfer.publishContainer)
+        self.logger.debug(f'okReplicas after add replicas to publishContainer: {okReplicas}')
+        okFileDoc = self.prepareOKFileDoc(okReplicas)
+        updateDB(self.crabRESTClient, 'filetransfers', 'updateTransfers', okFileDoc, self.logger)
+        okReplicas = self.updateBlockCompleteStatus(okReplicas)
+        self.logger.debug(f'okReplicas after update block completion: {okReplicas}')
+        okFileDoc = self.prepareOKFileDoc(okReplicas)
+        updateDB(self.crabRESTClient, 'filetransfers', 'updateRucioInfo', okFileDoc, self.logger)
         self.transfer.updateTransferOKReplicas([x['name'] for x in okReplicas])
-        if okReplicas:
-            okFileDoc = self.prepareOKFileDoc(okReplicas)
-            updateDB(self.crabRESTClient, 'filetransfers', 'updateRucioInfo', okFileDoc, self.logger)
-            updateDB(self.crabRESTClient, 'filetransfers', 'updateTransfers', okFileDoc, self.logger)
 
     def checkLocksStatus(self):
         okReplicas = []
         notOKReplicas = []
-        replicasByDataset = {}
         try:
             listReplicasLocks = self.rucioClient.list_replica_locks(self.transfer.containerRuleID)
         except TypeError:
@@ -41,54 +43,45 @@ class MonitorLocksStatus:
             # replicas lock info is not available yet.
             self.logger.info('TypeError has raised. Assume there is still no lock info available yet.')
             listReplicasLocks = []
+        replicasInContainer = self.transfer.replicasInContainer[self.transfer.transferContainer]
         for replicaStatus in listReplicasLocks:
-            # Skip replicas that registered in the same run.
-            if not replicaStatus['name'] in self.transfer.replicasInContainer:
+            # Skip replicas that register in the same run.
+            if not replicaStatus['name'] in replicasInContainer:
                 continue
-            blockName = self.transfer.replicasInContainer[replicaStatus['name']]
+            # skip if replicas transfer is in transferOKReplicas. No need to
+            # update status for transfer complete.
+            # Note that this will update `tm_block_complete` column to `OK`
+            # for some, but not all, replicas in the block. Besure checking
+            # block completion with `any` instead of `all` condition.
+            if replicaStatus['name'] in self.transfer.transferOKReplicas:
+                continue
+
             replica = {
                 'id': self.transfer.replicaLFN2IDMap[replicaStatus['name']],
                 'name': replicaStatus['name'],
-                'dataset': blockName,
+                'dataset': None,
                 'blockcomplete': 'NO',
                 'ruleid': self.transfer.containerRuleID,
-                'state': replicaStatus['state'],
             }
-            if not blockName in replicasByDataset:
-                replicasByDataset[blockName] = []
-            replicasByDataset[blockName].append(replica)
-        self.logger.debug(f'replicaByDataset dict: {replicasByDataset}')
-        for k, v in replicasByDataset.items():
-            # Block complete state rely on `config.args.max_file_per_dataset`.
-            # Beware blockcomplete will alway "NO" if we rerun script while
-            # change max_file_per_dataset to bigger value when register
-            # replicas.
-            if len(v) >= config.args.max_file_per_dataset \
-               and all(x['state'] == 'OK' for x in v):
-                self.logger.debug(f'Dataset "{k}" is all OK.')
-                blockComplete = 'OK'
+            if replicaStatus['state'] == 'OK':
+                okReplicas.append(replica)
             else:
-                self.logger.debug(f'Dataset "{k}" is still replicating.')
-                blockComplete = 'NO'
-            for replica in v:
-                # skip if replicas transfer is in transferOKReplicas. No need to
-                # update status for transfer complete.
-                # Note that this will update `tm_block_complete` column to `OK`
-                # for some, but not all, replicas in the block. Besure checking
-                # block completion with `any` instead of `all` condition.
-                if replica['name'] in self.transfer.transferOKReplicas:
-                    continue
-
-                replica['blockcomplete'] = blockComplete
-                # remove unnecessary key
-                state = replica.pop('state')
-                if state == 'OK':
-                    okReplicas.append(replica)
-                else:
-                    # TODO: if now - replica["created_at"] > 12h:
-                    # delete replica and detach from dataset --> treat as STUCK
-                    notOKReplicas.append(replica)
+                # TODO: if now - replica["created_at"] > 12h:
+                # delete replica and detach from dataset --> treat as STUCK
+                notOKReplicas.append(replica)
         return (okReplicas, notOKReplicas)
+
+    def updateBlockCompleteStatus(self, replicas):
+        r = RegisterReplicas(self.transfer, self.rucioClient, None)
+        tmpReplicas = r.addReplicasToDataset(replicas, self.transfer.publishContainer)
+        datasetsMap = {x['dataset']:x  for x in tmpReplicas}
+        for k, v in datasetsMap.items():
+            metadata = self.rucioClient.get_metadata(self.transfer.rucioScope, k)
+            if not metadata['is_open']:
+                for tr in tmpReplicas:
+                    if tr['dataset'] == k:
+                        tr['blockcomplete'] = 'OK'
+        return tmpReplicas
 
     def prepareOKFileDoc(self, replicas):
         """
