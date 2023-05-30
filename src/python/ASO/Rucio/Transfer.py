@@ -69,7 +69,7 @@ class Transfer:
         :param rucioClient: Rucio client
         :type rucioClient: rucio.client.client.Client
         """
-        self.getReplicasInContainer(rucioClient)
+        self.initReplicasInContainer(rucioClient)
 
     def readLastTransferLine(self):
         """

@@ -37,13 +37,14 @@ class RegisterReplicas:
         transferGenerator = itertools.islice(self.transfer.transferItems, start, end)
         # Prepare
         preparedReplicasByRSE = self.prepare(transferGenerator)
+        # Add file to rucio by RSE
         successReplicas = self.addFilesToRucio(preparedReplicasByRSE)
-        self.addReplicasToDataset(successReplicas, self.transfer.transferContainer)
         self.logger.debug(f'successReplicas: {successReplicas}')
+        # Add replicas to transfer container
+        self.addReplicasToContainer(successReplicas, self.transfer.transferContainer)
         # Create new entry in REST in FILETRANSFERDB table
-        if successReplicas:
-            successFileDoc = self.prepareSuccessFileDoc(successReplicas)
-            updateDB(self.crabRESTClient, 'filetransfers', 'updateTransfers', successFileDoc, self.logger)
+        successFileDoc = self.prepareSuccessFileDoc(successReplicas)
+        updateDB(self.crabRESTClient, 'filetransfers', 'updateTransfers', successFileDoc, self.logger)
         # After everything is done, bookkeeping LastTransferLine.
         self.transfer.updateLastTransferLine(end)
 
@@ -78,15 +79,6 @@ class RegisterReplicas:
             # We determine PFN of Temp RSE from normal RSE.
             # Simply remove temp suffix before passing to getSourcePFN function.
             pfn = self.getSourcePFN(xdict["source_lfn"], rse.split('_Temp')[0], xdict["destination"])
-            # hardcode fix for DESY temp,
-            if rse == 'T2_DE_DESY_Temp':
-                pfn = pfn.replace('/pnfs/desy.de/cms/tier2/temp', '/pnfs/desy.de/cms/tier2/store/temp')
-            # hardcode fix for T2_UK_SGrid_Bristol
-            if rse == 'T2_UK_SGrid_Bristol_Temp':
-                proto = self.rucioClient.get_protocols('T2_UK_SGrid_Bristol_Temp')[0]
-                if proto['scheme'] != 'root':
-                    raise RucioTransferException('Expected protocol scheme "root" from T2_UK_SGrid_Bristol_Temp. (Hardcode fix)')
-                pfn = f'{proto["scheme"]}://{proto["hostname"]}{proto["prefix"]}{"/".join(xdict["source_lfn"].split("/")[3:])}'
             replicasByRSE[rse] = []
             for xdict in bucket[rse]:
                 replica = {
@@ -143,7 +135,7 @@ class RegisterReplicas:
                 ret += success
         return ret
 
-    def addReplicasToDataset(self, replicas, container):
+    def addReplicasToContainer(self, replicas, container):
         """
         Add replicas to the dataset in `container` in chunks (chunk size is defined in
         `config.args.replicas_chunk_size`). This including creates a new dataset when the current dataset
@@ -153,14 +145,22 @@ class RegisterReplicas:
         :type replicas: list
         """
 
+        containerReplicas = []
+        newReplicas = []
         # filter out duplicated replicas
         replicasInContainer = self.transfer.replicasInContainer[container]
-        dedupReplicas = [x for x in replicas if x['name'] in replicasInContainer]
+        for r in replicas:
+            if r['name'] in replicasInContainer:
+                c = r.copy()
+                c['dataset'] = replicasInContainer[r['name']]
+                containerReplicas.append(c)
+            else:
+                newReplicas.append(r)
 
         b = BuildDBSDataset(self.transfer, self.rucioClient)
         currentDataset = b.getOrCreateDataset(container)
         self.logger.debug(f'currentDataset: {currentDataset}')
-        for chunk in chunks(dedupReplicas, config.args.replicas_chunk_size):
+        for chunk in chunks(newReplicas, config.args.replicas_chunk_size):
             dids = [{
                 'scope': self.transfer.rucioScope,
                 'type': "FILE",
@@ -174,6 +174,12 @@ class RegisterReplicas:
                 'dids': dids
             }]
             self.rucioClient.add_files_to_datasets(attachments, ignore_duplicate=True)
+            successItems = [{
+                'id': x['id'],
+                'name': x['name'],
+                'dataset': currentDataset,
+            } for x in chunk]
+            containerReplicas += successItems
             # Current algo will add files whole chunk, so total number of
             # files in dataset is at most is max_file_per_datset+replicas_chunk_size.
             #
@@ -181,10 +187,10 @@ class RegisterReplicas:
             num = len(list(self.rucioClient.list_content(self.transfer.rucioScope, currentDataset)))
             if num >= config.args.max_file_per_dataset:
                 # FIXME: close the last dataset when ALL Postjob has reach timeout.
-                #        But, do we really need to close dataset?
                 self.rucioClient.close(self.transfer.rucioScope, currentDataset)
-                currentDataset = b.generateDatasetName(container)
-                b.createDataset(container, currentDataset)
+                currentDataset = b.getOrCreateDataset(container)
+        return containerReplicas
+
 
     def getSourcePFN(self, sourceLFN, sourceRSE, destinationRSE):
         """
@@ -214,6 +220,15 @@ class RegisterReplicas:
             did = f'{self.transfer.rucioScope}:{sourceLFN}'
             sourcePFNMap = self.rucioClient.lfns2pfns(sourceRSE, [did], operation="third_party_copy_read", scheme=srcScheme)
             pfn = sourcePFNMap[did]
+            # hardcode fix for DESY temp,
+            if sourceRSE == 'T2_DE_DESY_Temp':
+                pfn = pfn.replace('/pnfs/desy.de/cms/tier2/temp', '/pnfs/desy.de/cms/tier2/store/temp')
+            # hardcode fix for T2_UK_SGrid_Bristol
+            if sourceRSE == 'T2_UK_SGrid_Bristol_Temp':
+                proto = self.rucioClient.get_protocols('T2_UK_SGrid_Bristol_Temp')[0]
+                if proto['scheme'] != 'root':
+                    raise RucioTransferException('Expected protocol scheme "root" from T2_UK_SGrid_Bristol_Temp (Temporary hardcoded).')
+                pfn = f'{proto["scheme"]}://{proto["hostname"]}{proto["prefix"]}{"/".join(sourceLFN.split("/")[3:])}'
             self.logger.debug(f'PFN: {pfn}')
             return pfn
         except Exception as ex:
@@ -240,37 +255,6 @@ class RegisterReplicas:
             pfn = pfn.replace('/pnfs/desy.de/cms/tier2/temp', '/pnfs/desy.de/cms/tier2/store/temp')
         self.logger.debug(f'PFN2: {pfn}')
         return pfn
-
-    def removeRegisteredReplicas(self, replicasByRSE):
-        """
-        Separate registered from unregistered replicas to prevent duplication of
-        replicas in the same container. The list of registered replicas is
-        stored in `self.transfer.replicasInContainer`.
-
-        :param replicasByRSE: dict return from `prepare()` method.
-        :type replicasByRSE: dict
-
-        :returns: list of unregistered replicas and list of registered
-            replicas. The unregistered replicas will have the same structure as
-            `replicasByRSE` param, and the registered will have the same
-            information and structure returned by `register()` method.
-        :rtype: tuple of list
-        """
-        notRegister = copy.deepcopy(replicasByRSE)
-        registered = []
-        for k, v in notRegister.items():
-            newV = []
-            for i in range(len(v)):
-                if v[i]['name'] in self.transfer.replicasInContainer:
-                    registeredReplica = {
-                        'id': v[i]['id'],
-                        'dataset': self.transfer.replicasInContainer[v[i]['name']],
-                    }
-                    registered.append(registeredReplica)
-                else:
-                    newV.append(v[i])
-            notRegister[k] = newV
-        return notRegister, registered
 
     def prepareSuccessFileDoc(self, replicas):
         """

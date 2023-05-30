@@ -73,7 +73,7 @@ class MonitorLocksStatus:
 
     def updateBlockCompleteStatus(self, replicas):
         r = RegisterReplicas(self.transfer, self.rucioClient, None)
-        tmpReplicas = r.addReplicasToDataset(replicas, self.transfer.publishContainer)
+        tmpReplicas = r.addReplicasToContainer(replicas, self.transfer.publishContainer)
         datasetsMap = {x['dataset']:x  for x in tmpReplicas}
         for k, v in datasetsMap.items():
             metadata = self.rucioClient.get_metadata(self.transfer.rucioScope, k)
