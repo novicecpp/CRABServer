@@ -21,13 +21,14 @@ class BuildDBSDataset():
 
     def execute(self):
         """
-        Creating DBS Dataset by create a new Rucio container and add a LOGS datasets.
+        Construct DBS Dataset by creating a new Rucio container and adding a
+        LOGS dataset.
         """
         # create publishContainer
         self.checkOrCreateContainer(self.transfer.publishContainer)
         # create transfer container and attach rule id
         self.createTransferContainer(self.transfer.transferContainer)
-        # create log dataset
+        # create log dataset in transfer container
         self.createDataset(self.transfer.transferContainer, self.transfer.logsDataset)
 
     def checkOrCreateContainer(self, container):
@@ -140,7 +141,7 @@ class BuildDBSDataset():
             self.logger.info(f"{dataset} dataset already exists, doing nothing")
         dsDID = {'scope': self.transfer.rucioScope, 'type': "DATASET", 'name': dataset}
         try:
-        # attach dataset to the container
+            # attach dataset to the container
             self.rucioClient.attach_dids(self.transfer.rucioScope, container, [dsDID])
         except DuplicateContent:
             self.logger.info(f'{dataset} dataset has attached to {container}, doing nothing')

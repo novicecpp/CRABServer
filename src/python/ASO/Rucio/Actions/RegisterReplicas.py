@@ -94,7 +94,7 @@ class RegisterReplicas:
 
     def addFilesToRucio(self, prepareReplicas):
         """
-        Register files in Temp RSE in chunks (chunk size is defined in
+        Register files in Temp RSE in chunks per RSE (chunk size is defined in
         `config.args.replicas_chunk_size`).
 
         :param prepareReplicas: dict return from `prepare()` method.
@@ -102,7 +102,6 @@ class RegisterReplicas:
 
         :returns: a list contain dict with REST xfer id and replicas LFN.
         :rtype: list
-
         """
 
         ret = []
@@ -136,9 +135,10 @@ class RegisterReplicas:
 
     def addReplicasToContainer(self, replicas, container):
         """
-        Add replicas to the dataset in `container` in chunks (chunk size is defined in
-        `config.args.replicas_chunk_size`). This including creates a new dataset when the current dataset
-        dataset exceeds `config.arg.max_file_per_datset`.
+        Add `replicas` to the dataset in `container` in chunks (chunk size is
+        defined in `config.args.replicas_chunk_size`). This including creates a
+        new dataset when the current dataset exceeds
+        `config.arg.max_file_per_datset`.
 
         :param replicas: a list contain dict with REST xfer id and replicas LFN.
         :type replicas: list
@@ -257,16 +257,11 @@ class RegisterReplicas:
 
     def uploadTransferInfoToREST(self, replicas):
         """
-        Convert replicas info to fileDoc to upload file transfer information to
-        REST.
-        This method is for successfully registered replicas.
+        Upload transfers info to REST server.
 
         :param replicas: list of dict contains transferItems's ID and its
             information.
         :type replicas: list
-
-        :return: dict which use in `filetransfers` REST API.
-        :rtype: dict
         """
         num = len(replicas)
         fileDoc = {
