@@ -43,8 +43,7 @@ class RegisterReplicas:
         # Add replicas to transfer container
         self.addReplicasToContainer(successReplicas, self.transfer.transferContainer)
         # Create new entry in REST in FILETRANSFERDB table
-        successFileDoc = self.prepareSuccessFileDoc(successReplicas)
-        updateDB(self.crabRESTClient, 'filetransfers', 'updateTransfers', successFileDoc, self.logger)
+        self.uploadTransferInfoToREST(successReplicas)
         # After everything is done, bookkeeping LastTransferLine.
         self.transfer.updateLastTransferLine(end)
 
@@ -256,7 +255,7 @@ class RegisterReplicas:
         self.logger.debug(f'PFN2: {pfn}')
         return pfn
 
-    def prepareSuccessFileDoc(self, replicas):
+    def uploadTransferInfoToREST(self, replicas):
         """
         Convert replicas info to fileDoc to upload file transfer information to
         REST.
@@ -281,31 +280,4 @@ class RegisterReplicas:
             'list_of_retry_value': None, # omit
             'list_of_fts_id': ['NA']*num,
         }
-        return fileDoc
-
-    def prepareFailFileDoc(self, replicas):
-        """
-        Convert replicas info to fileDoc to upload file transfer information to
-        REST.
-        This method is for fail registered replicas.
-
-        :param replicas: list of dict contains transferItems's ID and its
-            information.
-        :type replicas: list
-
-        :return: dict which use in `filetransfers` REST API.
-        :rtype: dict
-        """
-        num = len(replicas)
-        fileDoc = {
-            'asoworker': 'rucio',
-            'list_of_ids': [x['id'] for x in replicas],
-            'list_of_transfer_state': ['FAILED']*num,
-            'list_of_dbs_blockname': None,  # omit
-            'list_of_block_complete': None, # omit
-            'list_of_fts_instance': ['https://fts3-cms.cern.ch:8446/']*num,
-            'list_of_failure_reason': ['Failed to register files within RUCIO']*num,
-            'list_of_retry_value': [0]*num, # No need for retry -> delegate to RUCIO
-            'list_of_fts_id': ['NA']*num,
-        }
-        return fileDoc
+        updateDB(self.crabRESTClient, 'filetransfers', 'updateTransfers', fileDoc, self.logger)
