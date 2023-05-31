@@ -3,6 +3,7 @@ import os
 import sys
 import json
 import logging
+import copy
 
 from TaskWorker.Actions.Recurring.BaseRecurringAction import BaseRecurringAction
 from RucioUtils import getNativeRucioClient
@@ -19,8 +20,9 @@ class ReportRecallQuota(BaseRecurringAction):
         account = 'crab_tape_recall'
         self.logger.info(f"Looking up used quota for Rucio account: {account}")
 
-        config.Services.Rucio_account = account
-        rucioClient = getNativeRucioClient(config=config, logger=self.logger)
+        configForRucioClient = copy.deepcopy(config)
+        configForRucioClient.Services.Rucio_account = account
+        rucioClient = getNativeRucioClient(config=configForRucioClient, logger=self.logger)
         usageGenerator = rucioClient.get_local_account_usage(account=account)
         totalBytes = 0
         report = {}
