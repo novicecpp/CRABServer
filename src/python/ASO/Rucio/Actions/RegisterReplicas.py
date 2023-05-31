@@ -220,10 +220,10 @@ class RegisterReplicas:
             sourcePFNMap = self.rucioClient.lfns2pfns(sourceRSE, [did], operation="third_party_copy_read", scheme=srcScheme)
             pfn = sourcePFNMap[did]
             # hardcode fix for DESY temp,
-            if sourceRSE == 'T2_DE_DESY_Temp':
+            if sourceRSE == 'T2_DE_DESY':
                 pfn = pfn.replace('/pnfs/desy.de/cms/tier2/temp', '/pnfs/desy.de/cms/tier2/store/temp')
             # hardcode fix for T2_UK_SGrid_Bristol
-            if sourceRSE == 'T2_UK_SGrid_Bristol_Temp':
+            if sourceRSE == 'T2_UK_SGrid_Bristol':
                 proto = self.rucioClient.get_protocols('T2_UK_SGrid_Bristol_Temp')[0]
                 if proto['scheme'] != 'root':
                     raise RucioTransferException('Expected protocol scheme "root" from T2_UK_SGrid_Bristol_Temp (Temporary hardcoded).')
@@ -268,7 +268,7 @@ class RegisterReplicas:
             'asoworker': 'rucio',
             'list_of_ids': [x['id'] for x in replicas],
             'list_of_transfer_state': ['SUBMITTED']*num,
-            'list_of_dbs_blockname': [x['dataset'] for x in replicas],
+            'list_of_dbs_blockname': None, # omit, will update it in MonitorLockStatus action
             'list_of_block_complete': ['NO']*num,
             'list_of_fts_instance': ['https://fts3-cms.cern.ch:8446/']*num,
             'list_of_failure_reason': None, # omit
