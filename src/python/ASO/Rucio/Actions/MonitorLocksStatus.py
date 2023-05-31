@@ -21,14 +21,21 @@ class MonitorLocksStatus:
             updateDB(self.crabRESTClient, 'filetransfers', 'updateTransfers', notOKFileDoc, self.logger)
         # register okReplicas in publishContainer
         r = RegisterReplicas(self.transfer, self.rucioClient, None)
-        okReplicas = r.addReplicasToDataset(okReplicas, self.transfer.publishContainer)
+        newR = r.addReplicasToContainer(okReplicas, self.transfer.publishContainer)
+        # update dataset name for each replicas
+        # may change data structure return from checklockstatus to dict later
+        LFN2DatasetMap = {x['name']:x['dataset'] for x in newR}
+        for i in okReplicas:
+            i['dataset'] = LFN2DatasetMap[i['name']]
         self.logger.debug(f'okReplicas after add replicas to publishContainer: {okReplicas}')
-        okFileDoc = self.prepareOKFileDoc(okReplicas)
-        updateDB(self.crabRESTClient, 'filetransfers', 'updateTransfers', okFileDoc, self.logger)
-        okReplicas = self.updateBlockCompleteStatus(okReplicas)
+
+        okFileDoc1 = self.prepareOKFileDoc(okReplicas)
+        updateDB(self.crabRESTClient, 'filetransfers', 'updateTransfers', okFileDoc1, self.logger)
+
+        self.updateBlockCompleteStatus(okReplicas)
         self.logger.debug(f'okReplicas after update block completion: {okReplicas}')
-        okFileDoc = self.prepareOKFileDoc(okReplicas)
-        updateDB(self.crabRESTClient, 'filetransfers', 'updateRucioInfo', okFileDoc, self.logger)
+        okFileDoc2 = self.prepareOKFileDoc(okReplicas)
+        updateDB(self.crabRESTClient, 'filetransfers', 'updateRucioInfo', okFileDoc2, self.logger)
         self.transfer.updateTransferOKReplicas([x['name'] for x in okReplicas])
 
     def checkLocksStatus(self):
@@ -72,16 +79,21 @@ class MonitorLocksStatus:
         return (okReplicas, notOKReplicas)
 
     def updateBlockCompleteStatus(self, replicas):
-        r = RegisterReplicas(self.transfer, self.rucioClient, None)
-        tmpReplicas = r.addReplicasToContainer(replicas, self.transfer.publishContainer)
-        datasetsMap = {x['dataset']:x  for x in tmpReplicas}
+        """
+        We can rely on `is_open` dataset metadata because we only add replicas with transfer complete to dataset in publish container
+        """
+        datasetsMap = {}
+        for i in replicas:
+            dataset = i['dataset']
+            if not dataset in datasetsMap:
+                datasetsMap[dataset] = [i]
+            else:
+                datasetsMap[dataset].append(i)
         for k, v in datasetsMap.items():
             metadata = self.rucioClient.get_metadata(self.transfer.rucioScope, k)
             if not metadata['is_open']:
-                for tr in tmpReplicas:
-                    if tr['dataset'] == k:
-                        tr['blockcomplete'] = 'OK'
-        return tmpReplicas
+                for r in v:
+                    r['blockcomplete'] = 'OK'
 
     def prepareOKFileDoc(self, replicas):
         """
