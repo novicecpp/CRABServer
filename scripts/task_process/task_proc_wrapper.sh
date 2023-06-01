@@ -83,7 +83,7 @@ touch task_process/task_process_running
 log "Starting a new task_process, creating task_process_running file"
 
 
-HOURS_BETWEEN_QUERIES=24
+HOURS_BETWEEN_QUERIES=1
 
 # The request name is passed from the dagman_bootstrap_startup.sh and points to the main dag
 REQUEST_NAME=$1
