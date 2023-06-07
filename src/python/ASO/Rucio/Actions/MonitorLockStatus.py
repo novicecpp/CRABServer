@@ -120,10 +120,14 @@ class MonitorLockStatus:
                 datasetsMap[dataset].append(i)
         for k, v in datasetsMap.items():
             metadata = self.rucioClient.get_metadata(self.transfer.rucioScope, k)
-            timeout = config.args.open_dataset_timeout
-            if metadata['is_open'] and datetime.datetime.now() > metadata['updated_at'] + datetime.timedelta(seconds=timeout):
-                self.rucioClient.close(self.transfer.rucioScope, k)
-                metadata['is_open'] = False
+            # TODO: Also close dataset when the task has completed.
+            # FIXME: if we close here, next run will create a new dataset
+            # may be the original idea from Stefano/Diego, to do it in publisher is better
+            #
+            #isOpen6Hours = datetime.datetime.now() > metadata['updated_at'] + datetime.timedelta(seconds=config.args.open_dataset_timeout)
+            #if metadata['is_open'] and isOpen6Hours:
+            #    self.rucioClient.close(self.transfer.rucioScope, k)
+            #    metadata['is_open'] = False
             if not metadata['is_open']:
                 for r in v:
                     item = copy.copy(r)
