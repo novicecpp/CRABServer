@@ -4,7 +4,7 @@ import ASO.Rucio.config as config
 from ASO.Rucio.utils import updateDB
 from ASO.Rucio.Actions.RegisterReplicas import RegisterReplicas
 
-class MonitorLocksStatus:
+class MonitorLockStatus:
     def __init__(self, transfer, rucioClient, crabRESTClient):
         self.logger = logging.getLogger("RucioTransfer.Actions.MonitorLocksStatus")
         self.rucioClient = rucioClient
@@ -15,14 +15,14 @@ class MonitorLocksStatus:
         okReplicas, notOKReplicas = self.checkLocksStatus()
         self.logger.debug(f'okReplicas: {okReplicas}')
         self.logger.debug(f'notOKReplicas: {notOKReplicas}')
-        # update db
+        # update not ok replicas
         if notOKReplicas:
             notOKFileDoc = self.prepareNotOKFileDoc(notOKReplicas)
             updateDB(self.crabRESTClient, 'filetransfers', 'updateTransfers', notOKFileDoc, self.logger)
         # register okReplicas in publishContainer
         r = RegisterReplicas(self.transfer, self.rucioClient, None)
         newR = r.addReplicasToContainer(okReplicas, self.transfer.publishContainer)
-        # update dataset name for each replicas
+        # Update dataset name for each replicas
         # may change data structure return from checklockstatus to dict later
         LFN2DatasetMap = {x['name']:x['dataset'] for x in newR}
         for i in okReplicas:
