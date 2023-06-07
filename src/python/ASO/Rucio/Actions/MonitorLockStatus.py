@@ -1,5 +1,6 @@
 import logging
 import copy
+import datetime
 
 import ASO.Rucio.config as config
 from ASO.Rucio.utils import updateDB
@@ -76,8 +77,6 @@ class MonitorLockStatus:
             if replicaStatus['state'] == 'OK':
                 okReplicas.append(replica)
             else:
-                # TODO: if now - replica["created_at"] > 12h:
-                # delete replica and detach from dataset --> treat as STUCK
                 notOKReplicas.append(replica)
         return (okReplicas, notOKReplicas)
 
@@ -121,11 +120,16 @@ class MonitorLockStatus:
                 datasetsMap[dataset].append(i)
         for k, v in datasetsMap.items():
             metadata = self.rucioClient.get_metadata(self.transfer.rucioScope, k)
+            timeout = config.args.open_dataset_timeout
+            if metadata['is_open'] and datetime.datetime.now() > metadata['updated_at'] + datetime.timedelta(seconds=timeout):
+                self.rucioClient.close(self.transfer.rucioScope, k)
+                metadata['is_open'] = False
             if not metadata['is_open']:
                 for r in v:
                     item = copy.copy(r)
                     item['blockcomplete'] = 'OK'
                     tmpReplicas.append(item)
+
         return tmpReplicas
 
     def updateOKReplicasToREST(self, replicas):
