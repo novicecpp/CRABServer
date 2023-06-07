@@ -273,6 +273,6 @@ class RegisterReplicas:
             'list_of_fts_instance': ['https://fts3-cms.cern.ch:8446/']*num,
             'list_of_failure_reason': None, # omit
             'list_of_retry_value': None, # omit
-            'list_of_fts_id': ['NA']*num,
+            'list_of_fts_id': [self.transfer.containerRuleID]*num,
         }
         updateDB(self.crabRESTClient, 'filetransfers', 'updateTransfers', fileDoc, self.logger)
