@@ -6,7 +6,7 @@ from RESTInteractions import CRABRest
 from ASO.Rucio.Transfer import Transfer
 from ASO.Rucio.exception import RucioTransferException
 from ASO.Rucio.Actions.BuildDBSDataset import BuildDBSDataset
-from ASO.Rucio.Actions.MonitorLocksStatus import MonitorLocksStatus
+from ASO.Rucio.Actions.MonitorLockStatus import MonitorLockStatus
 from ASO.Rucio.Actions.RegisterReplicas import RegisterReplicas
 
 class RunTransfer:
@@ -45,7 +45,7 @@ class RunTransfer:
         # do 1
         RegisterReplicas(self.transfer, self.rucioClient, self.crabRESTClient).execute()
         # do 2
-        MonitorLocksStatus(self.transfer, self.rucioClient, self.crabRESTClient).execute()
+        MonitorLockStatus(self.transfer, self.rucioClient, self.crabRESTClient).execute()
 
     def _initRucioClient(self, username, proxypath=None):
         # maybe we can share with getNativeRucioClient
