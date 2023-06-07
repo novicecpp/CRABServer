@@ -1,4 +1,5 @@
 import logging
+import copy
 
 import ASO.Rucio.config as config
 from ASO.Rucio.utils import updateDB
@@ -12,33 +13,26 @@ class MonitorLockStatus:
         self.crabRESTClient = crabRESTClient
 
     def execute(self):
-        okReplicas, notOKReplicas = self.checkLocksStatus()
+        okReplicas, notOKReplicas = self.checkLockStatus()
         self.logger.debug(f'okReplicas: {okReplicas}')
         self.logger.debug(f'notOKReplicas: {notOKReplicas}')
-        # update not ok replicas
-        if notOKReplicas:
-            notOKFileDoc = self.prepareNotOKFileDoc(notOKReplicas)
-            updateDB(self.crabRESTClient, 'filetransfers', 'updateTransfers', notOKFileDoc, self.logger)
-        # register okReplicas in publishContainer
-        r = RegisterReplicas(self.transfer, self.rucioClient, None)
-        newR = r.addReplicasToContainer(okReplicas, self.transfer.publishContainer)
-        # Update dataset name for each replicas
-        # may change data structure return from checklockstatus to dict later
-        LFN2DatasetMap = {x['name']:x['dataset'] for x in newR}
-        for i in okReplicas:
-            i['dataset'] = LFN2DatasetMap[i['name']]
+        # update not-ok status
+        self.updateNotOKReplicasToREST(notOKReplicas)
+
+        # register to publish container
+        self.registerToPublishContainer(okReplicas)
         self.logger.debug(f'okReplicas after add replicas to publishContainer: {okReplicas}')
+        # update ok status
+        self.updateOKReplicasToREST(okReplicas)
 
-        okFileDoc1 = self.prepareOKFileDoc(okReplicas)
-        updateDB(self.crabRESTClient, 'filetransfers', 'updateTransfers', okFileDoc1, self.logger)
-
+        # update block complete status
         self.updateBlockCompleteStatus(okReplicas)
         self.logger.debug(f'okReplicas after update block completion: {okReplicas}')
-        okFileDoc2 = self.prepareOKFileDoc(okReplicas)
-        updateDB(self.crabRESTClient, 'filetransfers', 'updateRucioInfo', okFileDoc2, self.logger)
+
+        # bookkeeping published replicas
         self.transfer.updateTransferOKReplicas([x['name'] for x in okReplicas])
 
-    def checkLocksStatus(self):
+    def checkLockStatus(self):
         okReplicas = []
         notOKReplicas = []
         try:
@@ -78,6 +72,14 @@ class MonitorLockStatus:
                 notOKReplicas.append(replica)
         return (okReplicas, notOKReplicas)
 
+    def registerToPublishContainer(self, replicas):
+        r = RegisterReplicas(self.transfer, self.rucioClient, None)
+        replicasPublishedInfo = r.addReplicasToContainer(replicas, self.transfer.publishContainer)
+        # Update dataset name for each replicas
+        tmpLFN2DatasetMap = {x['name']:x['dataset'] for x in replicasPublishedInfo}
+        for i in replicas:
+            i['dataset'] = tmpLFN2DatasetMap[i['name']]
+
     def updateBlockCompleteStatus(self, replicas):
         """
         We can rely on `is_open` dataset metadata because we only add replicas with transfer complete to dataset in publish container
@@ -95,7 +97,7 @@ class MonitorLockStatus:
                 for r in v:
                     r['blockcomplete'] = 'OK'
 
-    def prepareOKFileDoc(self, replicas):
+    def updateOKReplicasToREST(self, replicas):
         """
         In case REST expected upload success and fail doc in time the reNot sure on the REST side if it support
         """
@@ -111,9 +113,29 @@ class MonitorLockStatus:
             'list_of_retry_value': None, # omit
             'list_of_fts_id': ['NA']*num,
         }
-        return fileDoc
+        updateDB(self.crabRESTClient, 'filetransfers', 'updateTransfers', fileDoc, self.logger)
 
-    def prepareNotOKFileDoc(self, replicas):
+    def updateBlockCompleteToREST(self, replicas):
+        """
+
+        """
+        # TODO: This can be optimize to single REST API call
+        num = len(replicas)
+        fileDoc = {
+            'asoworker': 'rucio',
+            'list_of_ids': [x['id'] for x in replicas],
+            'list_of_transfer_state': ['DONE']*num,
+            'list_of_dbs_blockname': [x['dataset'] for x in replicas],
+            'list_of_block_complete': [x['blockcomplete'] for x in replicas],
+            'list_of_fts_instance': ['https://fts3-cms.cern.ch:8446/']*num,
+            'list_of_failure_reason': None, # omit
+            'list_of_retry_value': None, # omit
+            'list_of_fts_id': ['NA']*num,
+        }
+        updateDB(self.crabRESTClient, 'filetransfers', 'updateRucioInfo', fileDoc, self.logger)
+
+
+    def updateNotOKReplicasToREST(self, replicas):
         num = len(replicas)
         fileDoc = {
             'asoworker': 'rucio',
@@ -126,4 +148,4 @@ class MonitorLockStatus:
             'list_of_retry_value': None, # omit
             'list_of_fts_id': [x['ruleid'] for x in replicas],
         }
-        return fileDoc
+        updateDB(self.crabRESTClient, 'filetransfers', 'updateTransfers', fileDoc, self.logger)
