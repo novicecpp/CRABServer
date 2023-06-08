@@ -1,6 +1,5 @@
 import logging
 import copy
-import datetime
 
 import ASO.Rucio.config as config
 from ASO.Rucio.utils import updateDB
@@ -8,8 +7,9 @@ from ASO.Rucio.Actions.RegisterReplicas import RegisterReplicas
 
 class MonitorLockStatus:
     """
-    This class check replicas status by given Rucio's rule ID, register replicas to publish container when transfer is complete (status 'OK'), and update transfer status to REST.
-    Note that we only add successfully transferred replicas to publish container.
+    This class checks the status of the replicas by giving Rucio's rule ID and
+    registering transfer completed replicas (status 'OK') to publish container,
+    then updating the transfer status back to REST to notify PostJob.
     """
     def __init__(self, transfer, rucioClient, crabRESTClient):
         self.logger = logging.getLogger("RucioTransfer.Actions.MonitorLockStatus")
@@ -36,15 +36,18 @@ class MonitorLockStatus:
         replicasToUpdateStatus = self.checkBlockCompleteStatus(publishedReplicas)
         self.logger.debug(f'Replicas to update block completion: {replicasToUpdateStatus}')
 
-        # Bookkeeping published replicas (only replicas with blockcomplete "ok")
+        # Bookkeeping published replicas (only replicas with blockcomplete "ok" left)
         self.transfer.updateBlockCompleteToREST([x['name'] for x in replicasToUpdateStatus])
 
     def checkLockStatus(self):
         """
-        Check all lock status of replicas in rule from `Transfer.containerRuleID`.
+        Check all lock status of replicas in the rule from
+        `Transfer.containerRuleID`.
 
-        :returns: list okReplicas and notOkReplicas where each item in list is dict of replica info
-        :rtype: tuple of list
+        :return: list of `okReplicas` where transfers are completed, and
+            `notOkReplicas` where transfer transfers are still in REPLICATING
+             or STUCK state. Each item in list is dict of replica info.
+        :rtype: tuple of list of dict
         """
         okReplicas = []
         notOKReplicas = []
@@ -55,7 +58,7 @@ class MonitorLockStatus:
             # None response from server. It will happen when we run
             # list_replica_locks immediately after register replicas with
             # replicas lock info is not available yet.
-            self.logger.info('TypeError has raised. Assume there is still no lock info available yet.')
+            self.logger.info('Error has raised. Assume there is still no lock info available yet.')
             listReplicasLocks = []
         replicasInContainer = self.transfer.replicasInContainer[self.transfer.transferContainer]
         for replicaStatus in listReplicasLocks:
@@ -82,9 +85,10 @@ class MonitorLockStatus:
 
     def registerToPublishContainer(self, replicas):
         """
-        Register replicas to publish container. Also update replicas info to new dataset name.
+        Register replicas to the published container. Update the replicas info
+        to the new dataset name.
 
-        :param replicas: replica info return from `checkLockStatus` method.
+        :param replicas: replicas info return from `checkLockStatus` method.
         :type replicas: list of dict
 
         :return: replicas info with updated dataset name.
@@ -101,10 +105,12 @@ class MonitorLockStatus:
 
     def checkBlockCompleteStatus(self, replicas):
         """
-        check (DBS) block completion status by checking `is_open` metadata of dataset.
-        Only return list of replica info where `is_open` of dataset is `False`.
+        check (DBS) block completion status from `is_open` dataset metadata.
+        Only return list of replica info where `is_open` of the dataset is
+        `False`.
 
-        :param replicas: replica info return from `registerToPublishContainer` method.
+        :param replicas: replica info return from `registerToPublishContainer`
+            method.
         :type replicas: list of dict
 
         :return: list of replicas info with updated `blockcomplete` to `OK`.
@@ -120,14 +126,9 @@ class MonitorLockStatus:
                 datasetsMap[dataset].append(i)
         for k, v in datasetsMap.items():
             metadata = self.rucioClient.get_metadata(self.transfer.rucioScope, k)
-            # TODO: Also close dataset when the task has completed.
-            # FIXME: if we close here, next run will create a new dataset
-            # may be the original idea from Stefano/Diego, to do it in publisher is better
-            #
-            #isOpen6Hours = datetime.datetime.now() > metadata['updated_at'] + datetime.timedelta(seconds=config.args.open_dataset_timeout)
-            #if metadata['is_open'] and isOpen6Hours:
-            #    self.rucioClient.close(self.transfer.rucioScope, k)
-            #    metadata['is_open'] = False
+            # TODO: Also close dataset when (in or)
+            # - the task has completed.
+            # - no new replica/is_open for more than 6 hours
             if not metadata['is_open']:
                 for r in v:
                     item = copy.copy(r)
@@ -140,9 +141,8 @@ class MonitorLockStatus:
         """
         Update OK status transfers info to REST server.
 
-        :param replicas: list of dict contains transferItems's ID and its
-            information.
-        :type replicas: list fts_id to rule ID
+        :param replicas: transferItems's ID and its information.
+        :type replicas: list of dict
         """
         # TODO: may need to refactor later along with rest and publisher part
         num = len(replicas)
@@ -163,12 +163,11 @@ class MonitorLockStatus:
         """
         Update block complete status of replicas to REST server.
 
-        :param replicas: list of dict contains transferItems's ID and its
-            information.
-        :type replicas: list fts_id to rule ID
+        :param replicas: transferItems's ID and its information.
+        :type replicas: list of dict
         """
         # TODO: may need to refactor later along with rest and publisher part
-        # This can be optimize to single REST API call together with updateTransfers sub resources
+        # This can be optimize to single REST API call together with updateTransfers's subresources
         num = len(replicas)
         fileDoc = {
             'asoworker': 'rucio',
