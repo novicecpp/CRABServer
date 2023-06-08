@@ -206,8 +206,6 @@ class PreDAG(object):
             x += f'{k}={v}\n'
         self.logger.info(f'Env: \n{x}')
 
-        self.logger.info(os.environ)
-
         # need to use user proxy as credential for talking with cmsweb
         config.TaskWorker.cmscert = os.environ.get('X509_USER_PROXY')
         config.TaskWorker.cmskey = os.environ.get('X509_USER_PROXY')
