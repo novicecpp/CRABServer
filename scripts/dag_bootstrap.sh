@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# 
+#
 # This script bootstraps the WMCore environment
 #
 # wrap the whole script in {} in order to redirect stdout/err to a file
@@ -35,7 +35,7 @@ then
 	else
 		TARBALL_NAME=TaskManagerRun-$CRAB3_VERSION.tar.gz
 	fi
-    
+
 	if [[ "X$CRAB_TASKMANAGER_TARBALL" != "Xlocal" ]]; then
 		# pass, we'll just use that value
 		echo "Downloading tarball from $CRAB_TASKMANAGER_TARBALL"
@@ -48,7 +48,7 @@ then
 	else
 		echo "Using tarball shipped within condor"
 	fi
-    	
+
 	tar xvfm TaskManagerRun.tar.gz
 	if [[ $? != 0 ]]
 	then
@@ -108,4 +108,4 @@ if [ "X$_CONDOR_JOB_AD" != "X" ]; then
 fi
 echo "Now running the job in `pwd`..."
 exec nice -n 19 python3 -m TaskWorker.TaskManagerBootstrap "$@"
-} 2>&1 | tee dag_bootstrap.out
+} 2>&1 | tee -a dag_bootstrap.out
