@@ -201,6 +201,13 @@ class PreDAG(object):
         with open('taskworkerconfig.pkl', 'rb') as fd:
             config = pickle.load(fd) #Task worker configuration
 
+        x = ''
+        for k,v in os.environ.items():
+            x += f'{k}={v}\n'
+        self.logger.info(f'Env: \n{x}')
+
+        self.logger.info(os.environ)
+
         # need to use user proxy as credential for talking with cmsweb
         config.TaskWorker.cmscert = os.environ.get('X509_USER_PROXY')
         config.TaskWorker.cmskey = os.environ.get('X509_USER_PROXY')
@@ -325,6 +332,7 @@ class PreDAG(object):
     def submitSubdag(subdag, maxidle, maxpost, stage):
         """ Submit a subdag
         """
+
         subprocess.check_call(['condor_submit_dag', '-DoRecov', '-AutoRescue', '0', '-MaxPre', '20', '-MaxIdle', str(maxidle),
                                '-MaxPost', str(maxpost), '-insert_sub_file', 'subdag.ad',
                                '-append', '+Environment = strcat(Environment," _CONDOR_DAGMAN_LOG={0}/{1}.dagman.out")'.format(os.getcwd(), subdag),
