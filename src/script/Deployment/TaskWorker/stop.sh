@@ -4,7 +4,7 @@
 #  this period, TW and all its slaves are killed by sending SIGKILL signal.
 
 checkTimes=12
-timeout=15 #that will give 12*15=180 seconds (3min) for the TW to finish work
+timeout=1 #that will give 12*15=180 seconds (3min) for the TW to finish work
 
 TaskMasterPid=$(ps exfww | grep MasterWorker | grep -v grep | head -1 | awk '{print $1}')
 kill $TaskMasterPid || exit 0
