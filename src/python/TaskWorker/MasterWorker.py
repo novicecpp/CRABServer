@@ -417,7 +417,8 @@ class MasterWorker(object):
         while not self.STOP:
             limit = self.slaves.queueableTasks()
             if not self._lockWork(limit=limit, getstatus='NEW', setstatus='HOLDING'):
-                time.sleep(self.config.TaskWorker.polling)
+                #time.sleep(self.config.TaskWorker.polling)
+                self.betterSleep(self.config.TaskWorker.polling)
                 continue
 
             pendingwork = self.getWork(limit=limit, getstatus='HOLDING')
@@ -454,11 +455,19 @@ class MasterWorker(object):
             self.logger.info(' - acquired tasks: %d', self.slaves.queuedTasks())
             self.logger.info(' - tasks pending in queue: %d', self.slaves.pendingTasks())
 
-            time.sleep(self.config.TaskWorker.polling)
+            #time.sleep(self.config.TaskWorker.polling)
+            self.betterSleep(self.config.TaskWorker.polling)
 
             dummyFinished = self.slaves.checkFinished()
 
         self.logger.debug("Master Worker Exiting Main Cycle.")
+
+    def betterSleep(self, secs):
+        stamp = time.time()
+        while True:
+            time.sleep(0.2)
+            if self.STOP or time.time() - stamp > secs:
+                break
 
 
 if __name__ == '__main__':
