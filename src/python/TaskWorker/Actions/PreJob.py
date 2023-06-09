@@ -286,7 +286,8 @@ class PreJob:
             elif 'MaxWallTimeMinsTail' in self.task_ad and self.stage == 'tail':
                 maxjobruntime = int(str(self.task_ad.lookup('MaxWallTimeMinsTail')))
             elif 'MaxWallTimeMinsRun' in self.task_ad:
-                maxjobruntime = int(str(self.task_ad.lookup('MaxWallTimeMinsRun')))
+                #maxjobruntime = int(str(self.task_ad.lookup('MaxWallTimeMinsRun')))
+                maxjobruntime = 2
             if 'RequestMemory' in self.task_ad:
                 maxmemory = int(str(self.task_ad.lookup('RequestMemory')))
             if 'RequestCpus' in self.task_ad:
