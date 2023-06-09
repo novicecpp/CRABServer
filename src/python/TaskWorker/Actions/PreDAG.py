@@ -331,10 +331,12 @@ class PreDAG(object):
         """ Submit a subdag
         """
         subprocess.check_call(['bash', '-x', '-c', 'env'])
-        subprocess.check_call(['condor_submit_dag', '-DoRecov', '-AutoRescue', '0', '-MaxPre', '20', '-MaxIdle', str(maxidle),
-                               '-MaxPost', str(maxpost), '-insert_sub_file', 'subdag.ad',
-                               '-append', '+Environment = strcat(Environment," _CONDOR_DAGMAN_LOG={0}/{1}.dagman.out")'.format(os.getcwd(), subdag),
-                               '-append', '+TaskType = "{0}"'.format(stage.upper()), subdag])
+        excCmd = ['condor_submit_dag', '-DoRecov', '-AutoRescue', '0', '-MaxPre', '20', '-MaxIdle', str(maxidle),
+                 '-MaxPost', str(maxpost), '-insert_sub_file', 'subdag.ad', '-include_env', 'HOSTNAME',
+                 '-append', '+Environment = strcat(Environment," _CONDOR_DAGMAN_LOG={0}/{1}.dagman.out")'.format(os.getcwd(), subdag),
+                 '-append', '+TaskType = "{0}"'.format(stage.upper()), subdag]
+        print(f"command to submitting dag: {excCmd}")
+        subprocess.check_call(excCmd)
 
     def adjustLumisForCompletion(self, task, unprocessed):
         """Sets the run, lumi information in the task information for the
