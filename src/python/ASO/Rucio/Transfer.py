@@ -44,6 +44,12 @@ class Transfer:
         # map lfn to id
         self.replicaLFN2IDMap = None
 
+        # info from rucio
+        self.replicasInContainer = None
+
+        # map lfn to id
+        self.replicaLFN2IDMap = None
+
     def readInfo(self):
         """
         Read the information from input files using path from configuration.
@@ -61,6 +67,15 @@ class Transfer:
         self.readInfoFromTransferItems()
         self.readContainerRuleID()
         self.readTransferOKReplicas()
+
+    def readInfoFromRucio(self, rucioClient):
+        """
+        Read the information from Rucio.
+
+        :param rucioClient: Rucio client
+        :type rucioClient: rucio.client.client.Client
+        """
+        self.initReplicasInContainer(rucioClient)
 
     def readInfoFromRucio(self, rucioClient):
         """

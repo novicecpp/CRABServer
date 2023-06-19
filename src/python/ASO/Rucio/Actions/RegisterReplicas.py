@@ -7,8 +7,7 @@ from rucio.common.exception import FileAlreadyExists
 
 import ASO.Rucio.config as config
 from ASO.Rucio.exception import RucioTransferException
-from ASO.Rucio.utils import chunks, updateDB, tfcLFN2PFN, LFNToPFNFromPFN
-
+from ASO.Rucio.utils import chunks, uploadToTransfersdb, tfcLFN2PFN, LFNToPFNFromPFN
 
 
 class RegisterReplicas:
@@ -195,6 +194,14 @@ class RegisterReplicas:
         """
         Get source PFN from `rucioClient.lfns2pfns()`.
 
+        The PFN stored in the Temp_RSE is not a general thing, but it is a
+        PFN which can only be used for replicating this file to a specific
+        destination. Given that, current code is clear enough, and forcing a
+        'davs' scheme would not make it any easier to understand.
+
+        All in all, we expect replicas in Temp_RSE to only stay there for one
+        month max.
+
         :param sourceLFN: source LFN
         :type sourceLFN: string
         :param sourceRSE: source RSE where LFN is reside, but it must be normal
@@ -202,7 +209,7 @@ class RegisterReplicas:
             will raise exception in `rucioClient.lfns2pfns()`.
         :type sourceRSE: string
         :param destinationRSE: need for select proper protocol for transfer
-            with `find_machine_scheme()`.
+            with `find_matching_scheme()`.
         :type destinationRSE: string
 
         :returns: PFN return from `lfns2pfns()`
@@ -274,5 +281,6 @@ class RegisterReplicas:
             'list_of_failure_reason': None, # omit
             'list_of_retry_value': None, # omit
             'list_of_fts_id': [self.transfer.containerRuleID]*num,
+            'list_of_fts_id': ['NA']*num,
         }
-        updateDB(self.crabRESTClient, 'filetransfers', 'updateTransfers', fileDoc, self.logger)
+        uploadToTransfersdb(self.crabRESTClient, 'filetransfers', 'updateTransfers', fileDoc, self.logger)
