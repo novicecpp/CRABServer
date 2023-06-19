@@ -33,11 +33,12 @@ class MonitorLockStatus:
         self.updateOKReplicasToREST(publishedReplicas)
 
         # update block complete status
-        replicasToUpdateStatus = self.checkBlockCompleteStatus(publishedReplicas)
-        self.logger.debug(f'Replicas to update block completion: {replicasToUpdateStatus}')
+        replicasToUpdateBlockComplete = self.checkBlockCompleteStatus(publishedReplicas)
+        self.logger.debug(f'Replicas to update block completion: {replicasToUpdateBlockComplete}')
+        self.updateBlockCompleteToREST(replicasToUpdateBlockComplete)
 
         # Bookkeeping published replicas (only replicas with blockcomplete "ok")
-        self.transfer.updateTransferOKReplicas([x['name'] for x in replicasToUpdateStatus])
+        self.transfer.updateTransferOKReplicas([x['name'] for x in replicasToUpdateBlockComplete])
 
     def checkLockStatus(self):
         """
