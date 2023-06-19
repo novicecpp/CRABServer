@@ -2,7 +2,7 @@ import logging
 import copy
 
 import ASO.Rucio.config as config
-from ASO.Rucio.utils import updateDB
+from ASO.Rucio.utils import uploadToTransfersdb
 from ASO.Rucio.Actions.RegisterReplicas import RegisterReplicas
 
 class MonitorLockStatus:
