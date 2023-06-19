@@ -157,7 +157,7 @@ class MonitorLockStatus:
             'list_of_retry_value': None, # omit
             'list_of_fts_id': ['NA']*num,
         }
-        updateDB(self.crabRESTClient, 'filetransfers', 'updateTransfers', fileDoc, self.logger)
+        uploadToTransfersdb(self.crabRESTClient, 'filetransfers', 'updateTransfers', fileDoc, self.logger)
 
     def updateBlockCompleteToREST(self, replicas):
         """
@@ -180,4 +180,4 @@ class MonitorLockStatus:
             'list_of_retry_value': None, # omit
             'list_of_fts_id': ['NA']*num,
         }
-        updateDB(self.crabRESTClient, 'filetransfers', 'updateRucioInfo', fileDoc, self.logger)
+        uploadToTransfersdb(self.crabRESTClient, 'filetransfers', 'updateRucioInfo', fileDoc, self.logger)
