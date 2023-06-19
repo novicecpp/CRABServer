@@ -185,7 +185,7 @@ class RegisterReplicas:
             # check the current number of files in the dataset
             num = len(list(self.rucioClient.list_content(self.transfer.rucioScope, currentDataset)))
             if num >= config.args.max_file_per_dataset:
-                # FIXME: close the last dataset when ALL Postjob has reach timeout.
+                self.logger.info(f'closing dataset: {currentDataset}')
                 self.rucioClient.close(self.transfer.rucioScope, currentDataset)
                 currentDataset = b.getOrCreateDataset(container)
         return containerReplicas
