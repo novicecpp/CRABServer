@@ -67,6 +67,9 @@ class RegisterReplicas:
         bucket = {}
         replicasByRSE = {}
         for xdict in transfers:
+            if xdict["type"] == 'log':
+                self.logger.info(f'Skipping {xdict["source_lfn"]}. Logs file transfer is not implemented.')
+                continue
             # /store/temp are register as `<site>_Temp` in rucio
             rse = f'{xdict["source"]}_Temp'
             if not rse in bucket:
