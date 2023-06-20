@@ -34,8 +34,10 @@ class RegisterReplicas:
         else:
             end = len(self.transfer.transferItems)
         transferGenerator = itertools.islice(self.transfer.transferItems, start, end)
+
         # Prepare
-        preparedReplicasByRSE = self.prepare(transferGenerator)
+        transfersNoLogfiles = self.skipLogTransfers(transferGenerator)
+        preparedReplicasByRSE = self.prepare(transfersNoLogfiles)
         # Add file to rucio by RSE
         successReplicas = self.addFilesToRucio(preparedReplicasByRSE)
         self.logger.debug(f'successReplicas: {successReplicas}')
@@ -45,6 +47,43 @@ class RegisterReplicas:
         self.uploadTransferInfoToREST(successReplicas)
         # After everything is done, bookkeeping LastTransferLine.
         self.transfer.updateLastTransferLine(end)
+
+    def skipLogTransfers(self, transfers):
+        """
+        Temporary solution for filter out logfiles from transferItems when task
+        has `tm_save_logs=T`. Force status logfiles in filetransfersdb to "DONE"
+        (required by PostJob).
+
+        Until we proper implement logs transfers with rucio later.
+
+        :param transfers: iterator of transfers dict
+        :type transfers: list of dict
+
+        :return: new transfers object where logfiles are removed.
+        :rtype: list of dict
+        """
+        newTransfers = []
+        logReplicas = []
+        for xdict in transfers:
+            if xdict["type"] == 'log':
+                self.logger.info(f'Skipping {xdict["source_lfn"]}. Logs file transfer is not implemented.')
+                logReplicas.append(xdict['id'])
+            else:
+                newTransfers.append(xdict)
+        num = len(logReplicas)
+        fileDoc = {
+            'asoworker': 'rucio',
+            'list_of_ids': [x for x in logReplicas],
+            'list_of_transfer_state': ['DONE']*num,
+            'list_of_dbs_blockname': None,
+            'list_of_block_complete': None,
+            'list_of_fts_instance': ['https://fts3-cms.cern.ch:8446/']*num,
+            'list_of_failure_reason': None, # omit
+            'list_of_retry_value': None, # omit
+            'list_of_fts_id': ['NA']*num,
+        }
+        uploadToTransfersdb(self.crabRESTClient, 'filetransfers', 'updateTransfers', fileDoc, self.logger)
+        return newTransfers
 
     def prepare(self, transfers):
         """
@@ -67,9 +106,6 @@ class RegisterReplicas:
         bucket = {}
         replicasByRSE = {}
         for xdict in transfers:
-            if xdict["type"] == 'log':
-                self.logger.info(f'Skipping {xdict["source_lfn"]}. Logs file transfer is not implemented.')
-                continue
             # /store/temp are register as `<site>_Temp` in rucio
             rse = f'{xdict["source"]}_Temp'
             if not rse in bucket:
