@@ -195,9 +195,9 @@ class RegisterReplicas:
                 newReplicas.append(r)
 
         b = BuildDBSDataset(self.transfer, self.rucioClient)
-        currentDataset = b.getOrCreateDataset(container)
-        self.logger.debug(f'currentDataset: {currentDataset}')
         for chunk in chunks(newReplicas, config.args.replicas_chunk_size):
+            currentDataset = b.getOrCreateDataset(container)
+            self.logger.debug(f'currentDataset: {currentDataset}')
             dids = [{
                 'scope': self.transfer.rucioScope,
                 'type': "FILE",
@@ -225,7 +225,6 @@ class RegisterReplicas:
             if num >= config.args.max_file_per_dataset:
                 self.logger.info(f'closing dataset: {currentDataset}')
                 self.rucioClient.close(self.transfer.rucioScope, currentDataset)
-                currentDataset = b.getOrCreateDataset(container)
         return containerReplicas
 
 
