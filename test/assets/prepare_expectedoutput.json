@@ -1,0 +1,28 @@
+{
+    "T2_CH_CERN_Temp": [
+        {
+            "scope": "user.tseethon",
+            "pfn": "davs://eoscms.cern.ch:443/eos/cms/store/temp/user/tseethon.d6830fc3715ee01030105e83b81ff3068df7c8e0/tseethon/test-workflow/GenericTTbar/autotest-1679671056/230324_151740/0000/output_9.root",
+            "name": "/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1679671056/230324_151740/0000/output_9.root",
+            "bytes": 628054,
+            "adler32": "812b8235",
+            "id": "98f353b91ec84f0217da80bde84d6b520c0c6640f60ad9aabb7b20ca"
+        },
+        {
+            "scope": "user.tseethon",
+            "pfn": "davs://eoscms.cern.ch:443/eos/cms/store/temp/user/tseethon.d6830fc3715ee01030105e83b81ff3068df7c8e0/tseethon/test-workflow/GenericTTbar/autotest-1679671056/230324_151740/0000/output_1.root",
+            "name": "/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1679671056/230324_151740/0000/output_1.root",
+            "bytes": 634337,
+            "adler32": "1732cc47",
+            "id": "ba52cec5d5db8ae13a480262e18e2fc24b0757f5a626667c8cdeb429"
+        },
+        {
+            "scope": "user.tseethon",
+            "pfn": "davs://eoscms.cern.ch:443/eos/cms/store/temp/user/tseethon.d6830fc3715ee01030105e83b81ff3068df7c8e0/tseethon/test-workflow/GenericTTbar/autotest-1679671056/230324_151740/0000/output_13.root",
+            "name": "/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1679671056/230324_151740/0000/output_13.root",
+            "bytes": 628979,
+            "adler32": "b939d662",
+            "id": "eb9a71bee4047a3b48494685c76712ff4fb7b0b82e20c05943a0e75a"
+        }
+	]
+}
