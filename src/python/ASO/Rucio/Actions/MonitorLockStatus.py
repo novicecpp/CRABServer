@@ -59,7 +59,7 @@ class MonitorLockStatus:
             # None response from server. It will happen when we run
             # list_replica_locks immediately after register replicas with
             # replicas lock info is not available yet.
-            self.logger.info('Error has raised. Assume there is still no lock info available yet.')
+            self.logger.info('Error was raised. Assume there is still no lock info available yet.')
             listReplicasLocks = []
         replicasInContainer = self.transfer.replicasInContainer[self.transfer.transferContainer]
         for replicaStatus in listReplicasLocks:
@@ -86,7 +86,7 @@ class MonitorLockStatus:
 
     def registerToPublishContainer(self, replicas):
         """
-        Register replicas to the published container. Update the replicas info
+        Register replicas to the publish container. Update the replicas info
         to the new dataset name.
 
         :param replicas: replicas info return from `checkLockStatus` method.
@@ -152,7 +152,7 @@ class MonitorLockStatus:
             'list_of_ids': [x['id'] for x in replicas],
             'list_of_transfer_state': ['DONE']*num,
             'list_of_dbs_blockname': [x['dataset'] for x in replicas],
-            'list_of_block_complete': [x['blockcomplete'] for x in replicas],
+            'list_of_block_complete': None # omit
             'list_of_fts_instance': ['https://fts3-cms.cern.ch:8446/']*num,
             'list_of_failure_reason': None, # omit
             'list_of_retry_value': None, # omit
