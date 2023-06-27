@@ -159,7 +159,7 @@ class MonitorLockStatus:
             'list_of_ids': [x['id'] for x in replicas],
             'list_of_transfer_state': ['DONE']*num,
             'list_of_dbs_blockname': [x['dataset'] for x in replicas],
-            'list_of_block_complete': None # omit
+            'list_of_block_complete': None, # omit
             'list_of_fts_instance': ['https://fts3-cms.cern.ch:8446/']*num,
             'list_of_failure_reason': None, # omit
             'list_of_retry_value': None, # omit
