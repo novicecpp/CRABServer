@@ -192,10 +192,10 @@ class RegisterReplicas:
         newFileDocs = []
 
         # filter out duplicated replicas
-        replicasInContainer = self.transfer.populateLFN2DatasetMap(container)
+        replicasInContainer = self.transfer.populateLFN2DatasetMap(container, self.rucioClient)
         for r in fileDocs:
             if r['name'] in replicasInContainer:
-                c = r.deepcopy()
+                c = copy.deepcopy(r)
                 c['dataset'] = replicasInContainer[r['name']]
                 containerFileDocs.append(c)
             else:

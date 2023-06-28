@@ -56,24 +56,24 @@ class MonitorLockStatus:
             listReplicasLocks = self.rucioClient.list_replica_locks(self.transfer.containerRuleID)
         except TypeError:
             # Current rucio-clients==1.29.10 will raise exception when it get
-            # None from server. It will happen when we run list_replica_locks
-            # immediately after register replicas with replicas lock info is
-            # not available yet.
+            # None from server. It happen when we run list_replica_locks
+            # immediately after register replicas in transfer container which
+            # replicas lock info is not available yet.
             self.logger.info('Error was raised. Assume there is still no lock info available yet.')
             listReplicasLocks = []
-        for replicaStatus in listReplicasLocks:
+        for lock in listReplicasLocks:
             # skip if locks are in transferOKLocks. No need to update status
             # for transfer complete.
-            if replicaStatus['name'] in self.transfer.bookeeppingOKLocks:
+            if lock['name'] in self.transfer.bookkeepingOKLocks:
                 continue
             fileDoc = {
-                'id': self.transfer.replicaLFN2IDMap[replicaStatus['name']],
-                'name': replicaStatus['name'],
+                'id': self.transfer.replicaLFN2IDMap[lock['name']],
+                'name': lock['name'],
                 'dataset': None,
                 'blockcomplete': 'NO',
                 'ruleid': self.transfer.containerRuleID,
             }
-            if replicaStatus['state'] == 'OK':
+            if lock['state'] == 'OK':
                 okFileDocs.append(fileDoc)
             else:
                 notOKFileDocs.append(fileDoc)
@@ -135,7 +135,7 @@ class MonitorLockStatus:
                     newF['blockcomplete'] = 'OK'
                     tmpFileDocs.append(newF)
             elif shouldClose:
-                self.rucioClient.close(dataset)
+                self.rucioClient.close(self.transfer.rucioScope, dataset)
         return tmpFileDocs
 
     def updateRESTFileDocsStateToDone(self, fileDocs):
@@ -157,7 +157,7 @@ class MonitorLockStatus:
             'list_of_fts_instance': ['https://fts3-cms.cern.ch:8446/']*num,
             'list_of_failure_reason': None, # omit
             'list_of_retry_value': None, # omit
-            'list_of_fts_id': ['NA']*num,
+            'list_of_fts_id': [x['ruleid'] for x in fileDocs]*num,
         }
         uploadToTransfersdb(self.crabRESTClient, 'filetransfers', 'updateTransfers', restFileDoc, self.logger)
 
@@ -180,6 +180,6 @@ class MonitorLockStatus:
             'list_of_fts_instance': ['https://fts3-cms.cern.ch:8446/']*num,
             'list_of_failure_reason': None, # omit
             'list_of_retry_value': None, # omit
-            'list_of_fts_id': ['NA']*num,
+            'list_of_fts_id': None,
         }
         uploadToTransfersdb(self.crabRESTClient, 'filetransfers', 'updateRucioInfo', restFileDoc, self.logger)

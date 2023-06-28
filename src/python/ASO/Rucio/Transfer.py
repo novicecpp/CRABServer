@@ -38,15 +38,6 @@ class Transfer:
         self.containerRuleID = ''
         self.bookkeepingOKLocks = None
 
-        # info from rucio
-        self.replicasInContainer = None
-
-        # map lfn to id
-        self.replicaLFN2IDMap = None
-
-        # info from rucio
-        self.replicasInContainer = None
-
         # map lfn to id
         self.replicaLFN2IDMap = None
 
@@ -66,7 +57,7 @@ class Transfer:
         self.readRESTInfo()
         self.readInfoFromTransferItems()
         self.readContainerRuleID()
-        self.readTransferOKReplicas()
+        self.readOKLocks()
 
     def readInfoFromRucio(self, rucioClient):
         """
@@ -75,16 +66,7 @@ class Transfer:
         :param rucioClient: Rucio client
         :type rucioClient: rucio.client.client.Client
         """
-        self.initReplicasInContainer(rucioClient)
-
-    def readInfoFromRucio(self, rucioClient):
-        """
-        Read the information from Rucio.
-
-        :param rucioClient: Rucio client
-        :type rucioClient: rucio.client.client.Client
-        """
-        self.initReplicasInContainer(rucioClient)
+        pass
 
     def readLastTransferLine(self):
         """
@@ -229,20 +211,6 @@ class Transfer:
         with writePath(path) as w:
             for l in self.bookkeepingOKLocks:
                 w.write(f'{l}\n')
-
-    def initReplicasInContainer(self, rucioClient):
-        """
-        Get replicas from transfer and publish container and assign it to
-        self.replicasInContainer as key-value pare of containerName and map of
-        LFN2Dataset.
-
-        :param rucioClient: Rucio Client
-        :type rucioClient: rucio.client.client.Client
-        """
-        replicasInContainer = {}
-        replicasInContainer[self.transferContainer] = self.populateLFN2DatasetMap(self.transferContainer, rucioClient)
-        replicasInContainer[self.publishContainer] = self.populateLFN2DatasetMap(self.publishContainer, rucioClient)
-        self.replicasInContainer = replicasInContainer
 
     def populateLFN2DatasetMap(self, container, rucioClient):
         """
