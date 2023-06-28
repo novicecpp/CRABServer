@@ -62,10 +62,6 @@ class MonitorLockStatus:
             self.logger.info('Error was raised. Assume there is still no lock info available yet.')
             listReplicasLocks = []
         for lock in listReplicasLocks:
-            # skip if locks are in transferOKLocks. No need to update status
-            # for transfer complete.
-            if lock['name'] in self.transfer.bookkeepingOKLocks:
-                continue
             fileDoc = {
                 'id': self.transfer.replicaLFN2IDMap[lock['name']],
                 'name': lock['name'],
@@ -114,6 +110,10 @@ class MonitorLockStatus:
         tmpFileDocs = []
         datasetsMap = {}
         for i in fileDocs:
+            # Skip if locks are in transferOKLocks. No need to update status
+            # for transfer complete.
+            if i['name'] in self.transfer.bookkeepingOKLocks:
+                continue
             datasetName = i['dataset']
             if not datasetName in datasetsMap:
                 datasetsMap[datasetName] = [i]
@@ -128,14 +128,17 @@ class MonitorLockStatus:
             # - no new replica/is_open for more than 6 hours. DONE
             shouldClose = (metadata['updated_at'] + \
                            datetime.timedelta(seconds=config.args.open_dataset_timeout)) \
-                           > datetime.datetime.now()
+                           < datetime.datetime.now()
             if not metadata['is_open']:
                 for f in v:
                     newF = copy.deepcopy(f)
                     newF['blockcomplete'] = 'OK'
                     tmpFileDocs.append(newF)
             elif shouldClose:
+                self.logger.info(f'Closing dataset: {dataset}')
                 self.rucioClient.close(self.transfer.rucioScope, dataset)
+            else:
+                self.logger.info(f'Dataset {dataset} is still open.')
         return tmpFileDocs
 
     def updateRESTFileDocsStateToDone(self, fileDocs):
