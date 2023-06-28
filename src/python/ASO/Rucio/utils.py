@@ -39,9 +39,9 @@ def chunks(l, n=1):
         for i in range(0, len(l), n):
             yield l[i:i + n]
     elif isinstance(l, dict):
-        l = l.items()
+        l = list(l.items())
         for i in range(0, len(l), n):
-            yield list(itertools.islice(l, i, i + n))
+            yield l[i:i + n]
     else:
         while True:
             newList = list(itertools.islice(l, n))
@@ -49,10 +49,6 @@ def chunks(l, n=1):
                 yield newList
             else:
                 break
-x = {'a': 1, 'b':2, 'c':3}
-y = chunks(x,2)
-for i in y:
-    print([k for _, k in i])
 
 def uploadToTransfersdb(client, api, subresource, fileDoc, logger=None):
     """
