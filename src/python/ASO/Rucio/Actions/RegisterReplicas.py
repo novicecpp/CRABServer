@@ -10,7 +10,6 @@ from ASO.Rucio.exception import RucioTransferException
 from ASO.Rucio.utils import chunks, uploadToTransfersdb, tfcLFN2PFN, LFNToPFNFromPFN
 
 
-
 class RegisterReplicas:
     """
     RegisterReplicas action is responsible for registering new files in the temp
@@ -35,8 +34,10 @@ class RegisterReplicas:
         else:
             end = len(self.transfer.transferItems)
         transferGenerator = itertools.islice(self.transfer.transferItems, start, end)
+
         # Prepare
-        preparedReplicasByRSE = self.prepare(transferGenerator)
+        transfersNoLogfiles = self.skipLogTransfers(transferGenerator)
+        preparedReplicasByRSE = self.prepare(transfersNoLogfiles)
         # Add file to rucio by RSE
         successReplicas = self.addFilesToRucio(preparedReplicasByRSE)
         self.logger.debug(f'successReplicas: {successReplicas}')
@@ -46,6 +47,43 @@ class RegisterReplicas:
         self.uploadTransferInfoToREST(successReplicas)
         # After everything is done, bookkeeping LastTransferLine.
         self.transfer.updateLastTransferLine(end)
+
+    def skipLogTransfers(self, transfers):
+        """
+        Temporary solution for filter out logfiles from transferItems when task
+        has `tm_save_logs=T`. Force status logfiles in filetransfersdb to "DONE"
+        (required by PostJob).
+
+        Until we proper implement logs transfers with rucio later.
+
+        :param transfers: iterator of transfers dict
+        :type transfers: list of dict
+
+        :return: new transfers object where logfiles are removed.
+        :rtype: list of dict
+        """
+        newTransfers = []
+        logReplicas = []
+        for xdict in transfers:
+            if xdict["type"] == 'log':
+                self.logger.info(f'Skipping {xdict["source_lfn"]}. Logs file transfer is not implemented.')
+                logReplicas.append(xdict['id'])
+            else:
+                newTransfers.append(xdict)
+        num = len(logReplicas)
+        fileDoc = {
+            'asoworker': 'rucio',
+            'list_of_ids': [x for x in logReplicas],
+            'list_of_transfer_state': ['DONE']*num,
+            'list_of_dbs_blockname': None,
+            'list_of_block_complete': None,
+            'list_of_fts_instance': ['https://fts3-cms.cern.ch:8446/']*num,
+            'list_of_failure_reason': None, # omit
+            'list_of_retry_value': None, # omit
+            'list_of_fts_id': ['NA']*num,
+        }
+        uploadToTransfersdb(self.crabRESTClient, 'filetransfers', 'updateTransfers', fileDoc, self.logger)
+        return newTransfers
 
     def prepare(self, transfers):
         """
@@ -157,9 +195,9 @@ class RegisterReplicas:
                 newReplicas.append(r)
 
         b = BuildDBSDataset(self.transfer, self.rucioClient)
-        currentDataset = b.getOrCreateDataset(container)
-        self.logger.debug(f'currentDataset: {currentDataset}')
         for chunk in chunks(newReplicas, config.args.replicas_chunk_size):
+            currentDataset = b.getOrCreateDataset(container)
+            self.logger.debug(f'currentDataset: {currentDataset}')
             dids = [{
                 'scope': self.transfer.rucioScope,
                 'type': "FILE",
@@ -185,9 +223,8 @@ class RegisterReplicas:
             # check the current number of files in the dataset
             num = len(list(self.rucioClient.list_content(self.transfer.rucioScope, currentDataset)))
             if num >= config.args.max_file_per_dataset:
-                # FIXME: close the last dataset when ALL Postjob has reach timeout.
+                self.logger.info(f'closing dataset: {currentDataset}')
                 self.rucioClient.close(self.transfer.rucioScope, currentDataset)
-                currentDataset = b.getOrCreateDataset(container)
         return containerReplicas
 
 
@@ -228,10 +265,10 @@ class RegisterReplicas:
             sourcePFNMap = self.rucioClient.lfns2pfns(sourceRSE, [did], operation="third_party_copy_read", scheme=srcScheme)
             pfn = sourcePFNMap[did]
             # hardcode fix for DESY temp,
-            if sourceRSE == 'T2_DE_DESY_Temp':
+            if sourceRSE == 'T2_DE_DESY':
                 pfn = pfn.replace('/pnfs/desy.de/cms/tier2/temp', '/pnfs/desy.de/cms/tier2/store/temp')
             # hardcode fix for T2_UK_SGrid_Bristol
-            if sourceRSE == 'T2_UK_SGrid_Bristol_Temp':
+            if sourceRSE == 'T2_UK_SGrid_Bristol':
                 proto = self.rucioClient.get_protocols('T2_UK_SGrid_Bristol_Temp')[0]
                 if proto['scheme'] != 'root':
                     raise RucioTransferException('Expected protocol scheme "root" from T2_UK_SGrid_Bristol_Temp (Temporary hardcoded).')
@@ -276,11 +313,12 @@ class RegisterReplicas:
             'asoworker': 'rucio',
             'list_of_ids': [x['id'] for x in replicas],
             'list_of_transfer_state': ['SUBMITTED']*num,
-            'list_of_dbs_blockname': [x['dataset'] for x in replicas],
+            'list_of_dbs_blockname': None, # omit, will update it in MonitorLockStatus action
             'list_of_block_complete': ['NO']*num,
             'list_of_fts_instance': ['https://fts3-cms.cern.ch:8446/']*num,
             'list_of_failure_reason': None, # omit
             'list_of_retry_value': None, # omit
+            'list_of_fts_id': [self.transfer.containerRuleID]*num,
             'list_of_fts_id': ['NA']*num,
         }
         uploadToTransfersdb(self.crabRESTClient, 'filetransfers', 'updateTransfers', fileDoc, self.logger)

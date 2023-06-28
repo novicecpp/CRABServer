@@ -1,0 +1,18 @@
+[
+    {
+        "scope": "user.tseethon",
+        "name": "/GenericTTbar/tseethon-integrationtest-1/USER#1d729186-e45b-44c0-aed6-03aadc00bdde",
+        "type": "DATASET",
+        "bytes": null,
+        "adler32": null,
+        "md5": null
+    },
+    {
+        "scope": "user.tseethon",
+        "name": "/GenericTTbar/tseethon-integrationtest-1/USER#6ff13359-e597-4159-b550-cb60f644c3f3",
+        "type": "DATASET",
+        "bytes": null,
+        "adler32": null,
+        "md5": null
+    }
+]

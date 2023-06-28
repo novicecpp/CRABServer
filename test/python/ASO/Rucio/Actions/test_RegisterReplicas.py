@@ -26,15 +26,20 @@ def mock_rucioClient():
     with patch('rucio.client.client.Client', autospec=True) as m_rucioClient:
         return m_rucioClient
 
-@pytest.fixture
-def mock_Transfer():
-    username = 'cmscrab'
-    rucioScope = f'user.{username}'
-    publishname = '/TestPrimary/test-dataset/RAW'
-    currentDatasetUUID = 'c9b28b96-5d16-41cd-89af-2678971132c9'
-    currentDataset = f'{publishname}#{currentDatasetUUID}'
-    logsDataset = f'{publishname}#LOG'
-    return Mock(publishname=publishname, currentDataset=currentDataset, rucioScope=rucioScope, logsDataset=logsDataset, currentDatasetUUID=currentDatasetUUID, username=username)
+#@pytest.fixture
+#def mock_BuildDBSDataset():
+#    with patch('ASO.Rucio.Actions.BuildDBSDataset.BuildDBSDataset') as m:
+#        return m
+
+#@pytest.fixture
+#def mock_Transfer():
+#    username = 'cmscrab'
+#    rucioScope = f'user.{username}'
+#    publishname = '/TestPrimary/test-dataset/RAW'
+#    currentDatasetUUID = 'c9b28b96-5d16-41cd-89af-2678971132c9'
+#    currentDataset = f'{publishname}#{currentDatasetUUID}'
+#    logsDataset = f'{publishname}#LOG'
+#    return Mock(publishname=publishname, currentDataset=currentDataset, rucioScope=rucioScope, logsDataset=logsDataset, currentDatasetUUID=currentDatasetUUID, username=username)
 
 @pytest.fixture
 def loadTransferList():
@@ -254,3 +259,93 @@ def test_prepareFailFileDoc(mock_Transfer):
     ]
     r = RegisterReplicas(mock_Transfer, Mock(), Mock())
     assert failFileDoc == r.prepareFailFileDoc(outputFail)
+
+def test_addFilesToRucio(mock_rucioClient):
+    prepareReplicasByRSE = {
+        "T2_CH_CERN_Temp": [
+            {
+                "scope": "user.cmscrab",
+                "pfn": 'davs://eoscms.cern.ch:443/eos/cms/store/temp/user/tseethon.d6830fc3715ee01030105e83b81ff3068df7c8e0/tseethon/test-workflow/GenericTTbar/autotest-1679671056/230324_151740/0000/output_9.root',
+                "name": "/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1679671056/230324_151740/0000/output_9.root",
+                "bytes": 628054,
+                "adler32": "812b8235",
+                "id": "98f353b91ec84f0217da80bde84d6b520c0c6640f60ad9aabb7b20ca",
+            }
+        ]
+    }
+    expectedReturn = []
+
+    config.args = Namespace(replicas_chunk_size=2)
+    r = RegisterReplicas(Mock(), mock_rucioClient, Mock())
+    assert r.addFilesToRucio(prepareReplicasByRSE) == expectedReturn
+    mock_rucioClient.add_replicas.assert_called()
+
+def test_addReplicasToDataset(mock_Transfer, mock_rucioClient):
+    replicas = [
+        {
+            "id": "98f353b91ec84f0217da80bde84d6b520c0c6640f60ad9aabb7b20ca",
+            "name": "/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1679671056/230324_151740/0000/output_9.root",
+        }
+    ]
+    replicasInContainer = {
+        '/TestPrimary/test-dataset_TRANSFER-bc8b2558/USER': {}
+    }
+    expectedOutput = [
+        {
+            "id": "98f353b91ec84f0217da80bde84d6b520c0c6640f60ad9aabb7b20ca",
+            "name": "/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1679671056/230324_151740/0000/output_9.root",
+            "dataset": '/TestPrimary/test-dataset_TRANSFER-bc8b2558/USER#c3800048-d946-45f7-9e83-1f420b4fc32e',
+        }
+    ]
+
+    config.args = Namespace(replicas_chunk_size=2, max_file_per_dataset=10)
+    with patch('ASO.Rucio.Actions.RegisterReplicas.BuildDBSDataset') as mock_BuildDBSDatasetObject:
+        mock_Transfer.replicasInContainer = replicasInContainer
+        mock_BuildDBSDataset = mock_BuildDBSDatasetObject.return_value
+        mock_BuildDBSDataset.getOrCreateDataset.return_value = expectedOutput[0]['dataset']
+        #mock_BuildDBSDataset.generateDatasetName.return_value = '/TestPrimary/test-dataset_TRANSFER-bc8b2558/USER#64aa3d0f-4f53-44df-add1-921e0f54f7c5'
+        r = RegisterReplicas(mock_Transfer, mock_rucioClient, Mock())
+        assert r.addReplicasToDataset(replicas, mock_Transfer.transferContainer) == expectedOutput
+        mock_rucioClient.add_files_to_datasets.assert_called()
+
+
+def test_addReplicasToDataset_with_some_replicas_in_container(mock_Transfer, mock_rucioClient):
+    replicas = [
+        {
+            "id": "98f353b91ec84f0217da80bde84d6b520c0c6640f60ad9aabb7b20ca",
+            "name": "/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1679671056/230324_151740/0000/output_9.root",
+        },
+        {
+            "id": "3536081b9c3562e324a70ae603dd6eab12c690a75159d490d5419970",
+            "name": "/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1679671056/230324_151740/0000/output_10.root",
+        },
+    ]
+    replicasInContainer = {
+        '/TestPrimary/test-dataset_TRANSFER-bc8b2558/USER':
+        {
+            '/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1679671056/230324_151740/0000/output_9.root':
+            '/TestPrimary/test-dataset_TRANSFER-bc8b2558/USER#c3800048-d946-45f7-9e83-1f420b4fc32e'
+        }
+    }
+
+    expectedOutput = [
+        {
+            "id": "98f353b91ec84f0217da80bde84d6b520c0c6640f60ad9aabb7b20ca",
+            "name": "/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1679671056/230324_151740/0000/output_9.root",
+            "dataset": '/TestPrimary/test-dataset_TRANSFER-bc8b2558/USER#c3800048-d946-45f7-9e83-1f420b4fc32e',
+        },
+        {
+            "id": "3536081b9c3562e324a70ae603dd6eab12c690a75159d490d5419970",
+            "name": "/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1679671056/230324_151740/0000/output_10.root",
+            "dataset": '/TestPrimary/test-dataset_TRANSFER-bc8b2558/USER#c3800048-d946-45f7-9e83-1f420b4fc32e',
+        },
+    ]
+    config.args = Namespace(replicas_chunk_size=2, max_file_per_dataset=10)
+    with patch('ASO.Rucio.Actions.RegisterReplicas.BuildDBSDataset') as mock_BuildDBSDatasetObject:
+        mock_Transfer.replicasInContainer = replicasInContainer
+        mock_BuildDBSDataset = mock_BuildDBSDatasetObject.return_value
+        mock_BuildDBSDataset.getOrCreateDataset.return_value = expectedOutput[0]['dataset']
+        #mock_BuildDBSDataset.generateDatasetName.return_value = '/TestPrimary/test-dataset_TRANSFER-bc8b2558/USER#64aa3d0f-4f53-44df-add1-921e0f54f7c5'
+        r = RegisterReplicas(mock_Transfer, mock_rucioClient, Mock())
+        assert r.addReplicasToDataset(replicas, mock_Transfer.transferContainer) == expectedOutput
+        mock_rucioClient.add_files_to_datasets.assert_called()
