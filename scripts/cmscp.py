@@ -13,6 +13,7 @@ import signal
 import logging
 import tarfile
 import traceback
+import subprocess
 
 if os.path.exists("WMCore.zip") and "WMCore.zip" not in sys.path:
     sys.path.append("WMCore.zip")
@@ -314,6 +315,15 @@ def add_output_file_to_job_report(file_name, key = 'addoutput'):
         print(msg)
     else:
         output_file_info['size'] = file_size
+
+    try:
+        output_stdout = subprocess.getoutput('xrdadler32 %s' % (file_name))
+        checksum_adler32 = output_stdout.split()[0]
+        output_file_info['checksums'] = { 'adler32': checksum_adler32 }
+    except Exception:
+        msg = "WARNING: Unable to add output file checksum to job report."
+        print(msg)
+
     is_ok = add_to_job_report([(key, output_file_info)], \
                               ['steps', 'cmsRun', 'output'], 'update')
     if not is_ok:
@@ -449,7 +459,7 @@ def perform_local_stageout(local_stageout_mgr, \
         signal.alarm(0)
     if retval == 0:
         dest_temp_file_name = os.path.split(dest_temp_lfn)[-1]
-        
+
         # If fallback stageout happens, PNN can be different as source
         if 'PNN' in stageout_info:
             print("INFO: PNN is defined in site-local-config. %s changed to %s" % (source_site, stageout_info['PNN']))
