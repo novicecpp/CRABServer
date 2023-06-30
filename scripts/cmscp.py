@@ -319,7 +319,10 @@ def add_output_file_to_job_report(file_name, key = 'addoutput'):
     try:
         output_stdout = subprocess.getoutput('xrdadler32 %s' % (file_name))
         checksum_adler32 = output_stdout.split()[0]
-        output_file_info['checksums'] = { 'adler32': checksum_adler32 }
+        output_file_info['checksums'] = {
+            'adler32': checksum_adler32,
+            'cksum': '00000000', # required for postjob
+        }
     except Exception:
         msg = "WARNING: Unable to add output file checksum to job report."
         print(msg)
