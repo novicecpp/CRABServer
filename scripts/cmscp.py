@@ -28,6 +28,7 @@ import WMCore.Storage.StageOutError as StageOutError
 from WMCore.Storage.Registry import retrieveStageOutImpl
 from WMCore.Algorithms.Alarm import Alarm, alarmHandler
 import WMCore.WMException as WMException
+from Utils.FileTools import calculateChecksums
 
 ## See the explanation of this sentry file in CMSRunAnalysis.py.
 with open('wmcore_initialized', 'w') as fd_wmcore:
@@ -316,16 +317,8 @@ def add_output_file_to_job_report(file_name, key = 'addoutput'):
     else:
         output_file_info['size'] = file_size
 
-    try:
-        output_stdout = subprocess.getoutput('xrdadler32 %s' % (file_name))
-        checksum_adler32 = output_stdout.split()[0]
-        output_file_info['checksums'] = {
-            'adler32': checksum_adler32,
-            'cksum': '00000000', # required for postjob
-        }
-    except Exception:
-        msg = "WARNING: Unable to add output file checksum to job report."
-        print(msg)
+    (adler32, cksum) = calculateChecksums(file_name)
+    output_file_info['checksums'] = {'adler32': adler32, 'cksum': cksum}
 
     is_ok = add_to_job_report([(key, output_file_info)], \
                               ['steps', 'cmsRun', 'output'], 'update')
