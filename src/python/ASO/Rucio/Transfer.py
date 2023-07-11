@@ -143,7 +143,7 @@ class Transfer:
         # outputdataset, raise and exception if output and retry next round.
         info = None
         for t in self.transferItems:
-            if t['type'] == 'output':
+            if t['delayed_publicationflag_update']:
                 info = t
                 break
         if not info:
