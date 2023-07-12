@@ -139,15 +139,15 @@ class Transfer:
         Convert info from first transferItems to this object attribute.
         Need to execute readTransferItems before this method.
         """
-        # Temporary solution to skip log output type whose have `/FakeDataset/*`
-        # outputdataset, raise and exception if output and retry next round.
-        info = None
+
+        info = self.transferItems[0]
+        firstJobID = info['job_id']
         for t in self.transferItems:
+            if t['job_id'] != firstJobID:
+                break
             if t['delayed_publicationflag_update']:
                 info = t
                 break
-        if not info:
-            raise RucioTransferException('No output to transfer yet.')
 
         self.username = info['username']
         self.rucioScope = f'user.{self.username}'
