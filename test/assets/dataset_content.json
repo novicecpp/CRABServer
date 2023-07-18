@@ -1,0 +1,50 @@
+[
+    {
+        "adler32": null,
+        "bytes": null,
+        "md5": null,
+        "name": "/TestPrimary/test-dataset_TRANSFER-bc8b2558/USER#LOGS",
+        "scope": "user.cmscrab",
+        "type": "DATASET"
+    },
+    {
+        "adler32": null,
+        "bytes": null,
+        "md5": null,
+        "name": "/TestPrimary/test-dataset_TRANSFER-bc8b2558/USER#c3800048-d946-45f7-9e83-1f420b4fc32e",
+        "scope": "user.cmscrab",
+        "type": "DATASET"
+    },
+    {
+        "adler32": null,
+        "bytes": null,
+        "md5": null,
+        "name": "/TestPrimary/test-dataset_TRANSFER-bc8b2558/USER#b74d9bde-9a36-4e40-af17-3d614f19d380",
+        "scope": "user.cmscrab",
+        "type": "DATASET"
+    },
+    {
+        "adler32": null,
+        "bytes": null,
+        "md5": null,
+        "name": "/TestPrimary/test-dataset_TRANSFER-bc8b2558/USER#b3b1428c-d1c1-48d6-b61f-546b42010625",
+        "scope": "user.cmscrab",
+        "type": "DATASET"
+    },
+    {
+        "adler32": null,
+        "bytes": null,
+        "md5": null,
+        "name": "/TestPrimary/test-dataset_TRANSFER-bc8b2558/USER#fb16200d-3eb7-46f2-a8e7-c0ba57b383fd",
+        "scope": "user.cmscrab",
+        "type": "DATASET"
+    },
+    {
+        "adler32": null,
+        "bytes": null,
+        "md5": null,
+        "name": "/TestPrimary/test-dataset_TRANSFER-bc8b2558/USER#8377371a-6ee5-4178-9577-d948f414f69a",
+        "scope": "user.cmscrab",
+        "type": "DATASET"
+    }
+]
