@@ -36,16 +36,54 @@ class RegisterReplicas:
         transferGenerator = itertools.islice(self.transfer.transferItems, start, end)
 
         # Prepare
-        preparedReplicasByRSE = self.prepare(transferGenerator)
+        transferItemsWithoutLogfile = self.skipLogTransfers(transferGenerator)
+        preparedReplicasByRSE = self.prepare(transferItemsWithoutLogfile)
         # Add file to rucio by RSE
         successFileDocs = self.addFilesToRucio(preparedReplicasByRSE)
         self.logger.debug(f'successFileDocs: {successFileDocs}')
         # Add replicas to transfer container
-        self.addReplicasToContainer(successFileDocs, self.transfer.transferContainer)
+        transferFileDocs = self.addReplicasToContainer(successFileDocs, self.transfer.transferContainer)
         # Update state of files in REST in FILETRANSFERDB table
-        self.updateRESTFileDocStateToSubmitted(successFileDocs)
+        self.updateRESTFileDocStateToSubmitted(transferFileDocs)
         # After everything is done, bookkeeping LastTransferLine.
         self.transfer.updateLastTransferLine(end)
+
+    def skipLogTransfers(self, transfers):
+        """
+        Temporary solution for filter out logfiles from transferItems when task
+        has `tm_save_logs=T`. Force status logfiles in filetransfersdb to "DONE"
+        (required by PostJob).
+
+        Until we proper implement logs transfers with rucio later.
+
+        :param transfers: iterator of transfers dict
+        :type transfers: list of dict
+
+        :return: new transfers object where logfiles are removed.
+        :rtype: list of dict
+        """
+        newTransfers = []
+        logFileDocs = []
+        for xdict in transfers:
+            if xdict["type"] == 'log':
+                self.logger.info(f'Skipping {xdict["source_lfn"]}. Logs file transfer is not implemented.')
+                logFileDocs.append(xdict['id'])
+            else:
+                newTransfers.append(xdict)
+        num = len(logFileDocs)
+        restFileDoc = {
+            'asoworker': 'rucio',
+            'list_of_ids': [x for x in logFileDocs],
+            'list_of_transfer_state': ['DONE']*num,
+            'list_of_dbs_blockname': None,
+            'list_of_block_complete': None,
+            'list_of_fts_instance': ['https://fts3-cms.cern.ch:8446/']*num,
+            'list_of_failure_reason': None, # omit
+            'list_of_retry_value': None, # omit
+            'list_of_fts_id': ['NA']*num,
+        }
+        uploadToTransfersdb(self.crabRESTClient, 'filetransfers', 'updateTransfers', restFileDoc, self.logger)
+        return newTransfers
 
     def prepare(self, transfers):
         """
@@ -164,9 +202,9 @@ class RegisterReplicas:
                 newFileDocs.append(r)
 
         b = BuildDBSDataset(self.transfer, self.rucioClient)
-        currentDataset = b.getOrCreateDataset(container)
-        self.logger.debug(f'currentDataset: {currentDataset}')
         for chunk in chunks(newFileDocs, config.args.replicas_chunk_size):
+            currentDataset = b.getOrCreateDataset(container)
+            self.logger.debug(f'currentDataset: {currentDataset}')
             dids = [{
                 'scope': self.transfer.rucioScope,
                 'type': "FILE",
@@ -197,8 +235,6 @@ class RegisterReplicas:
             if num >= config.args.max_file_per_dataset:
                 self.logger.info(f'Closing dataset: {currentDataset}')
                 self.rucioClient.close(self.transfer.rucioScope, currentDataset)
-                currentDataset = b.getOrCreateDataset(container)
-                self.logger.debug(f'currentDataset: {currentDataset}')
         return containerFileDocs
 
 

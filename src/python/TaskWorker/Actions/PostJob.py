@@ -96,6 +96,7 @@ import pickle
 import traceback
 import random
 import shutil
+import hashlib
 from shutil import move
 from http.client import HTTPException
 
@@ -821,6 +822,7 @@ class ASOServerJob(object):
                            'publication_state': 'not_published',
                            'publication_retry_count': [],
                            'type': file_type,
+                           'delayed_publicationflag_update' : delayed_publicationflag_update,
                           }
                     ## TODO: We do the following, only because that's what ASO does when a file has
                     ## been successfully transferred. But this modified LFN makes no sence when it
@@ -980,6 +982,8 @@ class ASOServerJob(object):
                 newDoc['destination'] = doc['destination']
             if not 'outputdataset' in newDoc:
                 newDoc['outputdataset'] = doc['outputdataset']
+            if not 'delayed_publicationflag_update' in  newDoc:
+                newDoc['delayed_publicationflag_update'] = doc['delayed_publicationflag_update']
             with open('task_process/transfers.txt', 'a+') as transfers_file:
                 transfer_dump = json.dumps(newDoc)
                 transfers_file.write(transfer_dump+"\n")
@@ -1622,6 +1626,11 @@ class PostJob():
             else:
                 msg = "This post-job corresponds to job with Condor ID %s." % (self.dag_clusterid)
                 self.logger.debug(msg)
+
+        # alter G_FAKE_OUTDATASET
+        taskhash = hashlib.md5(self.reqname.encode()).hexdigest()
+        global G_FAKE_OUTDATASET
+        G_FAKE_OUTDATASET = f'/FakeDataset/fakefile-FakePublish-{taskhash}/USER'
 
         ## Call execute_internal().
         retval = JOB_RETURN_CODES.RECOVERABLE_ERROR

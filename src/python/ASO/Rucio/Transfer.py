@@ -139,7 +139,16 @@ class Transfer:
         Convert info from first transferItems to this object attribute.
         Need to execute readTransferItems before this method.
         """
+
         info = self.transferItems[0]
+        firstJobID = info['job_id']
+        for t in self.transferItems:
+            if t['job_id'] != firstJobID:
+                break
+            if t['delayed_publicationflag_update']:
+                info = t
+                break
+
         self.username = info['username']
         self.rucioScope = f'user.{self.username}'
         self.destination = info['destination']
@@ -192,7 +201,7 @@ class Transfer:
         try:
             with open(path, 'r', encoding='utf-8') as r:
                 self.bookkeepingOKLocks = r.read().splitlines()
-                self.logger.info(f'Got list of "OK" locks from bookkeeping: {self.bookkeepingOKLocks}')
+                self.logger.info(f'Got list of locks "OK" from bookkeeping: {self.bookkeepingOKLocks}')
         except FileNotFoundError:
             self.bookkeepingOKLocks = []
             self.logger.info(f'Bookkeeping path "{path}" does not exist. Assume this is first time it run.')

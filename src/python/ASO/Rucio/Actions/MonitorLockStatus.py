@@ -1,5 +1,6 @@
 import logging
 import copy
+import datetime
 
 import ASO.Rucio.config as config
 from ASO.Rucio.utils import uploadToTransfersdb
@@ -26,8 +27,10 @@ class MonitorLockStatus:
         self.logger.debug(f'okFileDocs: {okFileDocs}')
         self.logger.debug(f'notOKFileDocs: {notOKFileDocs}')
 
+        needToPublishFileDocs = self.filterFilesNeedToPublish(okFileDocs)
+        self.logger.debug(f'needToPublishFileDocs: {needToPublishFileDocs}')
         # Register transfer complete replicas to publish container.
-        publishedFileDocs = self.registerToPublishContainer(okFileDocs)
+        publishedFileDocs = self.registerToPublishContainer(needToPublishFileDocs)
         self.logger.debug(f'publishedFileDocs: {publishedFileDocs}')
         # update fileDoc for ok filedocs
         self.updateRESTFileDocsStateToDone(publishedFileDocs)
@@ -61,10 +64,6 @@ class MonitorLockStatus:
             self.logger.info('Error was raised. Assume there is still no lock info available yet.')
             listReplicasLocks = []
         for lock in listReplicasLocks:
-            # skip if replicas transfer is in transferOKReplicas. No need to
-            # update status for transfer complete.
-            if lock['name'] in self.transfer.transferOKReplicas:
-                continue
             fileDoc = {
                 'id': self.transfer.replicaLFN2IDMap[lock['name']],
                 'name': lock['name'],
@@ -113,6 +112,10 @@ class MonitorLockStatus:
         tmpFileDocs = []
         datasetsMap = {}
         for i in fileDocs:
+            # Skip if locks are in transferOKLocks. No need to update status
+            # for transfer complete.
+            if i['name'] in self.transfer.bookkeepingOKLocks:
+                continue
             datasetName = i['dataset']
             if not datasetName in datasetsMap:
                 datasetsMap[datasetName] = [i]
@@ -122,14 +125,40 @@ class MonitorLockStatus:
             metadata = self.rucioClient.get_metadata(self.transfer.rucioScope, dataset)
             # TODO: Also close dataset when (in or)
             # - the task has completed.
-            # - no new replica/is_open for more than 6 hours
+            #   - We have no indication when task is completed unless it pass as
+            #     args manually from caller scripts (task_proc_wrapper.sh)
+            # - no new replica/is_open for more than 6 hours. DONE
+            shouldClose = (metadata['updated_at'] + \
+                           datetime.timedelta(seconds=config.args.open_dataset_timeout)) \
+                           < datetime.datetime.now()
             if not metadata['is_open']:
-                for r in v:
-                    item = copy.copy(r)
-                    item['blockcomplete'] = 'OK'
-                    tmpFileDocs.append(item)
-
+                for f in v:
+                    newF = copy.deepcopy(f)
+                    newF['blockcomplete'] = 'OK'
+                    tmpFileDocs.append(newF)
+            elif shouldClose:
+                self.logger.info(f'Closing dataset: {dataset}')
+                self.rucioClient.close(self.transfer.rucioScope, dataset)
+            else:
+                self.logger.info(f'Dataset {dataset} is still open.')
         return tmpFileDocs
+
+    def filterFilesNeedToPublish(self, fileDocs):
+        """
+        Return only fileDocs that need to publish by publisher
+
+        :param fileDocs: list of fileDoc
+        :type fileDocs: list of dict
+
+        :return: fileDocs
+        :rtype: list of dict
+        """
+        tmpPublishFileDocs = []
+        for doc in fileDocs:
+            transferItem = self.transfer.LFN2transferItem[doc['name']]
+            if transferItem['delayed_publicationflag_update']:
+                tmpPublishFileDocs.append(doc)
+        return tmpPublishFileDocs
 
     def updateRESTFileDocsStateToDone(self, fileDocs):
         """

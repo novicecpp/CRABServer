@@ -13,6 +13,7 @@ import signal
 import logging
 import tarfile
 import traceback
+import subprocess
 
 if os.path.exists("WMCore.zip") and "WMCore.zip" not in sys.path:
     sys.path.append("WMCore.zip")
@@ -318,6 +319,7 @@ def add_output_file_to_job_report(file_name, key = 'addoutput'):
 
     (adler32, cksum) = calculateChecksums(file_name)
     output_file_info['checksums'] = {'adler32': adler32, 'cksum': cksum}
+
     is_ok = add_to_job_report([(key, output_file_info)], \
                               ['steps', 'cmsRun', 'output'], 'update')
     if not is_ok:
