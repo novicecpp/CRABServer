@@ -27,8 +27,10 @@ class MonitorLockStatus:
         self.logger.debug(f'okFileDocs: {okFileDocs}')
         self.logger.debug(f'notOKFileDocs: {notOKFileDocs}')
 
+        needToPublishFileDocs = self.filterFilesNeedToPublish(okFileDocs)
+        self.logger.debug(f'needToPublishFileDocs: {needToPublishFileDocs}')
         # Register transfer complete replicas to publish container.
-        publishedFileDocs = self.registerToPublishContainer(okFileDocs)
+        publishedFileDocs = self.registerToPublishContainer(needToPublishFileDocs)
         self.logger.debug(f'publishedFileDocs: {publishedFileDocs}')
         # update fileDoc for ok filedocs
         self.updateRESTFileDocsStateToDone(publishedFileDocs)
@@ -140,6 +142,23 @@ class MonitorLockStatus:
             else:
                 self.logger.info(f'Dataset {dataset} is still open.')
         return tmpFileDocs
+
+    def filterFilesNeedToPublish(self, fileDocs):
+        """
+        Return only fileDocs that need to publish by publisher
+
+        :param fileDocs: list of fileDoc
+        :type fileDocs: list of dict
+
+        :return: fileDocs
+        :rtype: list of dict
+        """
+        tmpPublishFileDocs = []
+        for doc in fileDocs:
+            transferItem = self.transfer.LFN2transferItem[doc['name']]
+            if transferItem['delayed_publicationflag_update']:
+                tmpPublishFileDocs.append(doc)
+        return tmpPublishFileDocs
 
     def updateRESTFileDocsStateToDone(self, fileDocs):
         """
