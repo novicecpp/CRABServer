@@ -56,7 +56,7 @@ def main():
     opt.add_argument("--ignore-bookkeeping-block-complete", dest="ignore_bookkeeping_block_complete",
                      action='store_true',
                      help="")
-    opt.add_argument("--open-dataset-timeout", dest="open_dataset_timeout", default=2*60*60, type=int, # 6 hours
+    opt.add_argument("--open-dataset-timeout", dest="open_dataset_timeout", default=1*60*60, type=int, # 1 hours
                      help="Open dataset timeout in seconds")
     opts = opt.parse_args()
 
