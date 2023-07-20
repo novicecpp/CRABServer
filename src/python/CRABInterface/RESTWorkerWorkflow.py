@@ -16,6 +16,7 @@ from CRABInterface.Regexps import (RX_MANYLINES_SHORT, RX_TASKNAME, RX_WORKER_NA
 # external dependecies here
 from ast import literal_eval
 import json
+import pdb
 
 
 class RESTWorkerWorkflow(RESTEntity):

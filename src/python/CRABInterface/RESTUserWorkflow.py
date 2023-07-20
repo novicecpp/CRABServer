@@ -5,6 +5,7 @@
 import re
 import logging
 import cherrypy
+import pdb
 # WMCore dependecies here
 from WMCore.REST.Server import RESTEntity, restcall
 from WMCore.REST.Error import ExecutionError, InvalidParameter

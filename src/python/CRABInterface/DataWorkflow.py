@@ -2,6 +2,7 @@ import copy
 import time
 import logging
 import json
+import pdb
 from ast import literal_eval
 
 ## WMCore dependecies
