@@ -43,7 +43,8 @@ systems = \
                        'ServerUtilities', 'MultiProcessingLog', 'CMSGroupMapper',
                        'RucioUtils', 'cache_status'],
         'python': ['TaskWorker', 'TaskWorker/Actions', 'TaskWorker/DataObjects',
-                   'TaskWorker/Actions/Recurring', 'Publisher', 'TransferInterface', 'ASO']
+                   'TaskWorker/Actions/Recurring', 'Publisher', 'TransferInterface',
+                   'ASO', 'ASO/Rucio', 'ASO/Rucio/Actions']
     },
     'Publisher':
     {
