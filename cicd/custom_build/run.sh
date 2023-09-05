@@ -7,10 +7,10 @@ echo "(DEBUG) crabserver repo: $CRABSERVER_REPO branch: $CRABSERVER_BRANCH"
 echo "(DEBUG) WMCore repo: $WMCORE_REPO branch: $WMCORE_BRANCH"
 
 if [[ -n $CRABSERVER_BASEIMAGE ]]; then
-    echo "FROM $CRABSERVER_BASEIMAGE" > Dockerfile2
-    sed '1,1d' Dockerfile >> Dockerfile2
-    diff -u Dockerfile Dockerfile2 || true # prevent script exit from "set -e"
-    mv Dockerfile2 Dockerfile
+    echo "FROM $CRABSERVER_BASEIMAGE" > crabserver/Dockerfile2
+    sed '1,1d' crabserver/Dockerfile >> crabserver/Dockerfile2
+    diff -u crabserver/Dockerfile crabserver/Dockerfile2 || true # prevent script exit from "set -e"
+    mv crabserver/Dockerfile2 crabserver/Dockerfile
 fi
 
 if [[ -n $CRABTASKWORKER_BASEIMAGE ]]; then
@@ -29,17 +29,19 @@ fi
 set -u
 
 # FIXME: find tag in remote instead clone
-git clone $CRABSERVER_REPO -b $CRABSERVER_BRANCH --depth 1
-git clone $WMCORE_REPO -b $WMCORE_BRANCH --depth 1
-CRABSERVER_HASH=$(cd CRABServer && git rev-parse HEAD | head -c8)
-WMCORE_HASH=$(cd WMCore && git rev-parse HEAD | head -c8)
-CRABSERVER_NAMETAG=registry.cern.ch/cmscrab/crabserver:crabserver_$CRABSERVER_HASH.wmcore_$WMCORE_HASH
-CRABTASKWORKER_NAMETAG=registry.cern.ch/cmscrab/crabtaskworker:crabserver_$CRABSERVER_HASH.wmcore_$WMCORE_HASH
+mkdir latest
+git clone $CRABSERVER_REPO -b $CRABSERVER_BRANCH --depth 1 latest/CRABServer
+git clone $WMCORE_REPO -b $WMCORE_BRANCH --depth 1 latest/WMCore
+CRABSERVER_HASH=$(cd latest/CRABServer && git rev-parse HEAD | head -c8)
+WMCORE_HASH=$(cd latest/WMCore && git rev-parse HEAD | head -c8)
+TAG=crabserver_$CRABSERVER_HASH.wmcore_$WMCORE_HASH
+CRABSERVER_NAMETAG=registry.cern.ch/cmsweb/crabserver:$TAG
+CRABTASKWORKER_NAMETAG=registry.cern.ch/cmscrab/crabtaskworker:$TAG
 echo "(DEBUG) new CRABServer tag: $CRABSERVER_NAMETAG"
 echo "(DEBUG) new TaskWorker tag: $CRABTASKWORKER_NAMETAG"
 
 docker build \
-       -f Dockerfile \
+       -f crabserver/Dockerfile \
        -t $CRABSERVER_NAMETAG \
        .
 
@@ -52,3 +54,7 @@ export DOCKER_CONFIG=$PWD/docker_login
 docker login registry.cern.ch --username $HARBOR_CMSCRAB_USERNAME --password-stdin <<< $HARBOR_CMSCRAB_PASSWORD
 docker push $CRABSERVER_NAMETAG
 docker push $CRABTASKWORKER_NAMETAG
+
+echo "deploy with this command:"
+echo "kubectl set image deployment/crabserver crabserver=registry.cern.ch/cmsweb/crabserver:$TAG"
+echo "ssh crab-dev-tw03 \"sudo -u crab3 bash -c 'cd ~; docker rm -f TaskWorker && ./runContainer.sh -s TaskWorker -v $TAG'\""

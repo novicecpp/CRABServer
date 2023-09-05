@@ -1,9 +1,8 @@
 FROM registry.cern.ch/cmsweb/crabserver:v3.220705
-USER 0
 RUN mkdir /tmp/build
-COPY crabtaskworker/install.sh /tmp/build/install.sh
-COPY CRABServer /tmp/build/CRABServer
-COPY WMCore /tmp/build/WMCore
+COPY --chown=1000:1000 crabtaskworker/install.sh /tmp/build/install.sh
+COPY --chown=1000:1000 latest/CRABServer /tmp/build/CRABServer
+COPY --chown=1000:1000 latest/WMCore /tmp/build/WMCore
 RUN ls -alh . \
     && cd /tmp/build/ \
     && bash install.sh \

@@ -34,5 +34,8 @@ COPY --chown=${USER}:${USER} addGH.sh monitor.sh run.sh ./
 # add GitHub repositories
 RUN ./addGH.sh
 
+#
+COPY --chown=${USER}:${USER} addGH.sh monitor.sh run.sh ./
+
 # run the service
 CMD sh /data/run.sh && sh /data/monitor.sh && while true; do sleep 60;done
