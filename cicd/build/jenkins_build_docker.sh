@@ -23,7 +23,7 @@ export DOCKER_CONFIG=$PWD/docker_login
 
 export CI_CRABSERVER_REPO=${CI_CRABSERVER_REPO:-https://github.com/dmwm/CRABServer.git}
 export CI_CRABSERVER_BRANCH=${CI_CRABSERVER_BRANCH:-master}
-git clone "${CI_CRABTASKWORKER_REPO}" -b "${CI_CRABTASKWORKER_REPO}" CRABServer
+git clone "${CI_CRABSERVER_REPO}" -b "${CI_CRABSERVER_BRANCH}" CRABServer
 cd CRABServer/Docker
 
 #replace where RPMs are stored
