@@ -18,13 +18,13 @@ echo "(DEBUG) jenkin job's env variables:"
 echo "(DEBUG)   \- WORKSPACE: $WORKSPACE"
 echo "(DEBUG) end"
 
-# use docker config on our WORKSPACE area, avoid replace default creds in ~/.docker that many pipeline depend on it
-export DOCKER_CONFIG=$PWD/docker_login
-
 export CI_CRABSERVER_REPO=${CI_CRABSERVER_REPO:-https://github.com/dmwm/CRABServer.git}
 export CI_CRABSERVER_BRANCH=${CI_CRABSERVER_BRANCH:-master}
 git clone "${CI_CRABSERVER_REPO}" -b "${CI_CRABSERVER_BRANCH}" CRABServer
 cd CRABServer/Docker
+
+# use docker config on our WORKSPACE area, avoid replace default creds in ~/.docker that many pipeline depend on it
+export DOCKER_CONFIG=$PWD/docker_login
 
 #replace where RPMs are stored
 sed -i.bak -e "/export REPO=*/c\export REPO=comp.crab_${BRANCH}" install.sh
