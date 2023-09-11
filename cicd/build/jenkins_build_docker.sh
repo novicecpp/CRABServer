@@ -20,7 +20,9 @@ echo "(DEBUG) end"
 export DOCKER_CONFIG=$PWD/docker_login
 
 #build and push crabtaskworker image
-git clone https://github.com/dmwm/CRABServer.git
+#git clone https://github.com/dmwm/CRABServer.git
+git clone https://github.com/novicecpp/CRABServer.git -b crabtaskworker_baseimage_20230427_stable CRABServer-jenkins
+
 cd CRABServer/Docker
 
 #replace where RPMs are stored
