@@ -1,0 +1,46 @@
+#!/usr/bin/env groovy
+
+pipeline {
+    agent { node { label 'cms-dmwm-cc7' } }
+    options {
+        preserveStashes(buildCount: 5)
+    }
+    stages {
+        stage('stage1') {
+            steps {
+                sh '''
+                   #! /bin/bash
+                   printenv | sort
+                   date > 1.txt
+                '''
+                stash includes: '1.txt', name: 'submitted_tasks'
+            }
+        }
+        stage('stage2') {
+            steps {
+                unstash 'submitted_tasks'
+                sh '''
+                    cat 1.txt
+                    exit 1
+                '''
+            }
+        }
+    }
+    post {
+        // Clean after build
+        always {
+            archiveArtifacts(artifacts: '*',
+                             allowEmptyArchive: true,
+                             fingerprint: true,
+                             onlyIfSuccessful: false,
+                             caseSensitive: true,
+                             defaultExcludes: true,
+            )
+            cleanWs(cleanWhenNotBuilt: false,
+                    deleteDirs: true,
+                    disableDeferredWipeout: true,
+                    notFailBuild: true,
+            )
+        }
+    }
+}
