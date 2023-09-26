@@ -1,5 +1,6 @@
+#!/usr/bin/env groovy
 pipeline {
-    agent { label 'docker-build && amd64' }
+    agent { node { label 'docker-build && amd64' } }
 
     stages {
         stage('Build') {
