@@ -1,12 +1,32 @@
 #!/usr/bin/env groovy
+#!/usr/bin/env groovy
 pipeline {
     agent { node { label 'docker-build && amd64' } }
 
     stages {
         stage('Build') {
+            environment {
+                CRAB_REGISTRY_CRED = credentials('robot-cmscrab+jenkins')
+            }
             steps {
+                cleanWs()
+                // We need to explicitly checkout from SCM here
+                //checkout scm
                 echo 'Building..'
-                docker ps -a
+                sh """
+                    export HARBOR_CMSCRAB_USERNAME=${CRAB_REGISTRY_CRED_USR}
+                    export HARBOR_CMSCRAB_PASSWORD=${CRAB_REGISTRY_CRED_PWD}
+                    export HARBOR_CMSWEB_USERNAME=cccc
+                    export HARBOR_CMSWEB_PASSWORD=dddd
+                    export BRANCH=master
+                    export RELEASE_TAG=v3.230921
+                    export RPM_RELEASETAG_HASH=v3.230921-839a45450c3aae116b7f80aa57567361
+                    export IMAGE_TAG=test1111
+                    export CI_CRABSERVER_REPO=https://github.com/dmwm/CRABServer.git
+                    export CI_CRABSERVER_BRANCH=master
+                    git clone --depth 1 https://github.com/dmwm/CRABServer -b master CRABServer-ci
+                    bash CRABServer-ci/cicd/build/jenkins_build_docker.sh
+                """
             }
         }
         stage('Test') {
