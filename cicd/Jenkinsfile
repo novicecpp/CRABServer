@@ -6,7 +6,7 @@ pipeline {
     stages {
         stage('Build') {
             environment {
-                CRAB_REGISTRY_CRED = credentials('robot-cmscrab+jenkins')
+                CRAB_REGISTRY_CRED = credentials('edcd5106-7325-45be-a595-2a769fee0c9c') // robot-cmscrab+jenkins/****** (cmscrab robot account)
             }
             steps {
                 cleanWs()
