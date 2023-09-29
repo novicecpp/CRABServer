@@ -8,7 +8,7 @@ pipeline {
             steps {
                 cleanWs()
                 // We need to explicitly checkout from SCM here
-                //checkout scm
+                checkout scm
             }
         }
         stage('Build') {
@@ -17,6 +17,7 @@ pipeline {
             }
             steps {
                 echo 'Building..'
+                sh "ls -alh"
                 sh """
                     export HARBOR_CMSCRAB_USERNAME=${CRAB_REGISTRY_CRED_USR}
                     export HARBOR_CMSCRAB_PASSWORD=${CRAB_REGISTRY_CRED_PSW}
