@@ -21,13 +21,15 @@ RUN useradd ${USER} \
     && mkdir -p /opt/rucio/etc/
 #USER ${USER}
 
-COPY --chown=1000:1000 src/python/* /data/srv/current/lib/python3.8/site-packages/
+COPY src/python/ /data/srv/current/lib/python3.8/site-packages
+COPY src/script/ /data/srv/current/data/script/
+COPY src/html/ /data/srv/current/data/html/
+COPY src/css/ /data/srv/current/data/css/
 
 RUN req=($(./requirementsParse.py)) \
     && git clone ${req[0]} -b ${req[1]} WMCore \
     && ( cd WMCore; git status )
 RUN mkdir -p \
-    /data/srv/current/lib/python3.8/site-packages/ \
     /data/srv/current/bin \
     && cp -r WMCore/src/python/WMCore /data/srv/current/lib/python3.8/site-packages/ \
     && cp -r WMCore/src/python/Utils /data/srv/current/lib/python3.8/site-packages/ \
@@ -44,6 +46,7 @@ RUN echo "${USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/01-crab3
 COPY cicd/crabserver_pypi/run.sh cicd/crabserver_pypi/manage cicd/crabserver_pypi/entrypoint.sh cicd/crabserver_pypi/env.sh /data/
 COPY --from=tnsnames /etc/tnsnames.ora /etc/tnsnames.ora
 
+RUN chown -R 1000:1000 /data
 WORKDIR ${WDIR}
 USER ${USER}
 CMD /data/run.sh

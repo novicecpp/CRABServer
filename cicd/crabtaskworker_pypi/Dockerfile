@@ -77,4 +77,5 @@ RUN echo "${USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/01-crabserver
 
 WORKDIR ${WDIR}
 USER ${USER}
-CMD /data/run.sh
+
+CMD while true; do sleep 3600;done
