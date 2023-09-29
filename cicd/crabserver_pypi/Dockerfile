@@ -39,7 +39,7 @@ RUN ls /data/srv/current/ \
     && install -d -o ${USER} -g ${USER} /data/srv/current/auth/crabserver \
     && install -d -o ${USER} -g ${USER} /data/srv/current/config/crabserver
 
-RUN echo "${USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/01-crabserver
+RUN echo "${USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/01-crab3
 
 COPY cicd/crabserver_pypi/run.sh cicd/crabserver_pypi/manage cicd/crabserver_pypi/entrypoint.sh cicd/crabserver_pypi/env.sh /data/
 COPY --from=tnsnames /etc/tnsnames.ora /etc/tnsnames.ora

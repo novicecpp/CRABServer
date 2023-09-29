@@ -2,12 +2,9 @@
 
 set -x
 set -e
-BASEDIR=$(cd "$(dirname "$0")"; pwd)
 
 ORIGDIR=$PWD
 STARTDIR=$PWD/runtime
-
-CRAB3_VERSION=${CRAB3_VERSION:-3.3.0-pre1}
 
 WMCOREDIR=$ORIGDIR/WMCore
 pushd $WMCOREDIR
@@ -16,7 +13,7 @@ popd
 #WMCOREVER=${WMCOREVER:-1.1.14.crab1}
 #WMCOREREPO=dmwm
 
-CRABSERVERDIR=$ORIGDIR/CRABServer
+CRABSERVERDIR=$ORIGDIR
 pushd $CRABSERVERDIR
 python3 setup.py build_system -s TaskWorker --skip-docs=d
 popd
@@ -114,7 +111,7 @@ fi
 
 pwd
 echo "Making TaskManagerRun tarball"
-tar zcf $ORIGDIR/TaskManagerRun-$CRAB3_VERSION.tar.gz CRAB3.zip TweakPSet.py CMSRunAnalysis.py task_process ServerUtilities.py RucioUtils.py CMSGroupMapper.py RESTInteractions.py || exit 4
+tar zcf $ORIGDIR/TaskManagerRun.tar.gz CRAB3.zip TweakPSet.py CMSRunAnalysis.py task_process ServerUtilities.py RucioUtils.py CMSGroupMapper.py RESTInteractions.py || exit 4
 echo "Making CMSRunAnalysis tarball"
-tar zcf $ORIGDIR/CMSRunAnalysis-$CRAB3_VERSION.tar.gz WMCore.zip TweakPSet.py CMSRunAnalysis.py ServerUtilities.py CMSGroupMapper.py RESTInteractions.py || exit 4
+tar zcf $ORIGDIR/CMSRunAnalysis.tar.gz WMCore.zip TweakPSet.py CMSRunAnalysis.py ServerUtilities.py CMSGroupMapper.py RESTInteractions.py || exit 4
 popd
