@@ -17,7 +17,7 @@ pipeline {
             }
             steps {
                 echo 'Building..'
-                sh "ls -alh"
+                sh "ls -alh; pwd"
                 sh """
                     export HARBOR_CMSCRAB_USERNAME=${CRAB_REGISTRY_CRED_USR}
                     export HARBOR_CMSCRAB_PASSWORD=${CRAB_REGISTRY_CRED_PSW}
@@ -29,8 +29,8 @@ pipeline {
                     export IMAGE_TAG=test1111
                     export CI_CRABSERVER_REPO=https://github.com/dmwm/CRABServer.git
                     export CI_CRABSERVER_BRANCH=master
-                    git clone --depth 1 https://github.com/dmwm/CRABServer -b master CRABServer-ci
-                    bash CRABServer-ci/cicd/build/jenkins_build_docker.sh
+                    #git clone --depth 1 https://github.com/dmwm/CRABServer -b master CRABServer-ci
+                    #bash CRABServer-ci/cicd/build/jenkins_build_docker.sh
                 """
             }
         }
