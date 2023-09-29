@@ -9,6 +9,9 @@ FROM registry.cern.ch/cmsweb/cmsweb:20230427-stable as tnsnames
 
 FROM registry.cern.ch/cmsweb/wmagent-base:pypi-20230705
 
+ARG WMCORE_TAG
+ARG CRABSERVER_TAG
+
 ENV WDIR=/data
 ENV USER=crab3
 RUN apt-get update && apt-get install -y tini && apt-get clean all
@@ -21,8 +24,8 @@ RUN useradd ${USER} \
     && mkdir -p /opt/rucio/etc/
 #USER ${USER}
 SHELL ["/bin/bash", "-c"]
-RUN curl -Lo WMCore.tar.gz https://github.com/dmwm/WMCore/archive/refs/tags/2.2.3.2.tar.gz \
-    && curl -Lo CRABServer.tar.gz https://github.com/dmwm/CRABServer/archive/refs/tags/v3.230921.tar.gz
+#RUN curl -Lo WMCore.tar.gz https://github.com/dmwm/WMCore/archive/refs/tags/${WMCORE_TAG}.tar.gz \
+#    && curl -Lo CRABServer.tar.gz https://github.com/dmwm/CRABServer/archive/refs/tags/${CRABSERVER_TAG}.tar.gz
 RUN mkdir -p \
     /data/srv/current/lib/python3.8/site-packages/ \
     /build/WMCore \

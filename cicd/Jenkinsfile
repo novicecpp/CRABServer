@@ -2,13 +2,17 @@
 
 pipeline {
     agent { node { label 'docker-build && amd64' } }
-
+    parameters {
+        string(name: 'WMCORE_REPO', defaultValue: 'dmwm', description: '')
+        string(name: 'WMCORE_TAG', defaultValue: '2.2.4rc6', description: '')
+    }
     stages {
-        stage('clean') {
+        stage('clean and checkout') {
             steps {
                 cleanWs()
                 // We need to explicitly checkout from SCM here
                 checkout scm
+                sh "git clone https://github.com/${WMCORE_REPO}/WMCore -b ${WMCORE_TAG} WMCore"
             }
         }
         stage('Build') {
@@ -16,27 +20,14 @@ pipeline {
                 CRAB_REGISTRY_CRED = credentials('edcd5106-7325-45be-a595-2a769fee0c9c') // robot-cmscrab+jenkins/****** (cmscrab robot account)
             }
             steps {
-                echo 'Building..'
                 sh "ls -alh; pwd"
-                sh """
-                    export HARBOR_CMSCRAB_USERNAME=${CRAB_REGISTRY_CRED_USR}
-                    export HARBOR_CMSCRAB_PASSWORD=${CRAB_REGISTRY_CRED_PSW}
-                    export HARBOR_CMSWEB_USERNAME=cccc
-                    export HARBOR_CMSWEB_PASSWORD=dddd
-                    export BRANCH=master
-                    export RELEASE_TAG=v3.230921
-                    export RPM_RELEASETAG_HASH=v3.230921-839a45450c3aae116b7f80aa57567361
-                    export IMAGE_TAG=test1111
-                    export CI_CRABSERVER_REPO=https://github.com/dmwm/CRABServer.git
-                    export CI_CRABSERVER_BRANCH=master
-                    #git clone --depth 1 https://github.com/dmwm/CRABServer -b master CRABServer-ci
-                    #bash CRABServer-ci/cicd/build/jenkins_build_docker.sh
-                """
-            }
-        }
-        stage('Test') {
-            steps {
-                echo 'Testing..'
+                sh '''
+                    set -e
+                    export DOCKER_CONFIG=$PWD/docker_login
+                    docker login registry.cern.ch --username ${CRAB_REGISTRY_CRED_USR} --password-stdin <<< ${CRAB_REGISTRY_CRED_PSW}
+                    docker build -t registry.cern.ch/cmscrab/crabserver:pypi-${BUILD_TAG} cicd/crabserver_pypi
+                    docker push registry.cern.ch/cmscrab/crabserver:pypi-${BUILD_TAG}
+                '''
             }
         }
         stage('Deploy') {
