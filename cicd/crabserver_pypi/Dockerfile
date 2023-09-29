@@ -8,32 +8,27 @@
 FROM registry.cern.ch/cmsweb/cmsweb:20230427-stable as tnsnames
 
 FROM registry.cern.ch/cmsweb/wmagent-base:pypi-20230705
-
-ARG WMCORE_TAG
-ARG CRABSERVER_TAG
-
+SHELL ["/bin/bash", "-c"]
 ENV WDIR=/data
 ENV USER=crab3
 RUN apt-get update && apt-get install -y tini && apt-get clean all
 RUN mkdir /build
 WORKDIR /build
-COPY requirements.txt /build
-RUN pip install -r /build/requirements.txt
+COPY cicd/crabserver_pypi/ .
+RUN pip install -r requirements.txt
 RUN useradd ${USER} \
     && install -o ${USER} -d ${WDIR} \
     && mkdir -p /opt/rucio/etc/
 #USER ${USER}
-SHELL ["/bin/bash", "-c"]
-#RUN curl -Lo WMCore.tar.gz https://github.com/dmwm/WMCore/archive/refs/tags/${WMCORE_TAG}.tar.gz \
-#    && curl -Lo CRABServer.tar.gz https://github.com/dmwm/CRABServer/archive/refs/tags/${CRABSERVER_TAG}.tar.gz
+
+COPY --chown=1000:1000 src/python/* /data/srv/current/lib/python3.8/site-packages/
+
+RUN req=($(./requirementsParse.py)) \
+    && git clone ${req[0]} -b ${req[1]} WMCore \
+    && ( cd WMCore; git status )
 RUN mkdir -p \
     /data/srv/current/lib/python3.8/site-packages/ \
-    /build/WMCore \
-    /build/CRABServer \
     /data/srv/current/bin \
-    && tar -zxf WMCore.tar.gz --strip-components=1 -C WMCore \
-    && tar -zxf CRABServer.tar.gz --strip-components=1 -C CRABServer \
-    && cp -r CRABServer/src/python/* /data/srv/current/lib/python3.8/site-packages/ \
     && cp -r WMCore/src/python/WMCore /data/srv/current/lib/python3.8/site-packages/ \
     && cp -r WMCore/src/python/Utils /data/srv/current/lib/python3.8/site-packages/ \
     && cp WMCore/bin/wmc-httpd /data/srv/current/bin \
@@ -46,7 +41,7 @@ RUN ls /data/srv/current/ \
 
 RUN echo "${USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/01-crabserver
 
-COPY run.sh manage entrypoint.sh env.sh /data/
+COPY cicd/crabserver_pypi/run.sh cicd/crabserver_pypi/manage cicd/crabserver_pypi/entrypoint.sh cicd/crabserver_pypi/env.sh /data/
 COPY --from=tnsnames /etc/tnsnames.ora /etc/tnsnames.ora
 
 WORKDIR ${WDIR}

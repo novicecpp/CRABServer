@@ -2,20 +2,15 @@
 
 pipeline {
     agent { node { label 'docker-build && amd64' } }
-    parameters {
-        string(name: 'WMCORE_REPO', defaultValue: 'dmwm', description: '')
-        string(name: 'WMCORE_TAG', defaultValue: '2.2.4rc6', description: '')
-    }
     stages {
         stage('clean and checkout') {
             steps {
                 cleanWs()
                 // We need to explicitly checkout from SCM here
                 checkout scm
-                sh "git clone https://github.com/${WMCORE_REPO}/WMCore -b ${WMCORE_TAG} WMCore"
             }
         }
-        stage('Build') {
+        stage('Build CRABServer') {
             environment {
                 CRAB_REGISTRY_CRED = credentials('edcd5106-7325-45be-a595-2a769fee0c9c') // robot-cmscrab+jenkins/****** (cmscrab robot account)
             }
