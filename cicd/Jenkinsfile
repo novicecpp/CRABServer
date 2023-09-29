@@ -38,6 +38,7 @@ pipeline {
                 echo 'Deploying....'
             }
         }
+    }
     post {
         // Clean after build
         always {
