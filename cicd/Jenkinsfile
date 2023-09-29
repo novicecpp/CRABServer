@@ -2,6 +2,9 @@
 
 pipeline {
     agent { node { label 'docker-build && amd64' } }
+    options {
+        skipDefaultCheckout(true)
+    }
     stages {
         stage('clean and checkout') {
             steps {
@@ -15,16 +18,18 @@ pipeline {
         }
         stage('Build CRABServer') {
             environment {
-                CRAB_REGISTRY_CRED = credentials('edcd5106-7325-45be-a595-2a769fee0c9c') // robot-cmscrab+jenkins/****** (cmscrab robot account)
+                CMSCRAB_REGISTRY_CRED = credentials('edcd5106-7325-45be-a595-2a769fee0c9c') // robot-cmscrab+jenkins/****** (cmscrab robot account)
+                CRAB_REST_TAG = "pypi-${BUILD_TAG}"
             }
             steps {
                 sh "ls -alh; pwd"
                 sh '''
                     set -e
                     export DOCKER_CONFIG=$PWD/docker_login
-                    docker login registry.cern.ch --username ${CRAB_REGISTRY_CRED_USR} --password-stdin <<< ${CRAB_REGISTRY_CRED_PSW}
-                    docker build -t registry.cern.ch/cmscrab/crabserver:pypi-${BUILD_TAG} -f cicd/crabserver_pypi/Dockerfile .
-                    docker push registry.cern.ch/cmscrab/crabserver:pypi-${BUILD_TAG}
+                    docker login registry.cern.ch --username ${CMSCRAB_REGISTRY_CRED_USR} --password-stdin <<< ${CMSCRAB_REGISTRY_CRED_PSW}
+                    docker build -t registry.cern.ch/cmscrab/crabserver:${CRAB_REST_TAG} -f cicd/crabserver_pypi/Dockerfile .
+                    docker push registry.cern.ch/cmscrab/crabserver:${CRAB_REST_TAG}
+                    docker rmi registry.cern.ch/cmscrab/crabserver:${CRAB_REST_TAG}
                 '''
             }
         }
@@ -32,6 +37,15 @@ pipeline {
             steps {
                 echo 'Deploying....'
             }
+        }
+    post {
+        // Clean after build
+        always {
+            cleanWs(cleanWhenNotBuilt: false,
+                    deleteDirs: true,
+                    disableDeferredWipeout: true,
+                    notFailBuild: true,
+            )
         }
     }
 }
