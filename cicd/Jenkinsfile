@@ -23,7 +23,7 @@ pipeline {
                     set -e
                     export DOCKER_CONFIG=$PWD/docker_login
                     docker login registry.cern.ch --username ${CRAB_REGISTRY_CRED_USR} --password-stdin <<< ${CRAB_REGISTRY_CRED_PSW}
-                    docker build -t registry.cern.ch/cmscrab/crabserver:pypi-${BUILD_TAG} cicd/crabserver_pypi
+                    docker build -t registry.cern.ch/cmscrab/crabserver:pypi-${BUILD_TAG} -f cicd/crabserver_pypi/Dockerfile .
                     docker push registry.cern.ch/cmscrab/crabserver:pypi-${BUILD_TAG}
                 '''
             }
