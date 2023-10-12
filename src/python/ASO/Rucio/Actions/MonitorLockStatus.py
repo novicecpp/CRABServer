@@ -35,7 +35,6 @@ class MonitorLockStatus:
         self.updateRESTFileDocsStateToDone(newDoneFileDocs)
         self.transfer.updateOKLocks([x['name'] for x in newDoneFileDocs])
 
-        # NOTE: See https://github.com/dmwm/CRABServer/issues/7940
         ## Filter only files need to publish
         #needToPublishFileDocs = self.filterFilesNeedToPublish(okFileDocs)
         #self.logger.debug(f'needToPublishFileDocs: {needToPublishFileDocs}')
