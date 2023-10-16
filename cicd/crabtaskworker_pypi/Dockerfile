@@ -31,6 +31,8 @@ RUN pushd /data/miniconda \
     && popd \
     && rm -rf gfal2-util
 
+FROM gitlab-registry.cern.ch/linuxsupport/cc7-base:20231001-1.x86_64 as cern-cc7
+
 FROM registry.cern.ch/cmsweb/wmagent-base:pypi-20230705
 SHELL ["/bin/bash", "-c"]
 #gfal
@@ -76,6 +78,7 @@ RUN req=($(/build/cicd/crabserver_pypi/requirementsParse.py -f /build/cicd/crabs
     && pip install -r req.txt \
     && pip install --no-deps wmcore==${WMCORE_TAG} \
     && pip install python-ldap==3.4.3
+COPY --from=cern-cc7 /etc/openldap /etc/openldap
 
 # install crabserver
 # will replace with pip later
