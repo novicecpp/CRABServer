@@ -5,7 +5,7 @@ printenv
 ssh -o StrictHostKeyChecking=no crab3@${Environment}.cern.ch "docker exec ${Service} bash -c './stop.sh'; \
 docker stop ${Service}; \
 docker rm ${Service}; \
-~/runContainer.sh -r registry.cern.ch/cmscrab -v ${Image} -s ${Service}"
+~/runContainer_pypi.sh -r registry.cern.ch/cmscrab -v ${Image} -s ${Service}"
 
 
 #2. check if ${Service} is running

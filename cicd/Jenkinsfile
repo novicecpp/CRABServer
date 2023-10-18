@@ -63,8 +63,9 @@ pipeline {
                     set -e
                     export Environment=crab-dev-tw03
                     export Service=TaskWorker
-                    export Image=pypi-${BUILD_TAG}
+                    export Image=${IMAGE_TAG}
                     bash cicd/jenkins/deploy_tw.sh
+
                 '''
             }
         }
@@ -73,11 +74,20 @@ pipeline {
     post {
         // Clean after build
         always {
-            cleanWs(cleanWhenNotBuilt: false,
-                    deleteDirs: true,
-                    disableDeferredWipeout: true,
-                    notFailBuild: true,
-            )
+            node('docker-build && amd64') {
+                cleanWs(cleanWhenNotBuilt: false,
+                        deleteDirs: true,
+                        disableDeferredWipeout: true,
+                        notFailBuild: true,
+                )
+            }
+            node('master') {
+                cleanWs(cleanWhenNotBuilt: false,
+                        deleteDirs: true,
+                        disableDeferredWipeout: true,
+                        notFailBuild: true,
+                )
+            }
         }
     }
 }
