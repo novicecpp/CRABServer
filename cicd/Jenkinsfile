@@ -2,35 +2,35 @@
 
 pipeline {
     agent { node { label 'master' } }
-    options {
-        skipDefaultCheckout(true)
-    }
+    //options {
+    //    skipDefaultCheckout(true)
+    //}
     environment {
         IMAGE_TAG = "pypi-${BUILD_TAG}"
         CMSCRAB_REGISTRY_CRED = credentials('edcd5106-7325-45be-a595-2a769fee0c9c') // robot-cmscrab+jenkins/****** (cmscrab robot account)
     }
     stages {
-        stage('clean and checkout built-in node') {
-            steps {
-                cleanWs()
-                // We need to explicitly checkout from SCM here
-                checkout scm
-                sh """
-                    pwd; ls -alh
-                """
-            }
-        }
-        stage('clean and checkout docker node') {
-            agent { node { label 'docker-build && amd64' } }
-            steps {
-                cleanWs()
-                // We need to explicitly checkout from SCM here
-                checkout scm
-                sh """
-                    pwd; ls -alh
-                """
-            }
-        }
+        //stage('clean and checkout built-in node') {
+        //    steps {
+        //        cleanWs()
+        //        // We need to explicitly checkout from SCM here
+        //        checkout scm
+        //        sh """
+        //            pwd; ls -alh
+        //        """
+        //    }
+        //}
+        //stage('clean and checkout docker node') {
+        //    agent { node { label 'docker-build && amd64' } }
+        //    steps {
+        //        cleanWs()
+        //        // We need to explicitly checkout from SCM here
+        //        checkout scm
+        //        sh """
+        //            pwd; ls -alh
+        //        """
+        //    }
+        //}
         stage('Build CRABServer') {
             agent { node { label 'docker-build && amd64' } }
             steps {
@@ -69,6 +69,10 @@ pipeline {
                 '''
             }
         }
+        //stage('') {
+        //    build job: 'freestyler', parameters: [
+        //        string(name: 'param1', value:'test_param'),       string(name:'dummy', value: "${index}")]
+        //}
 
     }
     post {
