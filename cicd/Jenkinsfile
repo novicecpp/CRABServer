@@ -1,7 +1,7 @@
 #!/usr/bin/env groovy
 
 pipeline {
-    agent { node { label 'docker-build && amd64' } }
+    agent { node { label 'master' } }
     options {
         skipDefaultCheckout(true)
     }
@@ -10,7 +10,18 @@ pipeline {
         CMSCRAB_REGISTRY_CRED = credentials('edcd5106-7325-45be-a595-2a769fee0c9c') // robot-cmscrab+jenkins/****** (cmscrab robot account)
     }
     stages {
-        stage('clean and checkout') {
+        stage('clean and checkout built-in node') {
+            steps {
+                cleanWs()
+                // We need to explicitly checkout from SCM here
+                checkout scm
+                sh """
+                    pwd; ls -alh
+                """
+            }
+        }
+        stage('clean and checkout docker node') {
+            agent { node { label 'docker-build && amd64' } }
             steps {
                 cleanWs()
                 // We need to explicitly checkout from SCM here
@@ -21,6 +32,7 @@ pipeline {
             }
         }
         stage('Build CRABServer') {
+            agent { node { label 'docker-build && amd64' } }
             steps {
                 sh '''
                     set -e
@@ -33,6 +45,7 @@ pipeline {
             }
         }
         stage('Build TaskWorker') {
+            agent { node { label 'docker-build && amd64' } }
             steps {
                 sh '''
                     set -e
@@ -41,6 +54,17 @@ pipeline {
                     docker build -t registry.cern.ch/cmscrab/crabtaskworker:${IMAGE_TAG} -f cicd/crabtaskworker_pypi/Dockerfile .
                     docker push registry.cern.ch/cmscrab/crabtaskworker:${IMAGE_TAG}
                     docker rmi registry.cern.ch/cmscrab/crabtaskworker:${IMAGE_TAG}
+                '''
+            }
+        }
+        stage('Deploy to TW machine (crab-dev-tw03)') {
+            steps {
+                sh '''
+                    set -e
+                    export Environment=crab-dev-tw03
+                    export Service=TaskWorker
+                    export Image=pypi-${BUILD_TAG}
+                    bash cicd/jenkins/deploy_tw.sh
                 '''
             }
         }
