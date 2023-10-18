@@ -35,44 +35,34 @@ FROM gitlab-registry.cern.ch/linuxsupport/cc7-base:20231001-1.x86_64 as cern-cc7
 
 FROM registry.cern.ch/cmsweb/wmagent-base:pypi-20230705
 SHELL ["/bin/bash", "-c"]
-#gfal
+ENV USER=crab3
+
+# gfal
 COPY --from=wmcore-gfal /data/miniconda /data/miniconda
-#ENV PATH=$PATH:/data/miniconda/bin
-#ENV PYTHONPATH=/data/miniconda/lib/python3.8/site-packages/
 RUN ln -sf /data/miniconda/bin/gfal-ls /usr/bin/gfal-ls \
     && ln -sf /data/miniconda/bin/gfal-rm /usr/bin/gfal-rm \
     && ln -sf /data/miniconda/bin/gfal-copy /usr/bin/gfal-copy \
     && ln -sf /data/miniconda/bin/gfal-sum /usr/bin/gfal-sum
-##
+
 RUN mkdir /build
 WORKDIR /build
-#RUN apt install -y gfal2 gfal2-plugin-http gfal2-plugin-xrootd
-RUN apt-get update \
-    && apt-get install -y libsasl2-dev python3-dev libldap-dev libssl-dev \
-    && apt-get clean all
 
-ENV WDIR=/data
-ENV USER=crab3
+# install package from os repository
+RUN apt-get update \
+    && apt-get install -y tini libsasl2-dev python3-dev libldap-dev libssl-dev \
+    && apt-get clean all
 
 # add new user and switch to user
 RUN useradd ${USER} \
-    && install -o ${USER} -d ${WDIR} \
+    && install -o ${USER} -d /data \
     && mkdir -p /opt/rucio/etc/
 
-## add needed script (in a different line to avoid full rpm install when they change)
-#COPY --chown=${USER}:${USER} addGH.sh ./
-## add GitHub repositories
-#RUN ./addGH.sh
-#
-## run the service
-#CMD sh /data/run.sh && sh /data/monitor.sh && while true; do sleep 60;done
-
-COPY cicd /build/cicd
+COPY cicd/crabserver_pypi/requirementsParse.py cicd/crabserver_pypi/wmcore_requirements.txt /build
 
 # install dependencies
 COPY --from=wmcore-src /WMCore/requirements.txt requirements.txt
 RUN find /build
-RUN req=($(/build/cicd/crabserver_pypi/requirementsParse.py -f /build/cicd/crabserver_pypi/wmcore_requirements.txt)) \
+RUN req=($(/build/requirementsParse.py -f /build/wmcore_requirements.txt)) \
     && WMCORE_TAG=${req[1]} \
     && cat requirements.txt | grep -v gfal2 > req.txt \
     && pip install -r req.txt \
@@ -97,13 +87,23 @@ RUN cd /data/srv/TaskManager \
 WORKDIR /data/srv/TaskManager
 
 COPY cicd/crabtaskworker_pypi/rucio.cfg /opt/rucio/etc/
-COPY cicd/crabtaskworker_pypi/start.sh /data/srv/TaskManager/
+COPY cicd/crabtaskworker_pypi/start.sh  cicd/crabtaskworker_pypi/run.sh /data/srv/TaskManager/
 
 RUN chown -R 1000:1000 /data
 
+# for debuggin purpose, we should not allow sudo in container
 RUN echo "${USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/01-crab3
 
-WORKDIR ${WDIR}
+## add needed script (in a different line to avoid full rpm install when they change)
+#COPY --chown=${USER}:${USER} addGH.sh ./
+## add GitHub repositories
+#RUN ./addGH.sh
+
+# clean up
+RUN rm -rf /build
+
+WORKDIR /data
 USER ${USER}
 
-CMD while true; do sleep 3600;done
+ENTRYPOINT ["tini", "--"]
+CMD bash

@@ -50,4 +50,4 @@ if [ -f /etc/secrets/CRABServerAuth.py ]; then
 fi
 
 
-exec "$@"
+exec /usr/bin/tini -- "$@"
