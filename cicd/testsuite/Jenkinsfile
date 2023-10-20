@@ -63,6 +63,7 @@ pipeline {
                     bash cicd/testsuite/check_test_result.sh
                 '''
             }
+        }
     }
     post {
         // Clean after build
