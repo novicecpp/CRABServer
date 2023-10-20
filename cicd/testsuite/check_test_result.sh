@@ -1,4 +1,8 @@
 #! /bin/bash
+
+set -x
+set -euo pipefail
+
 #00. check parameters
 echo "(DEBUG) variables from upstream jenkin job:"
 echo "(DEBUG)   \- issueTitle: ${issueTitle}"
@@ -86,7 +90,7 @@ echo -e "**Test:** Task Submission Status Tracking\n\
 
 echo -e "\`\`\`\n`cat result`\n\`\`\`" >> message_TSResult || true
 
-$WORKSPACE/cms-bot/create-gh-issue.py -r $Repo_GH_Issue -t "$issueTitle" -R message_TSResult
+#$WORKSPACE/cms-bot/create-gh-issue.py -r $Repo_GH_Issue -t "$issueTitle" -R message_TSResult
 
 
 if $ERR ; then
