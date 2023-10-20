@@ -50,8 +50,8 @@ pipeline {
                     bash cicd/testsuite/execute_test.sh
 
                 '''
-                stash(name: 'artifacts'
-                      includes: 'artifacts/*'
+                stash(name: 'artifacts',
+                      includes: 'artifacts/*',
                 )
 
             }
