@@ -72,15 +72,16 @@ pipeline {
         }
     }
     post {
+
+
+        // Clean after build
+        always {
             archiveArtifacts(artifacts: 'artifacts/*',
                              allowEmptyArchive: true,
                              fingerprint: true,
                              onlyIfSuccessful: false
             )
 
-
-        // Clean after build
-        always {
             cleanWs(cleanWhenNotBuilt: false,
                     deleteDirs: true,
                     disableDeferredWipeout: true,
