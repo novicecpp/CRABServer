@@ -120,7 +120,6 @@ fi
 cd ${WORK_DIR}
 mv $WORKSPACE/artifacts/* $WORKSPACE/
 
-
 #4. Update issue with submission results
 if $ERR ; then
 	echo -e "Something went wrong during task submission. Find submission log [here](${BUILD_URL}console). None of the downstream jobs were triggered." >> message_taskSubmitted
@@ -137,6 +136,8 @@ fi
 
 sleep 20
 $WORKSPACE/cms-bot/create-gh-issue.py -r $Repo_GH_Issue -t "$issueTitle" -R message_taskSubmitted
+
+cp parameters $WORKSPACE/artifacts
 
 if $ERR ; then
 	exit 1

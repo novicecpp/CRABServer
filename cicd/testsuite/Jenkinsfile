@@ -50,15 +50,21 @@ pipeline {
                     bash cicd/testsuite/execute_test.sh
 
                 '''
+                stash(name: 'artifacts'
+                      includes: 'artifacts/*'
+                )
+
             }
         }
         stage('Check test result') {
             steps {
+                unstash 'artifacts'
                 sh '''
-                    export Repo_GH_Issue=novicecpp/CRABServer
-                    export Repo_Testing_Scripts=dmwm/CRABServer
-                    export Branch_Testing_Scripts=master
-                    export Test_Docker_Image=registry.cern.ch/cmscrab/crabtesting:231009
+                    #export Repo_GH_Issue=novicecpp/CRABServer
+                    #export Repo_Testing_Scripts=dmwm/CRABServer
+                    #export Branch_Testing_Scripts=master
+                    #export Test_Docker_Image=registry.cern.ch/cmscrab/crabtesting:231009
+                    ls -alh artifacts
 
                     bash cicd/testsuite/check_test_result.sh
                 '''
@@ -66,6 +72,13 @@ pipeline {
         }
     }
     post {
+            archiveArtifacts(artifacts: 'artifacts/*',
+                             allowEmptyArchive: true,
+                             fingerprint: true,
+                             onlyIfSuccessful: false
+            )
+
+
         // Clean after build
         always {
             cleanWs(cleanWhenNotBuilt: false,
