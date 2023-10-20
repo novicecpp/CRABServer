@@ -60,6 +60,11 @@ pipeline {
             steps {
                 unstash 'artifacts'
                 sh '''
+                    set -a
+                    . ./artifacts/parameters
+                    set +a
+                '''
+                sh '''
                     #export Repo_GH_Issue=novicecpp/CRABServer
                     #export Repo_Testing_Scripts=dmwm/CRABServer
                     #export Branch_Testing_Scripts=master
