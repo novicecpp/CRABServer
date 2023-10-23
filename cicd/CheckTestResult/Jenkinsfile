@@ -21,7 +21,8 @@ pipeline {
         stage('Check test result') {
             steps {
                 sh '''
-                    tree
+                    #! /bin/bash
+                    ls -alhR
                     printenv | sort
                     bash cicd/CheckTestResult/CheckTestResult.sh
                 '''
