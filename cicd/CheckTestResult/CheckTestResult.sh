@@ -59,6 +59,8 @@ docker run --rm $DOCKER_OPT $DOCKER_VOL $DOCKER_ENV --net=host \
 $Test_Docker_Image -c 	\
 'source setupCRABClient.sh; ./testingScripts/statusTracking.py' || export ERR=true
 
+echo 1111111111111111111111111
+
 
 cd ${WORK_DIR}
 mv $WORKSPACE/artifacts/* $WORKSPACE/
