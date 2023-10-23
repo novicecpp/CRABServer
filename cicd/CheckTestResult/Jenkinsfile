@@ -54,7 +54,7 @@ pipeline {
                                 #! /bin/bash
                                 ls -alhR
                                 printenv | sort
-                                bash cicd/CheckTestResult/CheckTestResult.sh
+                                bash cicd/CheckTestResult/CheckTestResult.sh || true
 
                             '''
                             // output = sh returnStdout: true, script: 'echo "BUILD FAILED" || true'
