@@ -14,7 +14,7 @@ pipeline {
         string(name: 'Repo_GH_Issue', defaultValue: 'novicecpp/CRABServer')
         string(name: 'Repo_Testing_Scripts', defaultValue: 'novicecpp/CRABServer')
         string(name: 'Branch_Testing_Scripts', defaultValue: 'master')
-        string(name: 'Test_Docker_Image', defaultValue: 'registry.cern.ch/cmscrab/crabtesting:220701')
+        string(name: 'Test_Docker_Image', defaultValue: 'registry.cern.ch/cmscrab/crabtesting:231009')
         string(name: 'Manual_Task_Names', defaultValue: '')
 
         // inherit from parent tasks
@@ -50,13 +50,12 @@ pipeline {
 
                             // execute command and capture stdout
                             // Uncomment one of these 3 lines to test different conditions.
-                            output = sh returnStdout: true, script: '''
+                            output = sh returnStdout: true, script: """
                                 #! /bin/bash
                                 ls -alhR
                                 printenv | sort
-                                bash cicd/CheckTestResult/CheckTestResult.sh || true
-
-                            '''
+                                echo 'FULL-STATUS-UNKNOWN' || true
+                            """
                             // output = sh returnStdout: true, script: 'echo "BUILD FAILED" || true'
                             // output = sh returnStdout: true, script: 'echo "something else happened" || true'
 
@@ -76,7 +75,7 @@ pipeline {
                                     error "Retried $count times. Giving up..."
                                 }
                                 // wait a bit before retrying
-                                sleep time: 5, unit: 'MINUTES'
+                                sleep time: 1, unit: 'MINUTES'
                                 return false    // repeat loop
                             } else {
                                 // throw an error (exits pipeline)
