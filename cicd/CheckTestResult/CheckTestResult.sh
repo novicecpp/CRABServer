@@ -59,6 +59,7 @@ docker run --rm $DOCKER_OPT $DOCKER_VOL $DOCKER_ENV --net=host \
 $Test_Docker_Image -c 	\
 'source setupCRABClient.sh; ./testingScripts/statusTracking.py' || export ERR=true
 
+set -x # test
 echo 1111111111111111111111111
 
 
