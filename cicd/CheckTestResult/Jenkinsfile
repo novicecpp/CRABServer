@@ -1,0 +1,41 @@
+#!/usr/bin/env groovy
+
+pipeline {
+    agent { node { label 'cms-dmwm-cc7' } }
+    //options {
+    //    skipDefaultCheckout(true)
+    //}
+    //environment {
+    //    IMAGE_TAG = "pypi-${BUILD_TAG}"
+    //    CMSCRAB_REGISTRY_CRED = credentials('edcd5106-7325-45be-a595-2a769fee0c9c') // robot-cmscrab+jenkins/****** (cmscrab robot account)
+    //}
+    parameters {
+        string(name: 'issueTitle')
+        string(name: 'Repo_GH_Issue', defaultValue: 'novicecpp/CRABServer')
+        string(name: 'Repo_Testing_Scripts', defaultValue: 'novicecpp/CRABServer')
+        string(name: 'Branch_Testing_Scripts', defaultValue: 'master')
+        string(name: 'Test_Docker_Image', defaultValue: 'registry.cern.ch/cmscrab/crabtesting:220701')
+        string(name: 'Manual_Task_Names', defaultValue: '')
+    }
+    stages {
+        stage('Check test result') {
+            steps {
+                sh '''
+                    tree
+                    printenv | sort
+                    bash cicd/CheckTestResult/CheckTestResult.sh
+                '''
+            }
+        }
+    }
+    post {
+        // Clean after build
+        always {
+            cleanWs(cleanWhenNotBuilt: false,
+                    deleteDirs: true,
+                    disableDeferredWipeout: true,
+                    notFailBuild: true,
+            )
+        }
+    }
+}
