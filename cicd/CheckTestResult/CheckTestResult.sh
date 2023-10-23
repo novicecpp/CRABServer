@@ -1,7 +1,7 @@
 #! /bin/bash
 
 set -x
-set -euo pipefail
+#set -euo pipefail
 
 #00. check parameters
 echo "(DEBUG) variables from upstream jenkin job:"
