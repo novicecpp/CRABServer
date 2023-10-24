@@ -56,7 +56,7 @@ pipeline {
                                     string(name: 'Repo_Testing_Scripts', value: 'novicecpp/CRABServer'),
                                     string(name: 'Branch_Testing_Scripts', value: 'master'),
                                     string(name: 'Test_Docker_Image', value: 'registry.cern.ch/cmscrab/crabtesting:231009'),
-                                    string(name: 'Manual_Task_Names', value: ''),
+                                    string(name: 'Manual_Task_Names', value: params.Manual_Task_Names),
                                     string(name: 'CRABClient_version', value: 'prod'),
                                     string(name: 'CRABServer_tag', value: 'HEAD'),
                                     string(name: 'REST_Instance', value: 'preprod'),
