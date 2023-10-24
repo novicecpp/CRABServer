@@ -67,7 +67,7 @@ pipeline {
                                     string(name: 'RETRY', value: retry_next.toString()),
                                     string(name: 'RETRY_MAX', value: '3'),
                                 ],
-                                quietPeriod: 10,
+                                quietPeriod: 60,
                                 waitForStart: false,
                             )
                             error 'retry triggered.'
