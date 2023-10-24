@@ -37,7 +37,8 @@ pipeline {
                         exit 1
                     '''
                 } catch (err) {
-                    build wait: false, job: 'tseethon_CRAB_CheckTestResult/wmcore_pypi', parameters: [string(name: 'issueTitle', value: ''), string(name: 'Repo_GH_Issue', value: 'novicecpp/CRABServer'), string(name: 'Repo_Testing_Scripts', value: 'novicecpp/CRABServer'), string(name: 'Branch_Testing_Scripts', value: 'master'), string(name: 'Test_Docker_Image', value: 'registry.cern.ch/cmscrab/crabtesting:231009'), string(name: 'Manual_Task_Names', value: ''), string(name: 'CRABClient_version', value: 'prod'), string(name: 'CRABServer_tag', value: 'HEAD'), string(name: 'REST_Instance', value: 'preprod'), string(name: 'CMSSW_release', value: 'CMSSW_13_0_2'), booleanParam(name: 'Task_Submission_Status_Tracking', value: true), booleanParam(name: 'Check_Publication_Status', value: true)], waitForStart: true
+                    echo '555555555555 trigger self'
+                    build wait: false, job: 'tseethon_Test_Jenkinsfile/configure', parameters: [string(name: 'issueTitle', value: ''), string(name: 'Repo_GH_Issue', value: 'novicecpp/CRABServer'), string(name: 'Repo_Testing_Scripts', value: 'novicecpp/CRABServer'), string(name: 'Branch_Testing_Scripts', value: 'master'), string(name: 'Test_Docker_Image', value: 'registry.cern.ch/cmscrab/crabtesting:231009'), string(name: 'Manual_Task_Names', value: ''), string(name: 'CRABClient_version', value: 'prod'), string(name: 'CRABServer_tag', value: 'HEAD'), string(name: 'REST_Instance', value: 'preprod'), string(name: 'CMSSW_release', value: 'CMSSW_13_0_2'), booleanParam(name: 'Task_Submission_Status_Tracking', value: true), booleanParam(name: 'Check_Publication_Status', value: true)], waitForStart: true
                 }
             }
         }
