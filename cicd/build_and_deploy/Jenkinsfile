@@ -64,7 +64,7 @@ pipeline {
                     export Environment=crab-dev-tw03
                     export Service=TaskWorker
                     export Image=${IMAGE_TAG}
-                    bash cicd/jenkins/deploy_tw.sh
+                    bash -x cicd/jenkins/deploy_tw.sh
 
                 '''
             }
