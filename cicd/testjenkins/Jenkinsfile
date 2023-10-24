@@ -51,7 +51,8 @@ pipeline {
                              string(name: 'REST_Instance', value: 'preprod'),
                              string(name: 'RETRY', value: retry_next.toString()),
                              string(name: 'RETRY_MAX', value: '3'),],
-                             waitForStart: false
+                             waitForStart: false,
+                             quietPeriod: 10,
                             error 'retry triggered.'
                         }
                     }
