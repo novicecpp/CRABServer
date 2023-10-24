@@ -74,6 +74,7 @@ pipeline {
             steps {
                 sh '''
                     set -e
+                    printenv | sort
 
                     export CRABClient_version=prod
                     export CRABServer_tag=HEAD
@@ -86,7 +87,7 @@ pipeline {
                     export Branch_Testing_Scripts=master
                     export Test_Docker_Image=registry.cern.ch/cmscrab/crabtesting:231009
 
-                    bash cicd/testsuite/execute_test.sh
+                    bash -x cicd/testsuite/execute_test.sh
                 '''
             }
         }
