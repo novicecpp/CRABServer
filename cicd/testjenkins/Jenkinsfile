@@ -43,7 +43,7 @@ pipeline {
                         int retry = params.RETRY.toInteger()
                         int retry_max = params.RETRY.toInteger()
                         int retry_next = retry + 1
-                        if retry >= retry_max {
+                        if (retry >= retry_max) {
                             error 'Error. Give up.'
                         } else {
                             echo '555555555555 trigger self'
