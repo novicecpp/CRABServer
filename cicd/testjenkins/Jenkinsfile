@@ -1,0 +1,62 @@
+#!/usr/bin/env groovy
+
+pipeline {
+    agent { node { label 'cms-dmwm-cc7' } }
+    //options {
+    //    skipDefaultCheckout(true)
+    //}
+    //environment {
+    //    IMAGE_TAG = "pypi-${BUILD_TAG}"
+    //    CMSCRAB_REGISTRY_CRED = credentials('edcd5106-7325-45be-a595-2a769fee0c9c') // robot-cmscrab+jenkins/****** (cmscrab robot account)
+    //}
+    parameters {
+        string(name: 'issueTitle')
+        string(name: 'Repo_GH_Issue', defaultValue: 'novicecpp/CRABServer')
+        string(name: 'Repo_Testing_Scripts', defaultValue: 'novicecpp/CRABServer')
+        string(name: 'Branch_Testing_Scripts', defaultValue: 'master')
+        string(name: 'Test_Docker_Image', defaultValue: 'registry.cern.ch/cmscrab/crabtesting:231009')
+        string(name: 'Manual_Task_Names', defaultValue: '')
+
+        // inherit from parent tasks
+        string(name: 'CRABClient_version', defaultValue: 'prod')
+        string(name: 'CRABServer_tag', defaultValue: 'HEAD')
+        string(name: 'REST_Instance', defaultValue: 'preprod')
+        choice(name: 'CMSSW_release',
+               choices: ['CMSSW_13_0_2', 'CMSSW_10_6_26'])
+        booleanParam(name: 'Task_Submission_Status_Tracking', defaultValue: true)
+        booleanParam(name: 'Check_Publication_Status', defaultValue: true)
+    }
+    stages {
+        stage('Check test result') {
+            steps {
+                try {
+                    sh '''
+                        #! /bin/bash
+                        ls -alhR
+                        printenv | sort
+                        exit 1
+                    '''
+                } catch (err) {
+                    build wait: false, job: 'tseethon_CRAB_CheckTestResult/wmcore_pypi', parameters: [string(name: 'issueTitle', value: ''), string(name: 'Repo_GH_Issue', value: 'novicecpp/CRABServer'), string(name: 'Repo_Testing_Scripts', value: 'novicecpp/CRABServer'), string(name: 'Branch_Testing_Scripts', value: 'master'), string(name: 'Test_Docker_Image', value: 'registry.cern.ch/cmscrab/crabtesting:231009'), string(name: 'Manual_Task_Names', value: ''), string(name: 'CRABClient_version', value: 'prod'), string(name: 'CRABServer_tag', value: 'HEAD'), string(name: 'REST_Instance', value: 'preprod'), string(name: 'CMSSW_release', value: 'CMSSW_13_0_2'), booleanParam(name: 'Task_Submission_Status_Tracking', value: true), booleanParam(name: 'Check_Publication_Status', value: true)], waitForStart: true
+                }
+            }
+        }
+    }
+    post {
+        // Clean after build
+        always {
+            archiveArtifacts(artifacts: '*',
+                             allowEmptyArchive: true,
+                             fingerprint: true,
+                             onlyIfSuccessful: false,
+                             caseSensitive: true,
+                             defaultExcludes: true,
+            )
+            cleanWs(cleanWhenNotBuilt: false,
+                    deleteDirs: true,
+                    disableDeferredWipeout: true,
+                    notFailBuild: true,
+            )
+        }
+    }
+}
