@@ -54,7 +54,7 @@ pipeline {
                                 parameters: [
                                     string(name: 'issueTitle', value: params.issueTitle),
                                     string(name: 'Repo_GH_Issue', value: params.Repo_GH_Issue),
-                                    string(name: 'Repo_Testing_Scripts', value: params.epo_Testing_Scripts),
+                                    string(name: 'Repo_Testing_Scripts', value: params.Repo_Testing_Scripts),
                                     string(name: 'Branch_Testing_Scripts', value: params.Branch_Testing_Scripts),
                                     string(name: 'Test_Docker_Image', value: params.Test_Docker_Image),
                                     string(name: 'Manual_Task_Names', value: params.Manual_Task_Names),
