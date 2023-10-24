@@ -70,6 +70,7 @@ pipeline {
             }
         }
         stage('Execute Tests') {
+            agent { node { label 'cms-dmwm-cc7' } }
             steps {
                 sh '''
                     set -e
@@ -86,11 +87,11 @@ pipeline {
                     export Test_Docker_Image=registry.cern.ch/cmscrab/crabtesting:231009
 
                     bash cicd/testsuite/execute_test.sh
-
                 '''
             }
         }
         stage('Trigger Checktest jobs') {
+            agent { node { label 'cms-dmwm-cc7' } }
             steps {
                 build(
                     wait: false,
@@ -134,6 +135,13 @@ pipeline {
                 )
             }
             node('master') {
+                cleanWs(cleanWhenNotBuilt: false,
+                        deleteDirs: true,
+                        disableDeferredWipeout: true,
+                        notFailBuild: true,
+                )
+            }
+            node('cms-dmwm-cc7') {
                 cleanWs(cleanWhenNotBuilt: false,
                         deleteDirs: true,
                         disableDeferredWipeout: true,
