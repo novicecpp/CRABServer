@@ -59,15 +59,15 @@ docker run --rm $DOCKER_OPT $DOCKER_VOL $DOCKER_ENV --net=host \
 $Test_Docker_Image -c 	\
 'source setupCRABClient.sh; ./testingScripts/statusTracking.py' || export ERR=true
 
-set -x # test
-echo 1111111111111111111111111
-
-
 cd ${WORK_DIR}
 mv $WORKSPACE/artifacts/* $WORKSPACE/
 
-export RETRY=${NAGINATOR_COUNT:-0}
-export MAX_RETRY=${NAGINATOR_MAXCOUNT:-4}
+#export RETRY=${NAGINATOR_COUNT:-0}
+#export MAX_RETRY=${NAGINATOR_MAXCOUNT:-4}
+
+export RETRY=${RETRY:-0}
+export MAX_RETRY=${MAX_RETRY:-4}
+
 
 #3. Update issue with submission results
 TEST_RESULT='FAILED'
