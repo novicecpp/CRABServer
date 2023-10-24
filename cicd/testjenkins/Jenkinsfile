@@ -35,7 +35,6 @@ pipeline {
                     try {
                         sh '''
                             #! /bin/bash
-                            ls -alhR
                             printenv | sort
                             exit 1
                         '''
@@ -43,6 +42,7 @@ pipeline {
                         int retry = params.RETRY.toInteger()
                         int retry_max = params.RETRY.toInteger()
                         int retry_next = retry + 1
+                        echo "retry ${retry} ${retry_max} ${retry_next}"
                         if (retry >= retry_max) {
                             error 'Error. Give up.'
                         } else {
@@ -52,6 +52,7 @@ pipeline {
                              string(name: 'RETRY', value: retry_next.toString()),
                              string(name: 'RETRY_MAX', value: '3'),],
                              waitForStart: false
+                            error 'retry triggered.'
                         }
                     }
                 }
