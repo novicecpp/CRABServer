@@ -30,6 +30,6 @@ fi
 echo -e "\nRunning containers: " >> $WORKSPACE/logFile.txt
 ssh -o StrictHostKeyChecking=no crab3@${Environment}.cern.ch  "docker ps" >> $WORKSPACE/logFile.txt
 
-if $ERR ; then
+if [[ "${ERR}" == "true" ]] ; then
 	exit 1
 fi
