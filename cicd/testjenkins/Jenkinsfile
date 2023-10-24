@@ -40,7 +40,7 @@ pipeline {
                         '''
                     } catch (err) {
                         int retry = params.RETRY.toInteger()
-                        int retry_max = params.RETRY.toInteger()
+                        int retry_max = params.RETRY_MAX.toInteger()
                         int retry_next = retry + 1
                         echo "retry ${retry} ${retry_max} ${retry_next}"
                         if (retry >= retry_max) {
