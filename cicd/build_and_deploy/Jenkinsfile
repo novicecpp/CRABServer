@@ -119,6 +119,13 @@ pipeline {
     post {
         // Clean after build
         always {
+            archiveArtifacts(artifacts: '*',
+                             allowEmptyArchive: true,
+                             fingerprint: true,
+                             onlyIfSuccessful: false,
+                             caseSensitive: true,
+                             defaultExcludes: true,
+            )
             node('docker-build && amd64') {
                 cleanWs(cleanWhenNotBuilt: false,
                         deleteDirs: true,
