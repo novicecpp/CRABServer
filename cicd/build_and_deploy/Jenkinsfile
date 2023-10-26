@@ -95,7 +95,7 @@ pipeline {
             agent { node { label 'cms-dmwm-cc7' } }
             steps {
                 build(
-                    wait: false,
+                    wait: true,
                     job:  "tseethon_CRAB_CheckTestResult/${env.BRANCH_NAME}",
                     parameters: [
                         string(name: 'issueTitle', value: "#${env.BUILD_NUMBER}: test new automated pipeline"),
