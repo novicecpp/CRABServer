@@ -89,6 +89,7 @@ pipeline {
 
                     bash -x cicd/testsuite/execute_test.sh
                 '''
+                stash includes: 'submitted_tasks*', name: 'submitted_tasks'
             }
         }
         //stage('Trigger Checktest jobs') {
@@ -120,6 +121,7 @@ pipeline {
 
         stage('Checktest') {
             agent { node { label 'cms-dmwm-cc7' } }
+            unstash 'submitted_tasks'
             steps {
                 retry(5) {
                 sh '''
