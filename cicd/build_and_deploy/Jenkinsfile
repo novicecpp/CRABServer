@@ -144,7 +144,7 @@ pipeline {
                              fingerprint: true,
                              onlyIfSuccessful: false,
                              caseSensitive: true,
-                             defaultExcludes: true,
+                             defaultExcludes: false,
             )
             node('docker-build && amd64') {
                 cleanWs(cleanWhenNotBuilt: false,
