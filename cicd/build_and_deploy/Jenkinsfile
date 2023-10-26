@@ -6,7 +6,7 @@ pipeline {
     //    skipDefaultCheckout(true)
     //}
     environment {
-        IMAGE_TAG = "pypi-${BUILD_TAG}"
+        IMAGE_TAG = "pypi-${GIT_COMMIT}"
         CMSCRAB_REGISTRY_CRED = credentials('edcd5106-7325-45be-a595-2a769fee0c9c') // robot-cmscrab+jenkins/****** (cmscrab robot account)
     }
     stages {
