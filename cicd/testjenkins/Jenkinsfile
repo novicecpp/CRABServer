@@ -2,78 +2,27 @@
 
 pipeline {
     agent { node { label 'cms-dmwm-cc7' } }
-    //options {
-    //    skipDefaultCheckout(true)
-    //}
-    //environment {
-    //    IMAGE_TAG = "pypi-${BUILD_TAG}"
-    //    CMSCRAB_REGISTRY_CRED = credentials('edcd5106-7325-45be-a595-2a769fee0c9c') // robot-cmscrab+jenkins/****** (cmscrab robot account)
-    //}
-    parameters {
-        string(name: 'issueTitle')
-        string(name: 'Repo_GH_Issue', defaultValue: 'novicecpp/CRABServer')
-        string(name: 'Repo_Testing_Scripts', defaultValue: 'novicecpp/CRABServer')
-        string(name: 'Branch_Testing_Scripts', defaultValue: 'master')
-        string(name: 'Test_Docker_Image', defaultValue: 'registry.cern.ch/cmscrab/crabtesting:231009')
-        string(name: 'Manual_Task_Names', defaultValue: '')
-
-        // inherit from parent tasks
-        string(name: 'CRABClient_version', defaultValue: 'prod')
-        string(name: 'CRABServer_tag', defaultValue: 'HEAD')
-        string(name: 'REST_Instance', defaultValue: 'preprod')
-        choice(name: 'CMSSW_release',
-               choices: ['CMSSW_13_0_2', 'CMSSW_10_6_26'])
-        booleanParam(name: 'Task_Submission_Status_Tracking', defaultValue: true)
-        booleanParam(name: 'Check_Publication_Status', defaultValue: true)
-        string(name: 'RETRY', defaultValue: '1')
-        string(name: 'RETRY_MAX', defaultValue: '3')
+    options {
+        preserveStashes(buildCount: 5)
     }
     stages {
-        stage('Check test result') {
+        stage('stage1') {
             steps {
-                script {
-                    try {
-                        sh '''
-                            #! /bin/bash
-                            printenv | sort
-                            exit 1
-                        '''
-                    } catch (err) {
-                        int retry = params.RETRY.toInteger()
-                        int retry_max = params.RETRY_MAX.toInteger()
-                        int retry_next = retry + 1
-                        echo "retry ${retry} ${retry_max} ${retry_next}"
-                        if (retry >= retry_max) {
-                            error 'Error. Give up.'
-                        } else {
-                            echo '555555555555 trigger self'
-                            build(
-                                wait: false,
-                                job: 'tseethon_Test_Jenkinsfile/wmcore_pypi',
-                                parameters: [
-                                    string(name: 'issueTitle', value: ''),
-                                    string(name: 'Repo_GH_Issue', value: 'novicecpp/CRABServer'),
-                                    string(name: 'Repo_Testing_Scripts', value: 'novicecpp/CRABServer'),
-                                    string(name: 'Branch_Testing_Scripts', value: 'master'),
-                                    string(name: 'Test_Docker_Image', value: 'registry.cern.ch/cmscrab/crabtesting:231009'),
-                                    string(name: 'Manual_Task_Names', value: params.Manual_Task_Names),
-                                    string(name: 'CRABClient_version', value: 'prod'),
-                                    string(name: 'CRABServer_tag', value: 'HEAD'),
-                                    string(name: 'REST_Instance', value: 'preprod'),
-                                    string(name: 'CMSSW_release', value: 'CMSSW_13_0_2'),
-                                    booleanParam(name: 'Task_Submission_Status_Tracking', value: true),
-                                    booleanParam(name: 'Check_Publication_Status', value: true),
-                                    string(name: 'REST_Instance', value: 'preprod'),
-                                    string(name: 'RETRY', value: retry_next.toString()),
-                                    string(name: 'RETRY_MAX', value: '3'),
-                                ],
-                                quietPeriod: 60,
-                                waitForStart: false,
-                            )
-                            error 'retry triggered.'
-                        }
-                    }
-                }
+                sh '''
+                   #! /bin/bash
+                   printenv | sort
+                   date > 1.txt
+                '''
+                stash includes: '1.txt', name: 'submitted_tasks'
+            }
+        }
+        stage('stage2') {
+            steps {
+                unstash 'submitted_tasks'
+                sh '''
+                    cat 1.txt
+                    exit 1
+                '''
             }
         }
     }
