@@ -91,33 +91,53 @@ pipeline {
                 '''
             }
         }
-        stage('Trigger Checktest jobs') {
+        //stage('Trigger Checktest jobs') {
+        //    agent { node { label 'cms-dmwm-cc7' } }
+        //    steps {
+        //        build(
+        //            wait: true,
+        //            job:  "tseethon_CRAB_CheckTestResult/${env.BRANCH_NAME}",
+        //            parameters: [
+        //                string(name: 'issueTitle', value: "#${env.BUILD_NUMBER}: test new automated pipeline"),
+        //                string(name: 'Repo_GH_Issue', value: 'novicecpp/CRABServer'),
+        //                string(name: 'Repo_Testing_Scripts', value: 'dmwm/CRABServer'),
+        //                string(name: 'Branch_Testing_Scripts', value: 'master'),
+        //                string(name: 'Test_Docker_Image', value: 'registry.cern.ch/cmscrab/crabtesting:231009'),
+        //                //string(name: 'Manual_Task_Names', value: params.Manual_Task_Names),
+        //                string(name: 'CRABClient_version', value: 'prod'),
+        //                string(name: 'CRABServer_tag', value: 'HEAD'),
+        //                string(name: 'REST_Instance', value: 'test12'),
+        //                string(name: 'CMSSW_release', value: 'CMSSW_13_0_2'),
+        //                booleanParam(name: 'Task_Submission_Status_Tracking', value: true),
+        //                string(name: 'RETRY', value: "1"),
+        //                string(name: 'MAX_RETRY', value: "3"),
+        //            ],
+        //            quietPeriod: 300,
+        //            waitForStart: false,
+        //        )
+        //    }
+        //}
+
+        stage('Checktest') {
             agent { node { label 'cms-dmwm-cc7' } }
             steps {
-                build(
-                    wait: true,
-                    job:  "tseethon_CRAB_CheckTestResult/${env.BRANCH_NAME}",
-                    parameters: [
-                        string(name: 'issueTitle', value: "#${env.BUILD_NUMBER}: test new automated pipeline"),
-                        string(name: 'Repo_GH_Issue', value: 'novicecpp/CRABServer'),
-                        string(name: 'Repo_Testing_Scripts', value: 'dmwm/CRABServer'),
-                        string(name: 'Branch_Testing_Scripts', value: 'master'),
-                        string(name: 'Test_Docker_Image', value: 'registry.cern.ch/cmscrab/crabtesting:231009'),
-                        //string(name: 'Manual_Task_Names', value: params.Manual_Task_Names),
-                        string(name: 'CRABClient_version', value: 'prod'),
-                        string(name: 'CRABServer_tag', value: 'HEAD'),
-                        string(name: 'REST_Instance', value: 'test12'),
-                        string(name: 'CMSSW_release', value: 'CMSSW_13_0_2'),
-                        booleanParam(name: 'Task_Submission_Status_Tracking', value: true),
-                        string(name: 'RETRY', value: "1"),
-                        string(name: 'MAX_RETRY', value: "3"),
-                        file(name: 'submitted_tasks', file: 'submitted_tasks_TS'),
-                    ],
-                    quietPeriod: 300,
-                    waitForStart: false,
-                )
-            }
-        }
+                retry(5) {
+                sh '''
+
+                    export issueTitle="#${BUILD_NUMBER}: test new automated pipeline"
+                    export Repo_GH_Issue='novicecpp/CRABServer'
+                    export Repo_Testing_Scripts='dmwm/CRABServer'
+                    export Branch_Testing_Scripts='master'
+                    export Test_Docker_Image='registry.cern.ch/cmscrab/crabtesting:231009'
+                    export CRABClient_version='prod'
+                    export CRABServer_tag='HEAD'
+                    export REST_Instance='test12'
+                    export CMSSW_release='CMSSW_13_0_2'
+                    sleep 60
+                    cp submitted_tasks_TS submitted_tasks
+                    bash cicd/CheckTestResult/CheckTestResult.sh
+                '''
+
     }
     post {
         failure {
@@ -139,7 +159,7 @@ pipeline {
         }
         // Clean after build
         always {
-            archiveArtifacts(artifacts: '*',
+            archiveArtifacts(artifacts: '*, submitted_tasks_TS',
                              allowEmptyArchive: true,
                              fingerprint: true,
                              onlyIfSuccessful: false,
