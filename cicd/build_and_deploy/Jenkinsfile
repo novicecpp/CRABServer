@@ -111,6 +111,7 @@ pipeline {
                         booleanParam(name: 'Task_Submission_Status_Tracking', value: true),
                         string(name: 'RETRY', value: "1"),
                         string(name: 'MAX_RETRY', value: "3"),
+                        file(name: 'submitted_tasks', file: 'submitted_tasks_TS'),
                     ],
                     quietPeriod: 300,
                     waitForStart: false,
@@ -119,6 +120,23 @@ pipeline {
         }
     }
     post {
+        failure {
+            emailext(
+                body: """waaah! pipeline fail JOB_NAME=${env.JOB_NAME}, BUILD_NUMBER=${env.BUILD_NUMBER}""",
+                recipientProviders: [buildUser()],
+                subject: 'Pipeline failed ',
+                to: 'thanayut.seethongchuen@cern.ch'
+            )
+        }
+
+        success {
+            emailext(
+                body: """yippi! pipeline pass JOB_NAME=${env.JOB_NAME}, BUILD_NUMBER=${env.BUILD_NUMBER}""",
+                recipientProviders: [buildUser()],
+                subject: 'Test pass',
+                to: 'thanayut.seethongchuen@cern.ch'
+            )
+        }
         // Clean after build
         always {
             archiveArtifacts(artifacts: '*',
