@@ -121,8 +121,8 @@ pipeline {
 
         stage('Checktest') {
             agent { node { label 'cms-dmwm-cc7' } }
-            unstash 'submitted_tasks'
             steps {
+                unstash 'submitted_tasks'
                 retry(5) {
                 sh '''
 
