@@ -5,7 +5,7 @@ from TaskWorker.Actions.TaskAction import TaskAction
 from TaskWorker.WorkerExceptions import TaskWorkerException
 from ServerUtilities import isFailurePermanent
 from ServerUtilities import getCheckWriteCommand, createDummyFile
-from ServerUtilities import removeDummyFile, execute_command
+from ServerUtilities import removeDummyFile, execute_command, isEnoughRucioQuota, RUCIO_QUOTA_MINIMUM_GB
 from RucioUtils import getWritePFN
 
 class StageoutCheck(TaskAction):
@@ -83,7 +83,16 @@ class StageoutCheck(TaskAction):
         if self.task['tm_output_lfn'].startswith('/store/user/rucio') or \
            self.task['tm_output_lfn'].startswith('/store/group/rucio'):
             # to be filled with actual quota check, for the time being.. just go
-            return
+            hasQuota, isQuotaWarning, remainQuota = isEnoughRucioQuota(self.rucioClient, self.task['tm_username'], self.task['tm_asyncdest'], self.logger)
+            if not hasQuota:
+                msg = f"Not enough Rucio quota at {self.task['tm_asyncdest']}:{self.task['tm_output_lfn']}."\
+                      f"Minimal: {RUCIO_QUOTA_MINIMUM_GB}, Remain quota: {remainQuota}"
+                raise TaskWorkerException(msg)
+            if isQuotaWarning:
+                msg = 'Rucio Quota is very little and although CRAB will submit, stageout may fail.'
+                self.logger.warning(msg)
+                self.uploadWarning(msg, self.task['user_proxy'], self.task['tm_taskname'])
+
         # if not using Rucio, old code:
         else:
             cpCmd, rmCmd, append = getCheckWriteCommand(self.proxy, self.logger)

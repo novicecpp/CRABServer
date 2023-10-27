@@ -130,6 +130,9 @@ USER_ALLOWED_PUBLICATIONDB_STATES = {0: "NEW",
                                      5: "NOT_REQUIRED"}
 USER_ALLOWED_PUBLICATIONDB_STATUSES = dict((v, k) for k, v in PUBLICATIONDB_STATES.items())
 
+RUCIO_QUOTA_WARNING_GB = 10  # when available Rucio quota is less than this, warn users
+RUCIO_QUOTA_MINIMUM_GB = 1  # when available Rucio quota is less thatn this, refuse submi
+
 def USER_SANDBOX_EXCLUSIONS(tarmembers):
     """ The function is used by both the client and the crabcache to get a list of files to exclude during the
         calculation of the checksum of the user input sandbox.
@@ -984,3 +987,22 @@ def isDatasetUserDataset(inputDataset, dbsInstance):
     """
     return (dbsInstance.split('/')[1] != 'global') and \
                 (inputDataset.split('/')[-1] == 'USER')
+
+def isEnoughRucioQuota(rucioClient, username, site, logger):
+    hasQuota = False
+    isQuotaWarning = False
+    remainQuota = 0
+    quota = list(rucioClient.get_local_account_usage(username, site))
+    if not quota:
+        hasQuota = False
+    else:
+        freeGB = quota[0]['bytes_remaining']/1024/1024/1024
+        remainQuota = freeGB
+        if freeGB > RUCIO_QUOTA_MINIMUM_GB:
+            hasQuota = True
+            if freeGB <= RUCIO_QUOTA_WARNING_GB:
+                isQuotaWarning = True
+        else:
+            hasQuota = False
+
+    return (hasQuota, isQuotaWarning, remainQuota)
