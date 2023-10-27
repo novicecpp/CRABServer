@@ -91,8 +91,8 @@ class StageoutCheck(TaskAction):
             #    self.privilegedRucioClient = getNativeRucioClient(tapeRecallConfig, self.logger)
             # use user creds
             userRucioConfig = copy.deepcopy(self.config)
-            userRucioConfig.Services.Rucio_cert = self.task['user_proxy']
-            userRucioConfig.Services.Rucio_key = self.task['user_proxy']
+            userRucioConfig.TaskWorker.Rucio_cert = self.task['user_proxy']
+            userRucioConfig.TaskWorker.Rucio_key = self.task['user_proxy']
             userRucioConfig.Services.Rucio_account = self.task['tm_username']
             import pdb; pdb.set_trace()
             userRucioClient = getNativeRucioClient(userRucioConfig, self.logger)
