@@ -91,9 +91,9 @@ class StageoutCheck(TaskAction):
             #    self.privilegedRucioClient = getNativeRucioClient(tapeRecallConfig, self.logger)
             # use user creds
             userRucioConfig = copy.deepcopy(self.config)
-            userRucioConfig.TaskWorker.Rucio_cert = self.task['user_proxy']
-            userRucioConfig.TaskWorker.Rucio_key = self.task['user_proxy']
-            userRucioConfig.TaskWorker.Rucio_account = self.task['tm_username']
+            userRucioConfig.Services.Rucio_cert = self.task['user_proxy']
+            userRucioConfig.Services.Rucio_key = self.task['user_proxy']
+            userRucioConfig.Services.Rucio_account = self.task['tm_username']
             import pdb; pdb.set_trace()
             userRucioClient = getNativeRucioClient(userRucioConfig, self.logger)
             hasQuota, isQuotaWarning, remainQuota = isEnoughRucioQuota(userRucioClient, self.task['tm_username'], self.task['tm_asyncdest'], self.logger)
