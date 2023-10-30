@@ -1019,10 +1019,21 @@ def isEnoughRucioQuota(rucioClient, site):
     return (hasQuota, isEnough, isQuotaWarning, remainQuota)
 
 def getRucioAccountFromLFN(lfn):
-    # Rucio group's account always has `_group` suffix.
-    name = lfn.split('/')[4]
+    """
+    Extract Rucio account from LFN.
+    For Rucio's group account, account always has `_group` suffix, but path and
+    scope do not contains `_group` suffix.
+    `_group` suffix.
+
+    :param lfn: LFN
+    :type lfn: str
+
+    :return: Rucio's account
+    :rtype: str
+    """
+    if lfn.startswith('/store/user/rucio') or lfn.startswith('/store/group/rucio'):
+        raise Exception(f'Expected /store/{{user,group}}/rucio/<account>, got {lfn}') from None
+    account = lfn.split('/')[4]
     if lfn.startswith('/store/group/rucio/'):
-        # Rucio group's account always has `_group` suffix.
-        return '%s_group' % name, 'group'
-    else:
-        return name, 'user'
+        return f'{account}_group'
+    return account
