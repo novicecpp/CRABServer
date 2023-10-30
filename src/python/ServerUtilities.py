@@ -991,32 +991,46 @@ def isDatasetUserDataset(inputDataset, dbsInstance):
 def isEnoughRucioQuota(rucioClient, site):
     """
     Check quota with Rucio server.
-    Return tuple of result to construct message on caller.
+
+    Return tuple of result to construct message on caller, where
+    - `hasQuota`: `True` if user has quota on that site
+    - `isEnough`: `True` if user has remain quota more than `RUCIO_QUOTA_MINIMUM_GB`
+    - `isQuotaWarning`: `True` if user has remain quota more than
+      `RUCIO_QUOTA_MINIMUM_GB`, but less than `RUCIO_QUOTA_WARNING_GB`
+    - `quota`: tuple of
+      - `totalGB`: (float) total quota
+      - `usedGB`: (float) used quota
+      - `freeGB`: (float) remain quota
 
     :param rucioClient: Rucio's client object
     :type rucioClient: rucio.client.client.Client
     :param site: rse name
     :type site: string
 
-    :return: tuple of (hasQuota, isEnough, isQuotaWarning, remainQuota)
+    :return: tuple of result of quota checking (see details above)
     :rtype: tuple
     """
     hasQuota = False
     isEnough = False
     isQuotaWarning = False
-    remainQuota = 0
+    totalGB = 0
+    usedGB = 0
+    freeGB = 0
     account = rucioClient.account
-    quota = list(rucioClient.get_local_account_usage(account, site))
-    if not quota:
+    quotas = list(rucioClient.get_local_account_usage(account, site))
+    if not quotas:
         hasQuota = False
     else:
         hasQuota = True
-        remainQuota = quota[0]['bytes_remaining']/1024/1024/1024
-        if remainQuota > RUCIO_QUOTA_MINIMUM_GB:
+        quota = quotas[0]
+        totalGB = quota['bytes_limit'] / 2**(10*3) # GiB
+        usedGB = quota['bytes'] / 2**(10*3) # GiB
+        freeGB = quota['bytes_remaining'] / 2**(10*3) # GiB
+        if freeGB > RUCIO_QUOTA_MINIMUM_GB:
             isEnough = True
-            if remainQuota <= RUCIO_QUOTA_WARNING_GB:
+            if freeGB <= RUCIO_QUOTA_WARNING_GB:
                 isQuotaWarning = True
-    return (hasQuota, isEnough, isQuotaWarning, remainQuota)
+    return (hasQuota, isEnough, isQuotaWarning, (totalGB, usedGB, freeGB))
 
 def getRucioAccountFromLFN(lfn):
     """
@@ -1032,8 +1046,8 @@ def getRucioAccountFromLFN(lfn):
     :rtype: str
     """
     if lfn.startswith('/store/user/rucio') or lfn.startswith('/store/group/rucio'):
-        raise Exception(f'Expected /store/{{user,group}}/rucio/<account>, got {lfn}') from None
-    account = lfn.split('/')[4]
-    if lfn.startswith('/store/group/rucio/'):
-        return f'{account}_group'
-    return account
+        account = lfn.split('/')[4]
+        if lfn.startswith('/store/group/rucio/'):
+            return f'{account}_group'
+        return account
+    raise Exception(f'Expected /store/{{user,group}}/rucio/<account>, got {lfn}') from None
