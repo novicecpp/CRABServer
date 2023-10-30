@@ -95,11 +95,14 @@ class StageoutCheck(TaskAction):
             userRucioConfig.TaskWorker.Rucio_key = self.task['user_proxy']
             userRucioConfig.Services.Rucio_account = self.task['tm_username']
             userRucioClient = getNativeRucioClient(userRucioConfig, self.logger)
+            self.logger.info("Checking Rucio quota.")
             _, isEnough, isQuotaWarning, remainQuota = isEnoughRucioQuota(userRucioClient, self.task['tm_username'], self.task['tm_asyncdest'])
             if isEnough:
                 msg = f"Not enough Rucio quota at {self.task['tm_asyncdest']}:{self.task['tm_output_lfn']}."\
                       f" Remain quota: {remainQuota} GB."
                 raise TaskWorkerException(msg)
+            else:
+                self.logger.info(f" Remain quota: {remainQuota} GB.")
             if isQuotaWarning:
                 msg = 'Rucio Quota is very little and although CRAB will submit, stageout may fail.'
                 self.logger.warning(msg)
