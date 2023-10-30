@@ -988,21 +988,33 @@ def isDatasetUserDataset(inputDataset, dbsInstance):
     return (dbsInstance.split('/')[1] != 'global') and \
                 (inputDataset.split('/')[-1] == 'USER')
 
-def isEnoughRucioQuota(rucioClient, username, site, logger):
+def isEnoughRucioQuota(rucioClient, username, site):
+    """
+    Check quota with Rucio server.
+    Return tuple of result to construct message on caller.
+
+    :param rucioClient: Rucio's client object
+    :type rucioClient: rucio.client.client.Client
+    :param username: Rucio username
+    :type username: string
+    :param site: rse
+    :type site: string
+
+    :return: tuple of (hasQuota, isEnough, isQuotaWarning, remainQuota)
+    :rtype: tuple
+    """
     hasQuota = False
+    isEnough = False
     isQuotaWarning = False
     remainQuota = 0
     quota = list(rucioClient.get_local_account_usage(username, site))
     if not quota:
         hasQuota = False
     else:
-        freeGB = quota[0]['bytes_remaining']/1024/1024/1024
-        remainQuota = freeGB
-        if freeGB > RUCIO_QUOTA_MINIMUM_GB:
-            hasQuota = True
-            if freeGB <= RUCIO_QUOTA_WARNING_GB:
+        hasQuota = True
+        remainQuota = quota[0]['bytes_remaining']/1024/1024/1024
+        if remainQuota > RUCIO_QUOTA_MINIMUM_GB:
+            isEnough = True
+            if remainQuota <= RUCIO_QUOTA_WARNING_GB:
                 isQuotaWarning = True
-        else:
-            hasQuota = False
-
-    return (hasQuota, isQuotaWarning, remainQuota)
+    return (hasQuota, isEnough, isQuotaWarning, remainQuota)
