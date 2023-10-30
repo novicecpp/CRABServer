@@ -97,7 +97,7 @@ class StageoutCheck(TaskAction):
             userRucioClient = getNativeRucioClient(userRucioConfig, self.logger)
             self.logger.info("Checking Rucio quota.")
             _, isEnough, isQuotaWarning, remainQuota = isEnoughRucioQuota(userRucioClient, self.task['tm_username'], self.task['tm_asyncdest'])
-            if isEnough:
+            if not isEnough:
                 msg = f"Not enough Rucio quota at {self.task['tm_asyncdest']}:{self.task['tm_output_lfn']}."\
                       f" Remain quota: {remainQuota} GB."
                 raise TaskWorkerException(msg)
