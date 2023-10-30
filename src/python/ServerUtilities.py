@@ -997,7 +997,7 @@ def isEnoughRucioQuota(rucioClient, username, site):
     :type rucioClient: rucio.client.client.Client
     :param username: Rucio username
     :type username: string
-    :param site: rse
+    :param site: rse name
     :type site: string
 
     :return: tuple of (hasQuota, isEnough, isQuotaWarning, remainQuota)
