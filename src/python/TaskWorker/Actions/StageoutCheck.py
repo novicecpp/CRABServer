@@ -6,7 +6,7 @@ from TaskWorker.Actions.TaskAction import TaskAction
 from TaskWorker.WorkerExceptions import TaskWorkerException
 from ServerUtilities import isFailurePermanent
 from ServerUtilities import getCheckWriteCommand, createDummyFile
-from ServerUtilities import removeDummyFile, execute_command, isEnoughRucioQuota, getRucioUserFromLFN
+from ServerUtilities import removeDummyFile, execute_command, isEnoughRucioQuota, getRucioAccountFromLFN
 from RucioUtils import getWritePFN, getNativeRucioClient
 
 class StageoutCheck(TaskAction):
@@ -89,16 +89,16 @@ class StageoutCheck(TaskAction):
             #    tapeRecallConfig = copy.deepcopy(self.config)
             #    tapeRecallConfig.Services.Rucio_account = 'crab_input'
             #    self.privilegedRucioClient = getNativeRucioClient(tapeRecallConfig, self.logger)
-            # use user creds
+            # patch for test with non superuser account, will remove later
             userRucioConfig = copy.deepcopy(self.config)
             userRucioConfig.TaskWorker.Rucio_cert = self.task['user_proxy']
             userRucioConfig.TaskWorker.Rucio_key = self.task['user_proxy']
-            userRucioConfig.Services.Rucio_account = getRucioUserFromLFN(self.task['tm_output_lfn'])
+            userRucioConfig.Services.Rucio_account, _ = getRucioAccountFromLFN(self.task['tm_output_lfn'])
             userRucioClient = getNativeRucioClient(userRucioConfig, self.logger)
-            self.logger.info("Checking Rucio quota.")
-            rucioUsername = getRucioUserFromLFN(self.task['tm_output_lfn'])
-            self.logger.info(f"Rucio username: {rucioUsername}")
-            _, isEnough, isQuotaWarning, remainQuota = isEnoughRucioQuota(userRucioClient, rucioUsername, self.task['tm_asyncdest'])
+            ###
+            rucioAccount, _ = getRucioAccountFromLFN(self.task['tm_output_lfn'])
+            self.logger.info(f"Checking Rucio quota from account {rucioAccount}.")
+            _, isEnough, isQuotaWarning, remainQuota = isEnoughRucioQuota(userRucioClient, self.task['tm_asyncdest'])
             if not isEnough:
                 msg = f"Not enough Rucio quota at {self.task['tm_asyncdest']}:{self.task['tm_output_lfn']}."\
                       f" Remain quota: {remainQuota} GB."

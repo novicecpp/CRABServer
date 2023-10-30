@@ -988,15 +988,13 @@ def isDatasetUserDataset(inputDataset, dbsInstance):
     return (dbsInstance.split('/')[1] != 'global') and \
                 (inputDataset.split('/')[-1] == 'USER')
 
-def isEnoughRucioQuota(rucioClient, username, site):
+def isEnoughRucioQuota(rucioClient, site):
     """
     Check quota with Rucio server.
     Return tuple of result to construct message on caller.
 
     :param rucioClient: Rucio's client object
     :type rucioClient: rucio.client.client.Client
-    :param username: Rucio username
-    :type username: string
     :param site: rse name
     :type site: string
 
@@ -1007,7 +1005,8 @@ def isEnoughRucioQuota(rucioClient, username, site):
     isEnough = False
     isQuotaWarning = False
     remainQuota = 0
-    quota = list(rucioClient.get_local_account_usage(username, site))
+    account = rucioClient.account
+    quota = list(rucioClient.get_local_account_usage(account, site))
     if not quota:
         hasQuota = False
     else:
@@ -1019,11 +1018,11 @@ def isEnoughRucioQuota(rucioClient, username, site):
                 isQuotaWarning = True
     return (hasQuota, isEnough, isQuotaWarning, remainQuota)
 
-def getRucioUserFromLFN(lfn):
-    # Rucio group's username always has `_group` suffix.
+def getRucioAccountFromLFN(lfn):
+    # Rucio group's account always has `_group` suffix.
     name = lfn.split('/')[4]
     if lfn.startswith('/store/group/rucio/'):
-        # Rucio group's username always has `_group` suffix.
-        return '%s_group' % name
+        # Rucio group's account always has `_group` suffix.
+        return '%s_group' % name, 'group'
     else:
-        return name
+        return name, 'user'
