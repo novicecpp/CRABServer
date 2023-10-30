@@ -6,7 +6,7 @@ from TaskWorker.Actions.TaskAction import TaskAction
 from TaskWorker.WorkerExceptions import TaskWorkerException
 from ServerUtilities import isFailurePermanent
 from ServerUtilities import getCheckWriteCommand, createDummyFile
-from ServerUtilities import removeDummyFile, execute_command, isEnoughRucioQuota, RUCIO_QUOTA_MINIMUM_GB
+from ServerUtilities import removeDummyFile, execute_command, isEnoughRucioQuota, getRucioUserFromLFN
 from RucioUtils import getWritePFN, getNativeRucioClient
 
 class StageoutCheck(TaskAction):
@@ -96,7 +96,8 @@ class StageoutCheck(TaskAction):
             userRucioConfig.Services.Rucio_account = self.task['tm_username']
             userRucioClient = getNativeRucioClient(userRucioConfig, self.logger)
             self.logger.info("Checking Rucio quota.")
-            _, isEnough, isQuotaWarning, remainQuota = isEnoughRucioQuota(userRucioClient, self.task['tm_username'], self.task['tm_asyncdest'])
+            rucioUsername = getRucioUserFromLFN(self.task['tm_output_lfn'])
+            _, isEnough, isQuotaWarning, remainQuota = isEnoughRucioQuota(userRucioClient, rucioUsername, self.task['tm_asyncdest'])
             if not isEnough:
                 msg = f"Not enough Rucio quota at {self.task['tm_asyncdest']}:{self.task['tm_output_lfn']}."\
                       f" Remain quota: {remainQuota} GB."

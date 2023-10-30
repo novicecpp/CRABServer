@@ -1018,3 +1018,12 @@ def isEnoughRucioQuota(rucioClient, username, site):
             if remainQuota <= RUCIO_QUOTA_WARNING_GB:
                 isQuotaWarning = True
     return (hasQuota, isEnough, isQuotaWarning, remainQuota)
+
+def getRucioUserFromLFN(lfn):
+    # Rucio group's username always has `_group` suffix.
+    name = lfn.split('/')[4]
+    if lfn.startswith('/store/group/rucio/'):
+        # Rucio group's username always has `_group` suffix.
+        return '%s_group' % name
+    else:
+        return name
