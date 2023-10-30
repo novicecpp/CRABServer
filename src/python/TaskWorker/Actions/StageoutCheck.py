@@ -96,7 +96,7 @@ class StageoutCheck(TaskAction):
             userRucioConfig.Services.Rucio_account, _ = getRucioAccountFromLFN(self.task['tm_output_lfn'])
             userRucioClient = getNativeRucioClient(userRucioConfig, self.logger)
             ###
-            rucioAccount, _ = getRucioAccountFromLFN(self.task['tm_output_lfn'])
+            rucioAccount = getRucioAccountFromLFN(self.task['tm_output_lfn'])
             self.logger.info(f"Checking Rucio quota from account {rucioAccount}.")
             _, isEnough, isQuotaWarning, remainQuota = isEnoughRucioQuota(userRucioClient, self.task['tm_asyncdest'])
             if not isEnough:
