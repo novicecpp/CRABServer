@@ -93,7 +93,7 @@ class StageoutCheck(TaskAction):
             userRucioConfig = copy.deepcopy(self.config)
             userRucioConfig.TaskWorker.Rucio_cert = self.task['user_proxy']
             userRucioConfig.TaskWorker.Rucio_key = self.task['user_proxy']
-            userRucioConfig.Services.Rucio_account = self.task['tm_username']
+            userRucioConfig.Services.Rucio_account = getRucioUserFromLFN(self.task['tm_output_lfn'])
             userRucioClient = getNativeRucioClient(userRucioConfig, self.logger)
             self.logger.info("Checking Rucio quota.")
             rucioUsername = getRucioUserFromLFN(self.task['tm_output_lfn'])
