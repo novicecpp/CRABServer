@@ -988,7 +988,7 @@ def isDatasetUserDataset(inputDataset, dbsInstance):
     return (dbsInstance.split('/')[1] != 'global') and \
                 (inputDataset.split('/')[-1] == 'USER')
 
-def isEnoughRucioQuota(rucioClient, site):
+def isEnoughRucioQuota(rucioClient, site, account=''):
     """
     Check quota with Rucio server.
 
@@ -1004,8 +1004,11 @@ def isEnoughRucioQuota(rucioClient, site):
 
     :param rucioClient: Rucio's client object
     :type rucioClient: rucio.client.client.Client
-    :param site: rse name
-    :type site: string
+    :param site: RSE name
+    :type site: str
+    :param account: optional account name (for server where it has priviledge to
+         get usage from all users)
+    :type account: str
 
     :return: tuple of result of quota checking (see details above)
     :rtype: tuple
@@ -1016,7 +1019,8 @@ def isEnoughRucioQuota(rucioClient, site):
     totalGB = 0
     usedGB = 0
     freeGB = 0
-    account = rucioClient.account
+    if not account:
+        account = rucioClient.account
     quotas = list(rucioClient.get_local_account_usage(account, site))
     if not quotas:
         hasQuota = False
