@@ -136,7 +136,7 @@ pipeline {
                     export REST_Instance='test12'
                     export CMSSW_release='CMSSW_13_0_2'
                     cp submitted_tasks_TS submitted_tasks
-                    sleep 60
+                    sleep 1200 # 20mins
                     bash cicd/CheckTestResult/CheckTestResult.sh
                 '''
                 }
