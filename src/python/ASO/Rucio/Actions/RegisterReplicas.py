@@ -203,7 +203,7 @@ class RegisterReplicas:
 
         :param fileDocs: a list of fileDoc info an
         :type fileDocs: list of dict
-        :return: same list as fileDocs args but with updated rule iD and dataset
+        :return: same list as fileDocs args but with updated rule ID and dataset
             name
         :rtype: list of dict
         """
