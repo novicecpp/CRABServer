@@ -167,10 +167,12 @@ class RESTFileTransfers(RESTEntity):
                     self.api.modifynocheck(self.transferDB.UpdateTransfers_sql, **binds)
             else:
                 ids = makeList(kwargs['list_of_ids'])
+
                 states = makeList(kwargs['list_of_transfer_state'])
                 retry = [0 for x in states]
                 reasons = ["" for x in states]
                 if kwargs['list_of_retry_value'] is not None:
+                    import pdb; pdb.set_trace()
                     reasons = makeList(kwargs['list_of_failure_reason'])
                     retry = makeList(kwargs['list_of_retry_value'])
                 for num in range(len(ids)):
