@@ -35,8 +35,7 @@ testName = "ruciotransfers-%d" % int(time.time())
 #testName = 'ruciotransfers-1'
 config.Data.outputDatasetTag = testName
 # rucio
-outLFN = os.getenv('OUT_LFN_DIR_BASE','/store/user/rucio/cmsbot')
-config.Data.outLFNDirBase = '/store/user/rucio/%s/%s' % (outLFN, testName)
+config.Data.outLFNDirBase = '/store/group/rucio/crab_test/%s' % (testName,)
 
 config.section_("User")
 
@@ -44,7 +43,7 @@ config.section_("Site")
 config.Site.whitelist = ['T1_*','T2_US_*','T2_IT_*','T2_DE_*','T2_ES_*','T2_FR_*','T2_UK_*']
 config.Site.blacklist = ['T2_ES_IFCA']
 
-config.Site.storageSite = 'T2_CH_CERN'
+config.Site.storageSite = 'T1_DE_KIT_Disk'
 
 config.section_("Debug")
 if SCHEDD_NAME != 'any':
