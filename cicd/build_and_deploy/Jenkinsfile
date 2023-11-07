@@ -77,8 +77,8 @@ pipeline {
                 sh '''
                     set -e
                     printenv | sort
-                    find /cvmfs -maxdepth 2
-                    exit 1
+                    #find /cvmfs -maxdepth 2
+                    #exit 1
 
                     export CRABClient_version=prod
                     export CRABServer_tag=HEAD
