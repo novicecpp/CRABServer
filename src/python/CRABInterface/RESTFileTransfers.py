@@ -2,7 +2,7 @@ from __future__ import print_function
 # WMCore dependecies here
 from Utils.Utilities import makeList
 from WMCore.REST.Server import RESTEntity, restcall
-from WMCore.REST.Validation import validate_str, validate_num
+from WMCore.REST.Validation import validate_str, validate_num, validate_strlist
 from WMCore.REST.Error import InvalidParameter, UnsupportedMethod
 
 from CRABInterface.Utilities import getDBinstance
