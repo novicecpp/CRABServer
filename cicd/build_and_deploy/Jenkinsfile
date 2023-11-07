@@ -72,12 +72,6 @@ pipeline {
         stage('Execute Tests') {
             agent {
                 node { label 'cms-dmwm-cc7' }
-                docker {
-                    image 'registry.cern.ch/cmscrab/crabtesting:231009'
-                    args '''-u $(id -u):$(id -g) -v /home:/home -v /etc/passwd:/etc/passwd -v /etc/group:/etc/group \
-                            -v $WORKSPACE/artifacts/:/data/CRABTesting/artifacts:Z -v /cvmfs/grid.cern.ch/etc/grid-security:/etc/grid-security  \
-                            -v /cvmfs/grid.cern.ch/etc/grid-security/vomses:/etc/vomses  -v /cvmfs:/cvmfs'''
-                }
             }
             steps {
                 sh '''
