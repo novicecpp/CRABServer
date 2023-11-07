@@ -43,7 +43,7 @@ class RESTFileTransfers(RESTEntity):
             validate_str("username", param, safe, RX_USERNAME, optional=True)
             validate_str("list_of_ids", param, safe, RX_ANYTHING, optional=True)
             validate_str("list_of_transfer_state", param, safe, RX_ANYTHING, optional=True)
-            validate_str("list_of_failure_reason", param, safe, RX_ANYTHING, optional=True)
+            validate_strlist("list_of_failure_reason", param, safe, RX_ANYTHING, optional=True)
             validate_str("list_of_retry_value", param, safe, RX_ANYTHING, optional=True)
             validate_str("list_of_fts_instance", param, safe, RX_ANYTHING, optional=True)
             validate_str("list_of_fts_id", param, safe, RX_ANYTHING, optional=True)
