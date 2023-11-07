@@ -94,7 +94,7 @@ class MonitorLockStatus:
 
     def registerToPublishContainer(self, fileDocs):
         """
-        Register replicas to the publish container. Update the replicas info
+        (Deprecated) Register replicas to the publish container. Update the replicas info
         to the new dataset name.
 
         :param fileDocs: replicas info return from `checkLockStatus` method.
@@ -121,7 +121,8 @@ class MonitorLockStatus:
         - 2 output files:
           - `output.root` (EDM)
           - `myfile.txt` (Misc)
-        All `output_{job_id}.root` files will registering to `/GenericTTbar/cmsbot-integration-1__output.root/USER`
+        All `output_{job_id}.root` will registering to `/GenericTTbar/cmsbot-integration-1__output.root/USER`.
+        All `myfile_{job_id}.txt` will registering to `/GenericTTbar/cmsbot-integration-1__myfile.txt/USER`.
 
         :param fileDocs: replicas info return from `checkLockStatus` method.
         :type fileDocs: list of dict (fileDoc)
@@ -132,12 +133,14 @@ class MonitorLockStatus:
         r = RegisterReplicas(self.transfer, self.rucioClient, None)
         publishContainerFileDocs = []
         groupFileDocs = {}
+        # Group by filename
         for fileDoc in fileDocs:
             filename = parseFileNameFromLFN(fileDoc['name'])
             if filename in groupFileDocs:
                 groupFileDocs[filename].append(fileDoc)
             else:
                 groupFileDocs[filename] = [fileDoc]
+        # Register to its own publish container
         for filename, fileDocsInGroup in groupFileDocs.items():
             container = ''
             for c in self.transfer.multiPubContainers:
@@ -147,6 +150,8 @@ class MonitorLockStatus:
                     break
             if not container:
                 raise RucioTransferException(f'Cannot find container for file: {filename} . There is a bug in the code.')
+            # Now fileDoc dict is consist for the rest of Rucio ASO code.
+            # We can return value from `addReplicasToContainer()` method.
             publishContainerFileDocs += r.addReplicasToContainer(fileDocsInGroup, container)
         return publishContainerFileDocs
 
