@@ -1,0 +1,200 @@
+#!/usr/bin/env groovy
+
+pipeline {
+    agent { node { label 'master' } }
+    options {
+        preserveStashes(buildCount: 10)
+    }
+    environment {
+        IMAGE_TAG = "pypi-${GIT_COMMIT}"
+        CMSCRAB_REGISTRY_CRED = credentials('edcd5106-7325-45be-a595-2a769fee0c9c') // robot-cmscrab+jenkins/****** (cmscrab robot account)
+    }
+    stages {
+        //stage('clean and checkout built-in node') {
+        //    steps {
+        //        cleanWs()
+        //        // We need to explicitly checkout from SCM here
+        //        checkout scm
+        //        sh """
+        //            pwd; ls -alh
+        //        """
+        //    }
+        //}
+        //stage('clean and checkout docker node') {
+        //    agent { node { label 'docker-build && amd64' } }
+        //    steps {
+        //        cleanWs()
+        //        // We need to explicitly checkout from SCM here
+        //        checkout scm
+        //        sh """
+        //            pwd; ls -alh
+        //        """
+        //    }
+        //}
+        stage('Build CRABServer') {
+            agent { node { label 'docker-build && amd64' } }
+            steps {
+                sh '''
+                    set -e
+                    export DOCKER_CONFIG=$PWD/docker_login
+                    docker login registry.cern.ch --username ${CMSCRAB_REGISTRY_CRED_USR} --password-stdin <<< ${CMSCRAB_REGISTRY_CRED_PSW}
+                    docker build -t registry.cern.ch/cmscrab/crabserver:${IMAGE_TAG} -f cicd/crabserver_pypi/Dockerfile .
+                    docker push registry.cern.ch/cmscrab/crabserver:${IMAGE_TAG}
+                    docker rmi registry.cern.ch/cmscrab/crabserver:${IMAGE_TAG}
+                '''
+            }
+        }
+        stage('Build TaskWorker') {
+            agent { node { label 'docker-build && amd64' } }
+            steps {
+                sh '''
+                    set -e
+                    export DOCKER_CONFIG=$PWD/docker_login
+                    docker login registry.cern.ch --username ${CMSCRAB_REGISTRY_CRED_USR} --password-stdin <<< ${CMSCRAB_REGISTRY_CRED_PSW}
+                    docker build -t registry.cern.ch/cmscrab/crabtaskworker:${IMAGE_TAG} -f cicd/crabtaskworker_pypi/Dockerfile .
+                    docker push registry.cern.ch/cmscrab/crabtaskworker:${IMAGE_TAG}
+                    docker rmi registry.cern.ch/cmscrab/crabtaskworker:${IMAGE_TAG}
+                '''
+            }
+        }
+        stage('Deploy to TW machine (crab-dev-tw03)') {
+            steps {
+                sh '''
+                    set -e
+                    export Environment=crab-dev-tw03
+                    export Service=TaskWorker
+                    export Image=${IMAGE_TAG}
+                    bash -x cicd/jenkins/deploy_tw.sh
+
+                '''
+            }
+        }
+        stage('Execute Tests') {
+            agent {
+                node { label 'cms-dmwm-cc7' }
+            }
+            steps {
+                sh '''
+                    set -e
+                    printenv | sort
+                    find /cvmfs -maxdepth 2
+                    exit 1
+
+                    export CRABClient_version=prod
+                    export CRABServer_tag=HEAD
+                    export REST_Instance=test12
+                    export CMSSW_release=CMSSW_13_0_2
+                    export Task_Submission_Status_Tracking=true
+                    export Check_Publication_Status=true
+                    export Repo_GH_Issue=novicecpp/CRABServer
+                    export Repo_Testing_Scripts=dmwm/CRABServer
+                    export Branch_Testing_Scripts=master
+                    export Test_Docker_Image=registry.cern.ch/cmscrab/crabtesting:231009
+
+                    bash -x cicd/testsuite/execute_test.sh
+                '''
+                stash includes: 'submitted_tasks*', name: 'submitted_tasks'
+            }
+        }
+        //stage('Trigger Checktest jobs') {
+        //    agent { node { label 'cms-dmwm-cc7' } }
+        //    steps {
+        //        build(
+        //            wait: true,
+        //            job:  "tseethon_CRAB_CheckTestResult/${env.BRANCH_NAME}",
+        //            parameters: [
+        //                string(name: 'issueTitle', value: "#${env.BUILD_NUMBER}: test new automated pipeline"),
+        //                string(name: 'Repo_GH_Issue', value: 'novicecpp/CRABServer'),
+        //                string(name: 'Repo_Testing_Scripts', value: 'dmwm/CRABServer'),
+        //                string(name: 'Branch_Testing_Scripts', value: 'master'),
+        //                string(name: 'Test_Docker_Image', value: 'registry.cern.ch/cmscrab/crabtesting:231009'),
+        //                //string(name: 'Manual_Task_Names', value: params.Manual_Task_Names),
+        //                string(name: 'CRABClient_version', value: 'prod'),
+        //                string(name: 'CRABServer_tag', value: 'HEAD'),
+        //                string(name: 'REST_Instance', value: 'test12'),
+        //                string(name: 'CMSSW_release', value: 'CMSSW_13_0_2'),
+        //                booleanParam(name: 'Task_Submission_Status_Tracking', value: true),
+        //                string(name: 'RETRY', value: "1"),
+        //                string(name: 'MAX_RETRY', value: "3"),
+        //            ],
+        //            quietPeriod: 300,
+        //            waitForStart: false,
+        //        )
+        //    }
+        //}
+
+        stage('Checktest') {
+            agent { node { label 'cms-dmwm-cc7' } }
+            steps {
+                unstash 'submitted_tasks'
+                retry(5) {
+                sh '''
+
+                    export issueTitle="#${BUILD_NUMBER}: test new automated pipeline"
+                    export Repo_GH_Issue='novicecpp/CRABServer'
+                    export Repo_Testing_Scripts='dmwm/CRABServer'
+                    export Branch_Testing_Scripts='master'
+                    export Test_Docker_Image='registry.cern.ch/cmscrab/crabtesting:231009'
+                    export CRABClient_version='prod'
+                    export CRABServer_tag='HEAD'
+                    export REST_Instance='test12'
+                    export CMSSW_release='CMSSW_13_0_2'
+                    cp submitted_tasks_TS submitted_tasks
+                    sleep 1200 # 20mins
+                    bash cicd/CheckTestResult/CheckTestResult.sh
+                '''
+                }
+            }
+        }
+    }
+    post {
+        failure {
+            emailext(
+                body: """waaah! pipeline fail JOB_NAME=${env.JOB_NAME}, BUILD_NUMBER=${env.BUILD_NUMBER}""",
+                recipientProviders: [buildUser()],
+                subject: 'Pipeline failed ',
+                to: 'thanayut.seethongchuen@cern.ch'
+            )
+        }
+
+        success {
+            emailext(
+                body: """yippi! pipeline pass JOB_NAME=${env.JOB_NAME}, BUILD_NUMBER=${env.BUILD_NUMBER}""",
+                recipientProviders: [buildUser()],
+                subject: 'Test pass',
+                to: 'thanayut.seethongchuen@cern.ch'
+            )
+        }
+        // Clean after build
+        always {
+            archiveArtifacts(artifacts: '*, submitted_tasks_TS',
+                             allowEmptyArchive: true,
+                             fingerprint: true,
+                             onlyIfSuccessful: false,
+                             caseSensitive: true,
+                             defaultExcludes: false,
+            )
+            node('docker-build && amd64') {
+                cleanWs(cleanWhenNotBuilt: false,
+                        deleteDirs: true,
+                        disableDeferredWipeout: true,
+                        notFailBuild: true,
+                )
+            }
+            node('master') {
+                cleanWs(cleanWhenNotBuilt: false,
+                        deleteDirs: true,
+                        disableDeferredWipeout: true,
+                        notFailBuild: true,
+                )
+            }
+            node('cms-dmwm-cc7') {
+                cleanWs(cleanWhenNotBuilt: false,
+                        deleteDirs: true,
+                        disableDeferredWipeout: true,
+                        notFailBuild: true,
+                )
+            }
+        }
+    }
+}

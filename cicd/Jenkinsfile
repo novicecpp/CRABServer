@@ -1,0 +1,97 @@
+#!/usr/bin/env groovy
+
+pipeline {
+    agent { node { label 'master' } }
+    //options {
+    //    skipDefaultCheckout(true)
+    //}
+    environment {
+        IMAGE_TAG = "pypi-${BUILD_TAG}"
+        CMSCRAB_REGISTRY_CRED = credentials('edcd5106-7325-45be-a595-2a769fee0c9c') // robot-cmscrab+jenkins/****** (cmscrab robot account)
+    }
+    stages {
+        //stage('clean and checkout built-in node') {
+        //    steps {
+        //        cleanWs()
+        //        // We need to explicitly checkout from SCM here
+        //        checkout scm
+        //        sh """
+        //            pwd; ls -alh
+        //        """
+        //    }
+        //}
+        //stage('clean and checkout docker node') {
+        //    agent { node { label 'docker-build && amd64' } }
+        //    steps {
+        //        cleanWs()
+        //        // We need to explicitly checkout from SCM here
+        //        checkout scm
+        //        sh """
+        //            pwd; ls -alh
+        //        """
+        //    }
+        //}
+        stage('Build CRABServer') {
+            agent { node { label 'docker-build && amd64' } }
+            steps {
+                sh '''
+                    set -e
+                    export DOCKER_CONFIG=$PWD/docker_login
+                    docker login registry.cern.ch --username ${CMSCRAB_REGISTRY_CRED_USR} --password-stdin <<< ${CMSCRAB_REGISTRY_CRED_PSW}
+                    docker build -t registry.cern.ch/cmscrab/crabserver:${IMAGE_TAG} -f cicd/crabserver_pypi/Dockerfile .
+                    docker push registry.cern.ch/cmscrab/crabserver:${IMAGE_TAG}
+                    docker rmi registry.cern.ch/cmscrab/crabserver:${IMAGE_TAG}
+                '''
+            }
+        }
+        stage('Build TaskWorker') {
+            agent { node { label 'docker-build && amd64' } }
+            steps {
+                sh '''
+                    set -e
+                    export DOCKER_CONFIG=$PWD/docker_login
+                    docker login registry.cern.ch --username ${CMSCRAB_REGISTRY_CRED_USR} --password-stdin <<< ${CMSCRAB_REGISTRY_CRED_PSW}
+                    docker build -t registry.cern.ch/cmscrab/crabtaskworker:${IMAGE_TAG} -f cicd/crabtaskworker_pypi/Dockerfile .
+                    docker push registry.cern.ch/cmscrab/crabtaskworker:${IMAGE_TAG}
+                    docker rmi registry.cern.ch/cmscrab/crabtaskworker:${IMAGE_TAG}
+                '''
+            }
+        }
+        stage('Deploy to TW machine (crab-dev-tw03)') {
+            steps {
+                sh '''
+                    set -e
+                    export Environment=crab-dev-tw03
+                    export Service=TaskWorker
+                    export Image=${IMAGE_TAG}
+                    bash cicd/jenkins/deploy_tw.sh
+
+                '''
+            }
+        }
+        //stage('') {
+        //    build job: 'freestyler', parameters: [
+        //        string(name: 'param1', value:'test_param'),       string(name:'dummy', value: "${index}")]
+        //}
+
+    }
+    post {
+        // Clean after build
+        always {
+            node('docker-build && amd64') {
+                cleanWs(cleanWhenNotBuilt: false,
+                        deleteDirs: true,
+                        disableDeferredWipeout: true,
+                        notFailBuild: true,
+                )
+            }
+            node('master') {
+                cleanWs(cleanWhenNotBuilt: false,
+                        deleteDirs: true,
+                        disableDeferredWipeout: true,
+                        notFailBuild: true,
+                )
+            }
+        }
+    }
+}
