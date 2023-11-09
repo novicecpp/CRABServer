@@ -71,6 +71,12 @@ def main():
     opt.add_argument("--ignore-lfn2pfn-map-path", dest="ignore_lfn2pfn_map_path",
                      action='store_true',
                      help="")
+    opt.add_argument("--gfal-log-path", dest="gfal_log_path",
+                     default='task_process/transfers/gfal.log',
+                     help="gfal log path")
+    opt.add_argument("--purge-transfers-dir", dest="purge_transfers_dir",
+                     action='store_true',
+                     help="purge task_process/transfers directory")
     opts = opt.parse_args()
 
     # Put args to config module to share variable across process.

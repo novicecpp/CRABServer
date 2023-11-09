@@ -332,7 +332,7 @@ class RegisterReplicas:
     def bookkeepingPFN(self, preparedReplicas):
         for rse, replicas in preparedReplicas.items():
             tmpdict = {}
-            for r in replicas:
+            for r in replicas.values():
                 sourceLFN = self.transfer.LFN2transferItemMap[r['name']]['source_lfn']
                 tmpdict[sourceLFN] = r['pfn']
             if rse in self.transfer.LFN2PFNMap:

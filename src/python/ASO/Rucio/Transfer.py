@@ -5,6 +5,7 @@ import logging
 import json
 import os
 import hashlib
+import shutil
 
 import ASO.Rucio.config as config # pylint: disable=consider-using-from-import
 from ASO.Rucio.exception import RucioTransferException
@@ -58,6 +59,8 @@ class Transfer:
         It needs to execute to following order because of dependency between
         method.
         """
+        if os.path.exists('task_process/transfers') and config.args.purge_transfers_dir:
+            shutil.rmtree('task_process/transfers', ignore_errors=False)
         # ensure task_process/transfers directory
         if not os.path.exists('task_process/transfers'):
             os.makedirs('task_process/transfers')

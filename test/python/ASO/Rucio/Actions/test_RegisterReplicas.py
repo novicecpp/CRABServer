@@ -293,16 +293,15 @@ def test_bookkeepingPFN():
     # expectedOuput should be
     getSourcePFNReturnValue = 'davs://eoscms.cern.ch:443/eos/cms/store/temp/user/tseethon.d6830fc3715ee01030105e83b81ff3068df7c8e0/tseethon/test-workflow/GenericTTbar/autotest-1679671056/230324_151740/0000/output_9.root'
     expectedOutput = {
-        "T2_CH_CERN_Temp": [
-            {
+        "T2_CH_CERN_Temp": {
+            "98f353b91ec84f0217da80bde84d6b520c0c6640f60ad9aabb7b20ca": {
                 "scope": "user.cmscrab",
                 "pfn": getSourcePFNReturnValue,
                 "name": "/store/user/rucio/tseethon/test-workflow/GenericTTbar/autotest-1679671056/230324_151740/0000/output_9.root",
                 "bytes": 628054,
                 "adler32": "812b8235",
-                "id": "98f353b91ec84f0217da80bde84d6b520c0c6640f60ad9aabb7b20ca"
             }
-        ]
+        }
     }
     expectedLFN2PFNMap = { 'T2_CH_CERN_Temp': { '/store/temp/user/tseethon.d6830fc3715ee01030105e83b81ff3068df7c8e0/tseethon/test-workflow/GenericTTbar/autotest-1679671056/230324_151740/0000/output_9.root': getSourcePFNReturnValue } }
 

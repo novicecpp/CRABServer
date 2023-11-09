@@ -177,7 +177,9 @@ def parseFileNameFromLFN(lfn):
     return origFileName
 
 def callGfalRm(pfns, proxy, logPath):
+    # checking gfal-rm command
+    subprocess.check_call('command -v gfal-rm', shell=True)
     timeout = len(pfns) * 3
     pfnsArg = ' '.join(pfns)
-    command = f'env -i X509_USER_PROXY={proxy} timeout {timeout} gfal-rm -v -t 180 {pfnsArg} >> {logPath} 2>&1 &'
+    command = f'X509_USER_PROXY={proxy} timeout {timeout} gfal-rm -v -t 180 {pfnsArg} >> {logPath} 2>&1 &'
     subprocess.call(command, shell=True)
