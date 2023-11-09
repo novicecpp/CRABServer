@@ -335,9 +335,11 @@ class RegisterReplicas:
             for r in replicas:
                 sourceLFN = self.transfer.LFN2transferItemMap[r['name']]['source_lfn']
                 tmpdict[sourceLFN] = r['pfn']
-        self.transfer.LFN2PFNMap.update({rse: tmpdict})
+            if rse in self.transfer.LFN2PFNMap:
+                self.transfer.LFN2PFNMap[rse].update(tmpdict)
+            else:
+                self.transfer.LFN2PFNMap[rse] = tmpdict
         self.transfer.updateLFN2PFNMap()
-
     def updateRESTFileDocStateToSubmitted(self, fileDocs):
         """
         Update files transfer state in filetransfersdb to SUBMITTED, along with
