@@ -30,7 +30,6 @@ def bookkeepingRulesJSONContent():
     with open(path, 'r', encoding='utf-8') as r:
         return json.load(r)
 
-
 @pytest.fixture
 def listContentDatasets():
     path = 'test/assets/rucio_list_content_datasets.json'
@@ -54,6 +53,13 @@ def containerRuleIDJSONContent():
     path = 'test/assets/container_ruleid.json'
     with open(path, 'r', encoding='utf-8') as r:
         return r.read()
+
+@pytest.fixture
+def LFN2PFNMapJSON():
+    path = 'test/assets/LFN2PFNMap.json'
+    with open(path, 'r', encoding='utf-8') as r:
+        return json.load(r)
+
 
 
 #old relic
@@ -307,7 +313,7 @@ def test_updateContainerRuleID(containerRuleIDJSONContent, fs):
         y = json.loads(containerRuleIDJSONContent)
         assert x == y
 
-def test_readContainerRuleID(containerRuleIDJSONContent, fs):
+def test_readContainerRuleID(containerRuleIDJSONContent):
     path = '/path/to/container_ruleid.json'
     config.args = Namespace(container_ruleid_path=path, force_publishname=False)
     with patch('ASO.Rucio.Transfer.open', new_callable=mock_open, read_data=containerRuleIDJSONContent):
@@ -320,3 +326,29 @@ def test_readContainerRuleID(containerRuleIDJSONContent, fs):
             '/GenericTTbar/tseethon-ruciotransfers-1697125324-94ba0e06145abd65ccb1d21786dc7e1d__output.root/USER': 'e609d75e4a7a4fa3a880ea0bb6681371',
             '/GenericTTbar/tseethon-ruciotransfers-1697125324-94ba0e06145abd65ccb1d21786dc7e1d__miniaodfake.root/USER': '6b159d7e5dc940daa2188658a68c4b23',
         }
+
+def test_readLFN2PFNMap(LFN2PFNMapJSON):
+    path = '/path/to/lfn2pfn.json'
+    config.args = Namespace(lfn2pfn_map_path=path, ignore_lfn2pfn_map_path=False)
+    with patch('ASO.Rucio.Transfer.open', new_callable=mock_open, read_data=json.dumps(LFN2PFNMapJSON)) as mo:
+        t = Transfer()
+        t.readLFN2PFNMap()
+        # check if open correct file
+        mo.assert_called_once_with(path, 'r', encoding='utf-8')
+        assert t.LFN2PFNMap == LFN2PFNMapJSON
+
+
+def test_updateLFN2PFNMap(LFN2PFNMapJSON, fs):
+    path = '/path/to/lfn2pfn.json'
+    config.args = Namespace(lfn2pfn_map_path=path, ignore_lfn2pfn_map_path=False)
+    fs.create_file(path)
+    with open(path, 'w', encoding='utf-8') as mock_file:
+        with patch('ASO.Rucio.Transfer.writePath') as mock_writePath:
+            mock_writePath.return_value.__enter__.return_value = mock_file
+            t = Transfer()
+            t.LFN2PFNMap = LFN2PFNMapJSON
+            t.updateLFN2PFNMap()
+            mock_writePath.assert_called_once_with(path)
+    with open(path, 'r', encoding='utf-8') as mock_file:
+        fileContent = json.loads(mock_file.read())
+        assert fileContent == LFN2PFNMapJSON

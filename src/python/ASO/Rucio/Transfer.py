@@ -24,7 +24,9 @@ class Transfer:
         self.restDBInstance = ''
         self.restProxyFile = ''
 
-        # content of transfers.txt
+        # Content of transfers.txt (list of dict)
+        # Note that we load whole file into memory but continue process from
+        # `lastTransferLine`.
         self.transferItems = []
 
         # from transfer info
@@ -47,8 +49,9 @@ class Transfer:
         self.multiPubRuleIDs = {}
         self.bookkeepingOKLocks = None
         self.bookkeepingBlockComplete = None
+        self.LFN2PFNMap = {}
 
-        # map of lfn to original info in transferItems
+        # map of destination_lfn to transferItems
         self.LFN2transferItemMap = None
 
     def readInfo(self):
@@ -318,3 +321,33 @@ class Transfer:
             for f in files:
                 replicasInContainer[f['name']] = ds['name']
         return replicasInContainer
+
+    def readLFN2PFNMap(self):
+        """
+        Read LFN2PFNMap from task_process/transfers/lfn2pfn_map.json
+        Initialize empty dict in case of path not found or
+        `--ignore-lfn2pfn-pathransfer-ok` is `True`.
+        """
+        if config.args.ignore_lfn2pfn_map_path:
+            self.LFN2PFNMap = {}
+            return
+        path = config.args.lfn2pfn_map_path
+        try:
+            with open(path, 'r', encoding='utf-8') as r:
+                self.LFN2PFNMap = json.load(r)
+                self.logger.info(f'Got LFN2PFN Map from bookkeeping: {self.LFN2PFNMap}')
+        except FileNotFoundError:
+            self.LFN2PFNMap = {}
+            self.logger.info(f'Bookkeeping LFN2PFNMap file "{path}" does not exist. Assume this is first time it run.')
+
+    def updateLFN2PFNMap(self):
+        """
+        update LFN2PFNMap to task_process/transfers/lfn2pfn_map.json
+        Note that we did not check if dict in self.LFN2PFNMap are conform with
+        format we expected.
+        """
+        path = config.args.lfn2pfn_map_path
+        self.logger.info (f'Bookkeeping LFN2PFNMap to file: {path}')
+        self.logger.debug(f'LFN2PFNMap: {self.LFN2PFNMap}')
+        with writePath(path) as w:
+            json.dump(self.LFN2PFNMap, w)

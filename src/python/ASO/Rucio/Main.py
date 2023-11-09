@@ -65,6 +65,12 @@ def main():
                      help="")
     opt.add_argument("--open-dataset-timeout", dest="open_dataset_timeout", default=1*60*60, type=int, # 1 hours
                      help="Open dataset timeout in seconds")
+    opt.add_argument("--lfn2pfn-map-path", dest="lfn2pfn_map_path",
+                     default='task_process/transfers/lfn2pfn_map.json',
+                     help="Bookkeeping path of lfn2pfnMap")
+    opt.add_argument("--ignore-lfn2pfn-map-path", dest="ignore_lfn2pfn_map_path",
+                     action='store_true',
+                     help="")
     opts = opt.parse_args()
 
     # Put args to config module to share variable across process.
