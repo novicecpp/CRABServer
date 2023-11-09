@@ -228,22 +228,15 @@ class MonitorLockStatus:
         Best effort for clean temp area
         """
         self.logger.info('Cleaning up temp area.')
-        success = []
-        failed = []
+        pfns = []
         for doc in fileDocs:
             transferItem = self.transfer.LFN2transferItemMap[doc['name']]
             rse = f'{transferItem["source"]}_Temp'
             lfn = transferItem['source_lfn']
             pfn = self.transfer.LFN2PFNMap[rse][lfn]
-            self.logger.debug(f'PFN to delete {pfn}.')
-            ret = callGfalRm(pfn, config.args.gfal_log_path)
-            if ret:
-                success.append({doc['name']: pfn})
-            else:
-                failed.append({doc['name']: pfn})
-        self.logger.info(f'Remove total: {len(success)+len(failed)}, success: {len(success)}, failed: {len(failed)}')
-        self.logger.debug(f'Success: {failed}')
-        self.logger.debug(f'Failed: {success}')
+            pfns.append(pfn)
+            self.logger.debug(f'PFN to delete: {pfn}.')
+        callGfalRm(pfns, self.transfer.restProxyFile, config.args.gfal_log_path)
 
     def updateRESTFileDocsStateToDone(self, fileDocs):
         """

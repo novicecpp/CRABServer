@@ -4,8 +4,9 @@ The utility function of Rucio ASO.
 import shutil
 import re
 import os
-from contextlib import contextmanager
 import itertools
+import subprocess
+from contextlib import contextmanager
 
 from ServerUtilities import encodeRequest
 from ASO.Rucio.exception import RucioTransferException
@@ -175,5 +176,8 @@ def parseFileNameFromLFN(lfn):
         origFileName = leftPiece + "." + fileExt
     return origFileName
 
-def callGfalRm(pfn, logpath=None):
-    pass
+def callGfalRm(pfns, proxy, logPath):
+    timeout = len(pfns) * 3
+    pfnsArg = ' '.join(pfns)
+    command = f'env -i X509_USER_PROXY={proxy} timeout {timeout} gfal-rm -v -t 180 {pfnsArg} >> {logPath} 2>&1 &'
+    subprocess.call(command, shell=True)
