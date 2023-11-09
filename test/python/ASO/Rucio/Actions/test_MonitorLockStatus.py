@@ -322,17 +322,20 @@ def test_CleanUpTempArea_allSuccess(mock_rucioClient, LFN2transferItemMap):
 
     t.LFN2PFNMap = LFN2PFNMap
     t.LFN2transferItemMap = LFN2transferItemMap
-    path = '/path/to/gfal.log'
-    config.args = Namespace(gfal_log_path=path)
-    with patch('ASO.Rucio.Actions.MonitorLockStatus.callGfalRm', autospec=True) as mock_callgfalRm:
+    proxyPath = '/path/to/proxy'
+    t.restProxyFile = proxyPath
+    logPath = '/path/to/gfal.log'
+    config.args = Namespace(gfal_log_path=logPath)
+    with patch('ASO.Rucio.Actions.MonitorLockStatus.callGfalRm', autospec=True) as mo_callGfalRm:
         m = MonitorLockStatus(t, Mock(), Mock())
         m.cleanupTempArea(fileDocs)
         expectedPFNs = LFN2PFNMap['T2_CH_CERN_Temp'].values()
-        mock_callgfalRm.side_effect = [True]*len(expectedPFNs)
-        for pfn in expectedPFNs :
-            assert call(pfn, path) in mock_callgfalRm.call_args_list
-
-
+        mo_callGfalRm.assert_called_once()
+        calledPFNs, calledProxy, calledLogPath = mo_callGfalRm.call_args.args
+        assert calledProxy == proxyPath
+        assert calledLogPath == logPath
+        for pfn in expectedPFNs:
+            assert pfn in calledPFNs
 
 @pytest.mark.skip(reason="Laziness.")
 def test_CleanUpTempArea_allFailed():
