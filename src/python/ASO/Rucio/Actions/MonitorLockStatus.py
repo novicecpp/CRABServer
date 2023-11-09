@@ -6,7 +6,7 @@ import copy
 import datetime
 
 import ASO.Rucio.config as config # pylint: disable=consider-using-from-import
-from ASO.Rucio.utils import updateToREST, parseFileNameFromLFN
+from ASO.Rucio.utils import updateToREST, parseFileNameFromLFN, callGfalRm
 from ASO.Rucio.Actions.RegisterReplicas import RegisterReplicas
 from ASO.Rucio.exception import RucioTransferException
 
@@ -35,6 +35,9 @@ class MonitorLockStatus:
         newDoneFileDocs = [doc for doc in okFileDocs if not doc['name'] in self.transfer.bookkeepingOKLocks]
         self.updateRESTFileDocsStateToDone(newDoneFileDocs)
         self.transfer.updateOKLocks([x['name'] for x in newDoneFileDocs])
+
+        # pseudo code
+        self.cleanupTempArea(fileDocs)
 
         # NOTE: See https://github.com/dmwm/CRABServer/issues/7940
         ## Filter only files need to publish
@@ -219,6 +222,28 @@ class MonitorLockStatus:
             if not transferItem['outputdataset'].startswith('/FakeDataset'):
                 tmpPublishFileDocs.append(doc)
         return tmpPublishFileDocs
+
+    def cleanupTempArea(self, fileDocs):
+        """
+        Best effort for clean temp area
+        """
+        self.logger.info('Cleaning up temp area.')
+        success = []
+        failed = []
+        for doc in fileDocs:
+            transferItem = self.transfer.LFN2transferItemMap[doc['name']]
+            rse = f'{transferItem["source"]}_Temp'
+            lfn = transferItem['source_lfn']
+            pfn = self.transfer.LFN2PFNMap[rse][lfn]
+            self.logger.debug(f'PFN to delete {pfn}.')
+            ret = callGfalRm(pfn, config.args.gfal_log_path)
+            if ret:
+                success.append({doc['name']: pfn})
+            else:
+                failed.append({doc['name']: pfn})
+        self.logger.info(f'Remove total: {len(success)+len(failed)}, success: {len(success)}, failed: {len(failed)}')
+        self.logger.debug(f'Success: {failed}')
+        self.logger.debug(f'Failed: {success}')
 
     def updateRESTFileDocsStateToDone(self, fileDocs):
         """

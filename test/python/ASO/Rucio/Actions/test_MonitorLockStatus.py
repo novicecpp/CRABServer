@@ -41,6 +41,11 @@ def loadDatasetMetadata():
     with open('test/assets/dataset_metadata.json') as r:
         return json.load(r)
 
+@pytest.fixture
+def LFN2transferItemMap():
+    with open('test/assets/LFN2transferItemMap.json') as r:
+        return json.load(r)
+
 def test_checkLockStatus_all_ok(mock_Transfer, mock_rucioClient):
     outputAllOK = [
         {
@@ -352,3 +357,62 @@ def test_registerToMutiPubContainers(mock_addReplicasToContainer):
 
 def test_checkBlockCompleteStatus():
     assert 1 == 0
+
+def test_CleanUpTempArea_allSuccess(mock_rucioClient, LFN2transferItemMap):
+    t = create_autospec(Transfer, instance=True)
+    # input1
+    # input2 fileDocs
+    # return nothing but have log.
+    # mock subprocess.run
+    LFN2PFNMap = {
+        'T2_CH_CERN_Temp': {
+            '/store/temp/user/tseethon.d6830fc3715ee01030105e83b81ff3068df7c8e0/tseethon/test-rucio/ruciotransfers-1697125324/GenericTTbar/ruciotransfers-1697125324/231012_154207/0000/log/cmsRun_3.log.tar.gz': 'davs://eoscms.cern.ch:443/eos/cms/store/temp/user/tseethon.d6830fc3715ee01030105e83b81ff3068df7c8e0/tseethon/test-rucio/ruciotransfers-1697125324/GenericTTbar/ruciotransfers-1697125324/231012_154207/0000/log/cmsRun_3.log.tar.gz',
+            '/store/temp/user/tseethon.d6830fc3715ee01030105e83b81ff3068df7c8e0/tseethon/test-rucio/ruciotransfers-1697125324/GenericTTbar/ruciotransfers-1697125324/231012_154207/0000/miniaodfake_3.root': 'davs://eoscms.cern.ch:443/eos/cms/store/temp/user/tseethon.d6830fc3715ee01030105e83b81ff3068df7c8e0/tseethon/test-rucio/ruciotransfers-1697125324/GenericTTbar/ruciotransfers-1697125324/231012_154207/0000/miniaodfake_3.root',
+            '/store/temp/user/tseethon.d6830fc3715ee01030105e83b81ff3068df7c8e0/tseethon/test-rucio/ruciotransfers-1697125324/GenericTTbar/ruciotransfers-1697125324/231012_154207/0000/output_3.root': 'davs://eoscms.cern.ch:443/eos/cms/store/temp/user/tseethon.d6830fc3715ee01030105e83b81ff3068df7c8e0/tseethon/test-rucio/ruciotransfers-1697125324/GenericTTbar/ruciotransfers-1697125324/231012_154207/0000/output_3.root',
+        }
+    }
+    fileDocs = [
+        {
+            "id": "7652449e07afeaf00abe804e8507f4172e5b04f09a2c5e0d883a3193",
+            "name": "/store/user/rucio/tseethon/test-rucio/ruciotransfers-1697125324/GenericTTbar/ruciotransfers-1697125324/231012_154207/0000/log/cmsRun_3.log.tar.gz",
+            "dataset": None,
+            "blockcomplete": 'NO',
+            "ruleid": "b43a554244c54dba954aa29cb2fdde0a",
+        },
+        {
+            "id": "10ba0d321da1a9d7ecc17e2bf411932ec5268ae12d5be76b5928dc29",
+            "name": "/store/user/rucio/tseethon/test-rucio/ruciotransfers-1697125324/GenericTTbar/ruciotransfers-1697125324/231012_154207/0000/miniaodfake_3.root",
+            "dataset": None,
+            "blockcomplete": 'NO',
+            "ruleid": "b43a554244c54dba954aa29cb2fdde0a",
+        },
+        {
+            "id": "091bfc9fb03fe326b1ace7cac5b71e034ce4b44ed46be14ae88b472a",
+            "name": "/store/user/rucio/tseethon/test-rucio/ruciotransfers-1697125324/GenericTTbar/ruciotransfers-1697125324/231012_154207/0000/output_3.root",
+            "dataset": None,
+            "blockcomplete": 'NO',
+            "ruleid": "b43a554244c54dba954aa29cb2fdde0a",
+        },
+    ]
+
+    t.LFN2PFNMap = LFN2PFNMap
+    t.LFN2transferItemMap = LFN2transferItemMap
+    path = '/path/to/gfal.log'
+    config.args = Namespace(gfal_log_path=path)
+    with patch('ASO.Rucio.Actions.MonitorLockStatus.callGfalRm', autospec=True) as mock_callgfalRm:
+        m = MonitorLockStatus(t, Mock(), Mock())
+        m.cleanupTempArea(fileDocs)
+        expectedPFNs = LFN2PFNMap['T2_CH_CERN_Temp'].values()
+        mock_callgfalRm.side_effect = [True]*len(expectedPFNs)
+        for pfn in expectedPFNs :
+            assert call(pfn, path) in mock_callgfalRm.call_args_list
+
+
+
+@pytest.mark.skip(reason="Laziness.")
+def test_CleanUpTempArea_allFailed():
+    assert 0 == 1
+
+@pytest.mark.skip(reason="Laziness.")
+def test_CleanUpTempArea_mixed():
+    assert 0 == 1

@@ -174,3 +174,6 @@ def parseFileNameFromLFN(lfn):
         fileExt = jobid_fileext.rsplit(".", 1)[-1]
         origFileName = leftPiece + "." + fileExt
     return origFileName
+
+def callGfalRm(pfn, logpath=None):
+    pass
