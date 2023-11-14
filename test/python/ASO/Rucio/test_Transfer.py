@@ -329,7 +329,7 @@ def test_readContainerRuleID(containerRuleIDJSONContent):
 
 def test_readLFN2PFNMap(LFN2PFNMapJSON):
     path = '/path/to/lfn2pfn.json'
-    config.args = Namespace(lfn2pfn_map_path=path, ignore_lfn2pfn_map_path=False)
+    config.args = Namespace(lfn2pfn_map_path=path, ignore_lfn2pfn_map=False)
     with patch('ASO.Rucio.Transfer.open', new_callable=mock_open, read_data=json.dumps(LFN2PFNMapJSON)) as mo:
         t = Transfer()
         t.readLFN2PFNMap()
@@ -340,7 +340,7 @@ def test_readLFN2PFNMap(LFN2PFNMapJSON):
 
 def test_updateLFN2PFNMap(LFN2PFNMapJSON, fs):
     path = '/path/to/lfn2pfn.json'
-    config.args = Namespace(lfn2pfn_map_path=path, ignore_lfn2pfn_map_path=False)
+    config.args = Namespace(lfn2pfn_map_path=path)
     fs.create_file(path)
     with open(path, 'w', encoding='utf-8') as mock_file:
         with patch('ASO.Rucio.Transfer.writePath') as mock_writePath:

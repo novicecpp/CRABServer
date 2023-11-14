@@ -68,7 +68,7 @@ def main():
     opt.add_argument("--lfn2pfn-map-path", dest="lfn2pfn_map_path",
                      default='task_process/transfers/lfn2pfn_map.json',
                      help="Bookkeeping path of lfn2pfnMap")
-    opt.add_argument("--ignore-lfn2pfn-map-path", dest="ignore_lfn2pfn_map_path",
+    opt.add_argument("--ignore-lfn2pfn-map", dest="ignore_lfn2pfn_map",
                      action='store_true',
                      help="")
     opt.add_argument("--gfal-log-path", dest="gfal_log_path",
