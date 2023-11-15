@@ -329,9 +329,9 @@ class Transfer:
         """
         Read LFN2PFNMap from task_process/transfers/lfn2pfn_map.json
         Initialize empty dict in case of path not found or
-        `--ignore-lfn2pfn-pathransfer-ok` is `True`.
+        `--ignore-lfn2pfn-map` is `True`.
         """
-        if config.args.ignore_lfn2pfn_map_path:
+        if config.args.ignore_lfn2pfn_map:
             self.LFN2PFNMap = {}
             return
         path = config.args.lfn2pfn_map_path

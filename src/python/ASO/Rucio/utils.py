@@ -177,9 +177,20 @@ def parseFileNameFromLFN(lfn):
     return origFileName
 
 def callGfalRm(pfns, proxy, logPath):
-    # checking gfal-rm command
+    """
+    Calling `gfal-rm` to delete files by passing list PFNs as arguments.
+    Ignore thhe exit code and pipe all logs to `logPath`.
+
+    :param pfs: list of pfn need to delete
+    :type pfs: list
+    :param proxy: X509 proxy path
+    :type proxy: str
+    :param logPath: logs path to append the logs
+    :type logPath: str
+    """
+    # checking gfal-rm command,
     subprocess.check_call('command -v gfal-rm', shell=True)
-    timeout = len(pfns) * 3
+    timeout = len(pfns) * 3 * 60 # 3 minutes per file
     pfnsArg = ' '.join(pfns)
-    command = f'X509_USER_PROXY={proxy} timeout {timeout} gfal-rm -v -t 180 {pfnsArg} >> {logPath} 2>&1 &'
+    command = f'set -x; X509_USER_PROXY={proxy} timeout {timeout} gfal-rm -v -t 180 {pfnsArg} >> {logPath} 2>&1 &'
     subprocess.call(command, shell=True)

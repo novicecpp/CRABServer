@@ -43,7 +43,7 @@ class RegisterReplicas:
         transferItemsWithoutLogfile = self.skipLogTransfers(transferGenerator)
         preparedReplicasByRSE = self.prepare(transferItemsWithoutLogfile)
 
-        # store pfn in transfer
+        # store pfn in `self.transfer`.
         self.bookkeepingPFN(preparedReplicasByRSE)
 
         # Add file to rucio by RSE
@@ -329,17 +329,6 @@ class RegisterReplicas:
         self.logger.debug(f'PFN2: {pfn}')
         return pfn
 
-    def bookkeepingPFN(self, preparedReplicas):
-        for rse, replicas in preparedReplicas.items():
-            tmpdict = {}
-            for r in replicas.values():
-                sourceLFN = self.transfer.LFN2transferItemMap[r['name']]['source_lfn']
-                tmpdict[sourceLFN] = r['pfn']
-            if rse in self.transfer.LFN2PFNMap:
-                self.transfer.LFN2PFNMap[rse].update(tmpdict)
-            else:
-                self.transfer.LFN2PFNMap[rse] = tmpdict
-        self.transfer.updateLFN2PFNMap()
     def updateRESTFileDocStateToSubmitted(self, fileDocs):
         """
         Update files transfer state in filetransfersdb to SUBMITTED, along with
@@ -387,3 +376,23 @@ class RegisterReplicas:
             #'list_of_fts_id': None,
         }
         updateToREST(self.crabRESTClient, 'filetransfers', 'updateTransfers', restFileDoc)
+
+    def bookkeepingPFN(self, prepareReplicas):
+        """
+        Store lfn to pfn map to `self.transfer.LFN2PFNMap` and bookkeeping it to
+        disk. `prepareReplicas` is the same object that feed to
+        `addFilesToRucio()`
+
+        :param prepareReplicas: dict return from `prepare()` method.
+        :type prepareReplicas: dict
+        """
+        for rse, replicas in prepareReplicas.items():
+            tmpdict = {}
+            for r in replicas.values():
+                sourceLFN = self.transfer.LFN2transferItemMap[r['name']]['source_lfn']
+                tmpdict[sourceLFN] = r['pfn']
+            if rse in self.transfer.LFN2PFNMap:
+                self.transfer.LFN2PFNMap[rse].update(tmpdict)
+            else:
+                self.transfer.LFN2PFNMap[rse] = tmpdict
+        self.transfer.updateLFN2PFNMap()
