@@ -35,8 +35,7 @@ class MonitorLockStatus:
         self.updateRESTFileDocsStateToDone(newDoneFileDocs)
         self.transfer.updateOKLocks([x['name'] for x in newDoneFileDocs])
 
-        if newDoneFileDocs:
-            self.cleanupTempArea(newDoneFileDocs)
+        self.cleanupTempArea(newDoneFileDocs)
 
         # NOTE: See https://github.com/dmwm/CRABServer/issues/7940
         ## Filter only files need to publish
@@ -166,7 +165,7 @@ class MonitorLockStatus:
         as outputdataset.
 
         :param fileDocs: list of fileDoc
-        :type fileDocs: list of dict
+        :type fileDocs: list
 
         :return: fileDocs
         :rtype: list of dict
@@ -181,8 +180,16 @@ class MonitorLockStatus:
     def cleanupTempArea(self, fileDocs):
         """
         Best effort for clean temp area
+
+        :param fileDocs: list of fileDoc
+        :type fileDocs: list
         """
         self.logger.info('Cleaning up temp area.')
+        # Return if there is no file to delete, to prevent weird log line in
+        # `gfal.log`
+        if len(fileDocs) == 0:
+            self.logger.info('No file to clean up.')
+            return
         pfns = []
         for doc in fileDocs:
             transferItem = self.transfer.LFN2transferItemMap[doc['name']]
