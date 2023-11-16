@@ -159,6 +159,11 @@ class RegisterReplicas:
                 # chunk is slice of list of dict.items() return by chunks's utils function, only when we passing dict in first args.
                 rs = [v for _, v in chunk]
                 try:
+                    import os
+                    if not os.path.exists('task_process/transfers/firsttime'):
+                        with open('task_process/transfers/firsttime', 'w') as w:
+                            w.write('first')
+                        raise RSEProtocolNotSupported('mark job as fail for test')
                     # add_replicas with same dids will always return True, even
                     # with changing metadata (e.g pfn), rucio will not update to
                     # the new value.
