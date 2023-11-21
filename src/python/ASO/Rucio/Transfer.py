@@ -124,6 +124,9 @@ class Transfer:
     def buildLFN2transferItemMap(self):
         """
         Create map from LFN to transferItem
+
+        Note that LFN2transferItemMap will only have transfersDict from last
+        retry of PostJob.
         """
         self.LFN2transferItemMap = {}
         for x in self.transferItems:
