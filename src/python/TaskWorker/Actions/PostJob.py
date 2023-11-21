@@ -948,6 +948,7 @@ class ASOServerJob(object):
                       'job_id': doc['jobid'],
                       'job_retry_count': doc['job_retry_count'],
                       'transfer_retry_count': 0,
+                      'type': doc['type'],
                       'subresource': 'updateDoc'}
             try:
                 self.crabserver.post(api='fileusertransfers', data=encodeRequest(newDoc))
@@ -956,13 +957,6 @@ class ASOServerJob(object):
                 msg += " Transfer submission failed."
                 msg += "\n%s" % (str(hte.headers))
                 returnMsg['error'] = msg
-            # add/remove some keys from newDoc to has the same schema as `if not self.found_doc_in_db` is True.
-            # add
-            newDoc['type'] = doc['type']
-            # remove
-            newDoc.pop('subresource', None)
-            newDoc.pop('transfer_retry_count', None) # we never use this, even in FTS ASO
-
             # Previous post resets asoworker to NULL. This is not good, so we set it again
             # using a different API to update the transfersDB record
             updateDoc = {}
