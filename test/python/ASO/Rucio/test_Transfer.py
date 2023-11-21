@@ -273,7 +273,7 @@ def test_buildReplica2IDMap():
     assert 0 == 1
 
 
-def test_populateMultiPubContainers(transferDicts):
+def test_buildMultiPubContainerNames(transferDicts):
     t = Transfer()
     t.transferItems = transferDicts
     t.publishContainer = '/GenericTTbar/tseethon-ruciotransfers-1697125324-94ba0e06145abd65ccb1d21786dc7e1d/USER'
