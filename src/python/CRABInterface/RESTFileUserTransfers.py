@@ -83,6 +83,7 @@ class RESTFileUserTransfers(RESTEntity):
             validate_str("job_id", param, safe, RX_JOBID, optional=True)
             validate_num("job_retry_count", param, safe, optional=True)
             validate_strlist("listOfIds", param, safe, RX_ANYTHING)  # Interesting... TODO. Have optional in strlist
+            validate_str("type", param, safe, RX_ANYTHING, optional=False)
         elif method in ['GET']:
             validate_str("subresource", param, safe, RX_SUBGETUSERTRANSFER, optional=False)
             validate_str("id", param, safe, RX_TASKNAME, optional=True)
