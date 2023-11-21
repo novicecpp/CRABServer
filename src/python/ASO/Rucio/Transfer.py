@@ -115,6 +115,8 @@ class Transfer:
             with open(path, 'r', encoding='utf-8') as r:
                 for line in r:
                     doc = json.loads(line)
+                    if config.args.force_publishname:
+                        doc = manipulateOutputDataset(doc, config.args.force_publishname)
                     self.transferItems.append(doc)
         except FileNotFoundError as ex:
             raise RucioTransferException(f'{path} does not exist. Probably no completed jobs in the task yet.') from ex
@@ -169,10 +171,7 @@ class Transfer:
             self.rucioScope = f'user.{self.rucioUsername}'
         self.taskname = info['taskname']
         self.destination = info['destination']
-        if config.args.force_publishname:
-            containerName = config.args.force_publishname
-        else:
-            containerName = info["outputdataset"]
+        containerName = info["outputdataset"]
         self.publishContainer = containerName
         tmp = containerName.split('/')
         taskNameHash = hashlib.md5(info['taskname'].encode()).hexdigest()[:8]
@@ -331,3 +330,21 @@ class Transfer:
             for f in files:
                 replicasInContainer[f['name']] = ds['name']
         return replicasInContainer
+
+def manipulateOutputDataset(transfer, forcePubName):
+    """
+    This helper function is use only for run integration test.
+
+    It is protected by `if config.args.force_publishname` and never mean to run
+    in normal task submission.
+    """
+    # import here to prevent import error in prod code.
+    import copy
+    from ASO.Rucio.utils import addSuffixToProcessedDataset
+    newTransfer = copy.deepcopy(transfer)
+    newhash = hashlib.md5(forcePubName.encode()).hexdigest()[:8]
+    if transfer['outputdataset'].startswith('/FakeDataset'):
+        newTransfer['outputdataset'] = addSuffixToProcessedDataset(newTransfer['outputdataset'], f'.int{newhash}')
+    else:
+        newTransfer['outputdataset'] = forcePubName
+    return newTransfer

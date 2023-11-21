@@ -145,17 +145,16 @@ class MonitorLockStatus:
         for filename, fileDocsInGroup in groupFileDocs.items():
             container = ''
             for c in self.transfer.multiPubContainers:
-                print(c)
                 _, primaryDataset, processedDataset, _ = c.split('/')
                 # edm
                 if not primaryDataset == 'FakeDataset':
                     container = c
                     break
-                else:
-                    tmp = processedDataset.rsplit('_', 1)[1]
-                    if tmp == filename:
-                        container = c
-                        break
+                # /FakeDataset
+                tmp = processedDataset.rsplit('_', 1)[1]
+                if tmp == filename:
+                    container = c
+                    break
             if not container:
                 raise RucioTransferException(f'Cannot find container for file: {filename}. Likely a bug in the code.')
             # Now fileDoc dict is consist for the rest of Rucio ASO code.
