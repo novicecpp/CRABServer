@@ -957,10 +957,11 @@ class ASOServerJob(object):
                 msg += "\n%s" % (str(hte.headers))
                 returnMsg['error'] = msg
             # add/remove some keys from newDoc to has the same schema as `if not self.found_doc_in_db` is True.
+            # add
             newDoc['type'] = doc['type']
+            # remove
             newDoc.pop('subresource', None)
-            # we never use this, even in FTS ASO
-            newDoc.pop('transfer_retry_count', None)
+            newDoc.pop('transfer_retry_count', None) # we never use this, even in FTS ASO
 
             # Previous post resets asoworker to NULL. This is not good, so we set it again
             # using a different API to update the transfersDB record
