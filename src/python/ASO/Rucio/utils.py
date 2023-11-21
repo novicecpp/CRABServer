@@ -141,7 +141,7 @@ def parseFileNameFromLFN(lfn):
 
     For the job's output files, we append `_{job_id}` before the last file
     extension. But for the log file, we use the format
-    `cmsRun_{job_id}.log.tar.gz` instead. So, the log file will be hardcode to
+    `cmsRun_{job_id}.log.tar.gz` instead. So, the log file will be hardcoded to
     always return 'cmsRun.log.tar.gz'.
 
     See https://github.com/dmwm/CRABServer/blob/f5fa82078ff858fd35cf11773020f258abd2c3c7/src/python/TaskWorker/Actions/DagmanCreator.py#L621-L626

@@ -66,7 +66,7 @@ class Transfer:
         self.buildLFN2transferItemMap()
         self.readRESTInfo()
         self.readInfoFromTransferItems()
-        self.populateMultiPubContainers()
+        self.buildMultiPubContainerNames()
         self.readContainerRuleID()
         self.readOKLocks()
         self.readBlockComplete()
@@ -181,9 +181,9 @@ class Transfer:
         self.logger.info(f'Publish container: {self.publishContainer}, Transfer container: {self.transferContainer}')
         self.logsDataset = f'{self.transferContainer}#LOGS'
 
-    def populateMultiPubContainers(self):
+    def buildMultiPubContainerNames(self):
         """
-        Populate the `self.multiPubContainers` by reading all transfers
+        Create the `self.multiPubContainers` by reading all transfers
         dict from the same job id.
 
         Note that this method does not check the limit of the new container name
@@ -220,7 +220,7 @@ class Transfer:
                 self.logger.info('Got container rule ID from bookkeeping:')
                 self.logger.info(f'  Transfer Container rule ID: {self.containerRuleID}')
                 self.logger.info(f'  Publish Container rule ID: {self.publishRuleID}')
-                self.logger.info(f'  Multiple Publish Container rule ID: {self.multiPubRuleIDs}')
+                self.logger.info(f'  Multiple Publish Container rule IDs: {self.multiPubRuleIDs}')
         except FileNotFoundError:
             self.logger.info(f'Bookkeeping rules "{path}" does not exist. Assume it is first time it run.')
 
