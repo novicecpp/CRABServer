@@ -186,6 +186,10 @@ class Transfer:
         Create the `self.multiPubContainers` by reading all transfers
         dict from the same job id.
 
+        If it starts with '/FakeDatset', append filename to ProcessedName
+        section of DBS dataset name.
+        Otherwise, use it as is.
+
         Note that this method does not check the limit of the new container name
         length, but only relies on validation from REST.
         """
@@ -196,6 +200,9 @@ class Transfer:
                 break
             if item['outputdataset'].startswith('/FakeDataset'):
                 filename = parseFileNameFromLFN(item['destination_lfn'])
+                # Alter Rucio container name from `/FakeDataset/fakefile/USER`
+                # To `/FakeDataset/fakefile_<filename>/USER`
+                # E.g., `/FakeDataset/fakefile_myoutput.root/USER`
                 containerName = addSuffixToProcessedDataset(item['outputdataset'], f'_{filename}')
             else:
                 containerName = item['outputdataset']
