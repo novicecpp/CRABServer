@@ -1349,7 +1349,10 @@ class PostJob():
         ## ID is -1 (and the $RETURN argument macro is -1004). This is just the first
         ## number in self.dag_jobid.
         self.dag_clusterid       = None
-        self.schedd = htcondor.Schedd()
+        if os.environ.get('TEST_POSTJOB_NO_SCHEDD', False):
+            self.schedd = None
+        else:
+            self.schedd = htcondor.Schedd()
 
         ## Set a logger for the post-job. Use a memory handler by default. Once we know
         ## the name of the log file where all the logging should go, we will flush the
@@ -2805,6 +2808,8 @@ class PostJob():
         """
         Update PostJobStatus and job exit-code among the job ClassAds for the monitoring script to update the Grafana dashboard.
         """
+        if os.environ.get('TEST_POSTJOB_NO_SCHEDD', False):
+            return
         if os.environ.get('TEST_POSTJOB_NO_STATUS_UPDATE', False):
             try:  # this may fail when running PostJob interactively for debugging
                 self.schedd.edit([self.dag_jobid], "LeaveJobInQueue", classad.ExprTree("false"))
