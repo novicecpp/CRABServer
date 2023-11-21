@@ -8,7 +8,7 @@ import hashlib
 
 import ASO.Rucio.config as config # pylint: disable=consider-using-from-import
 from ASO.Rucio.exception import RucioTransferException
-from ASO.Rucio.utils import writePath, parseFileNameFromLFN, addSuffixToDatasetName
+from ASO.Rucio.utils import writePath, parseFileNameFromLFN, addSuffixToProcessedDataset
 
 class Transfer:
     """
@@ -66,7 +66,7 @@ class Transfer:
         self.buildLFN2transferItemMap()
         self.readRESTInfo()
         self.readInfoFromTransferItems()
-        self.buildMultiPubContainers()
+        self.populateMultiPubContainers()
         self.readContainerRuleID()
         self.readOKLocks()
         self.readBlockComplete()
@@ -178,9 +178,9 @@ class Transfer:
         self.logger.info(f'Publish container: {self.publishContainer}, Transfer container: {self.transferContainer}')
         self.logsDataset = f'{self.transferContainer}#LOGS'
 
-    def buildMultiPubContainers(self):
+    def populateMultiPubContainers(self):
         """
-        Create the self.multiPubContainers attribute by reading all transfers
+        Populate the `self.multiPubContainers` by reading all transfers
         dict from the same job id.
 
         Note that this method does not check the limit of the new container name
@@ -191,8 +191,11 @@ class Transfer:
         for item in self.transferItems:
             if item['job_id'] != jobID:
                 break
-            filename = parseFileNameFromLFN(item['destination_lfn'])
-            containerName = addSuffixToDatasetName(self.publishContainer, f'__{filename}')
+            if item['outputdataset'].startswith('/FakeDataset'):
+                filename = parseFileNameFromLFN(item['destination_lfn'])
+                containerName = addSuffixToProcessedDataset(item['outputdataset'], f'_{filename}')
+            else:
+                containerName = item['outputdataset']
             multiPubContainers.append(containerName)
         self.multiPubContainers = multiPubContainers
 
