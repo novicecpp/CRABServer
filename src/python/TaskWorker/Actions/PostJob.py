@@ -948,6 +948,7 @@ class ASOServerJob(object):
                       'job_id': doc['jobid'],
                       'job_retry_count': doc['job_retry_count'],
                       'transfer_retry_count': 0,
+                      'type': doc['type'],
                       'subresource': 'updateDoc'}
             try:
                 self.crabserver.post(api='fileusertransfers', data=encodeRequest(newDoc))

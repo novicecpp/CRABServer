@@ -83,6 +83,7 @@ class RESTFileUserTransfers(RESTEntity):
             validate_str("job_id", param, safe, RX_JOBID, optional=True)
             validate_num("job_retry_count", param, safe, optional=True)
             validate_strlist("listOfIds", param, safe, RX_ANYTHING)  # Interesting... TODO. Have optional in strlist
+            validate_str("type", param, safe, RX_ANYTHING, optional=False)
         elif method in ['GET']:
             validate_str("subresource", param, safe, RX_SUBGETUSERTRANSFER, optional=False)
             validate_str("id", param, safe, RX_TASKNAME, optional=True)
@@ -147,7 +148,7 @@ class RESTFileUserTransfers(RESTEntity):
 
     @restcall
     def post(self, subresource, id, username, taskname, start_time, source, source_lfn, filesize,
-             transfer_state, transfer_retry_count, dbs_blockname, block_complete, publish, publication_state, job_id, job_retry_count, listOfIds):
+             transfer_state, transfer_retry_count, dbs_blockname, block_complete, publish, publication_state, job_id, job_retry_count, listOfIds, type):
         """This is used for user to allow kill transfers for specific task, retryPublication or retryTransfers.
             So far we do not allow retryPublications or retryTransfers for themselfs."""
         binds = {}
