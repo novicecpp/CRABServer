@@ -252,10 +252,36 @@ def test_updateBlockCompleteStatus(mock_addReplicasToDataset, mock_Transfer, moc
             "ruleid": "b43a554244c54dba954aa29cb2fdde0a",
         },
     ]
-    mock_addReplicasToDataset.return_value = retAddReplicasToDataset
-    datasetMetadata = loadDatasetMetadata[:2]
-    datasetMetadata[0]['is_open'] = False
-    datasetMetadata[1]['is_open'] = True
-    mock_rucioClient.get_metadata.side_effect = datasetMetadata
-    m = MonitorLocksStatus(mock_Transfer, mock_rucioClient, Mock())
-    assert m.updateBlockCompleteStatus(outputOK) == expectedOutput
+
+    def side_effect(*args):
+        container = args[1]
+        index = multiPubContainers.index(container)
+        return [returnValue[index]]
+
+    t = create_autospec(Transfer, instance=True)
+    t.multiPubContainers = multiPubContainers
+    mock_addReplicasToContainer.side_effect = side_effect
+    m = MonitorLockStatus(t, Mock(), Mock())
+    ret = m.registerToMutiPubContainers(outputAllOK)
+
+
+    # check args pass to addReplicasToContainer()
+    allcall = []
+    for i in range(len(returnValue)):
+        allcall.append(call([outputAllOK[i]], multiPubContainers[i]))
+    mock_addReplicasToContainer.assert_has_calls(allcall, any_order=True)
+
+    # check return value
+    assert sorted(ret, key=lambda d: d['id']) == sorted(returnValue, key=lambda d: d['id'])
+
+
+def test_checkBlockCompleteStatus():
+    assert 1 == 0
+
+@pytest.mark.skip(reason="Laziness.")
+def test_CleanUpTempArea_allFailed():
+    assert 0 == 1
+
+@pytest.mark.skip(reason="Laziness.")
+def test_CleanUpTempArea_mixed():
+    assert 0 == 1
