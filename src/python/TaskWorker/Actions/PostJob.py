@@ -956,12 +956,6 @@ class ASOServerJob(object):
                 msg += " Transfer submission failed."
                 msg += "\n%s" % (str(hte.headers))
                 returnMsg['error'] = msg
-            # add/remove some keys from newDoc to has the same schema as `if not self.found_doc_in_db` is True.
-            newDoc['type'] = doc['type']
-            newDoc.pop('subresource', None)
-            # we never use this, even in FTS ASO
-            newDoc.pop('transfer_retry_count', None)
-
             # Previous post resets asoworker to NULL. This is not good, so we set it again
             # using a different API to update the transfersDB record
             updateDoc = {}
@@ -987,6 +981,9 @@ class ASOServerJob(object):
                 newDoc['destination'] = doc['destination']
             if not 'outputdataset' in newDoc:
                 newDoc['outputdataset'] = doc['outputdataset']
+            # Rucio ASO requires the "type" field to handle the log transfers.
+            if not 'type' in newDoc:
+                newDoc['type'] = doc['type']
             with open('task_process/transfers.txt', 'a+') as transfers_file:
                 transfer_dump = json.dumps(newDoc)
                 transfers_file.write(transfer_dump+"\n")
