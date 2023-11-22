@@ -42,6 +42,10 @@ class RegisterReplicas:
         # Prepare
         transferItemsWithoutLogfile = self.skipLogTransfers(transferGenerator)
         preparedReplicasByRSE = self.prepare(transferItemsWithoutLogfile)
+
+        # store pfn in transfer
+        self.bookkeepingPFN(preparedReplicasByRSE)
+
         # Add file to rucio by RSE
         successFileDocs, failFileDocs = self.addFilesToRucio(preparedReplicasByRSE)
         self.logger.debug(f'successFileDocs: {successFileDocs}')
@@ -324,6 +328,15 @@ class RegisterReplicas:
             pfn = pfn.replace('/pnfs/desy.de/cms/tier2/temp', '/pnfs/desy.de/cms/tier2/store/temp')
         self.logger.debug(f'PFN2: {pfn}')
         return pfn
+
+    def bookkeepingPFN(self, preparedReplicas):
+        for rse, replicas in preparedReplicas.items():
+            tmpdict = {}
+            for r in replicas:
+                sourceLFN = self.transfer.LFN2transferItemMap[r['name']]['source_lfn']
+                tmpdict[sourceLFN] = r['pfn']
+        self.transfer.LFN2PFNMap.update({rse: tmpdict})
+        self.transfer.updateLFN2PFNMap()
 
     def updateRESTFileDocStateToSubmitted(self, fileDocs):
         """
