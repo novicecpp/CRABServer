@@ -176,29 +176,6 @@ class MonitorLockStatus:
                 tmpPublishFileDocs.append(doc)
         return tmpPublishFileDocs
 
-    def cleanupTempArea(self, fileDocs):
-        """
-        Best effort for clean temp area
-
-        :param fileDocs: list of fileDoc
-        :type fileDocs: list
-        """
-        self.logger.info('Cleaning up temp area.')
-        # Return if there is no file to delete, to prevent weird log line in
-        # `gfal.log`
-        if len(fileDocs) == 0:
-            self.logger.info('No file to clean up.')
-            return
-        pfns = []
-        for doc in fileDocs:
-            transferItem = self.transfer.LFN2transferItemMap[doc['name']]
-            rse = f'{transferItem["source"]}_Temp'
-            lfn = transferItem['source_lfn']
-            pfn = self.transfer.LFN2PFNMap[rse][lfn]
-            pfns.append(pfn)
-            self.logger.debug(f'PFN to delete: {pfn}.')
-        callGfalRm(pfns, self.transfer.restProxyFile, config.args.gfal_log_path)
-
     def updateRESTFileDocsStateToDone(self, fileDocs):
         """
         Update files transfer state in filetransfersdb to DONE, along with
