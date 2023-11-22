@@ -74,6 +74,7 @@ class Transfer:
         self.readContainerRuleID()
         self.readOKLocks()
         self.readBlockComplete()
+        self.readCleanedFiles()
 
     def readInfoFromRucio(self, rucioClient):
         """
