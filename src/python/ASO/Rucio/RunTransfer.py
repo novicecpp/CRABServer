@@ -12,6 +12,7 @@ from ASO.Rucio.exception import RucioTransferException
 from ASO.Rucio.Actions.BuildDBSDataset import BuildDBSDataset
 from ASO.Rucio.Actions.RegisterReplicas import RegisterReplicas
 from ASO.Rucio.Actions.MonitorLockStatus import MonitorLockStatus
+from ASO.Rucio.Actions.Cleanup import Cleanup
 
 
 class RunTransfer:
