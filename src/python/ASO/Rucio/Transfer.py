@@ -42,6 +42,9 @@ class Transfer:
         # dynamically change throughout the scripts
         self.currentDataset = ''
 
+        # map of destination_lfn to transferItems
+        self.LFN2transferItemMap = None
+
         # bookkeeping
         self.lastTransferLine = 0
         self.containerRuleID = ''
@@ -49,9 +52,7 @@ class Transfer:
         self.bookkeepingOKLocks = None
         self.bookkeepingBlockComplete = None
         self.LFN2PFNMap = {}
-
-        # map of destination_lfn to transferItems
-        self.LFN2transferItemMap = None
+        self.cleanedFiles = None
 
     def readInfo(self):
         """
@@ -126,7 +127,9 @@ class Transfer:
 
     def buildLFN2transferItemMap(self):
         """
-        Create map from LFN to transferItem
+        Create map from destination LFN to transferItem.
+        Note that LFN2transferItemMap only point to latest `destination_lfn` in
+        case job has been retry.
         """
         self.LFN2transferItemMap = {}
         for x in self.transferItems:
@@ -329,3 +332,33 @@ class Transfer:
         self.logger.debug(f'LFN2PFNMap: {self.LFN2PFNMap}')
         with writePath(path) as w:
             json.dump(self.LFN2PFNMap, w)
+
+    def readCleanedFiles(self):
+        """
+        Read `self.cleanedFiles` from task_process/transfers/cleaned_files.json
+        Initialize empty dict in case of path not found or
+        `--ignore-cleanup-files` is `True`.
+        """
+        if config.args.ignore_cleaned_files:
+            self.cleanedFiles = []
+            return
+        path = config.args.cleaned_files_path
+        try:
+            with open(path, 'r', encoding='utf-8') as r:
+                self.cleanedFiles = json.load(r)
+                self.logger.info(f'Got `cleanedFiles` from bookkeeping: {self.cleanedFiles}')
+        except FileNotFoundError:
+            self.cleanedFiles = []
+            self.logger.info(f'`cleanedFiles` "{path}" does not exist. Assume this is first time it run.')
+
+    def updateCleanedFiles(self):
+        """
+        update LFN2PFNMap to task_process/transfers/lfn2pfn_map.json
+        Note that we did not check if dict in self.LFN2PFNMap are conform with
+        format we expected.
+        """
+        path = config.args.cleaned_files_path
+        self.logger.info (f'Bookkeeping `self.cleanedFiles` to file: {path}')
+        self.logger.debug(f'self.cleanedFiles: {self.cleanedFiles}')
+        with writePath(path) as w:
+            json.dump(self.cleanedFiles, w)

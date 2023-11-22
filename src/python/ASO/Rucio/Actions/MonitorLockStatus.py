@@ -6,7 +6,7 @@ import copy
 import datetime
 
 import ASO.Rucio.config as config # pylint: disable=consider-using-from-import
-from ASO.Rucio.utils import updateToREST, parseFileNameFromLFN, callGfalRm
+from ASO.Rucio.utils import updateToREST
 from ASO.Rucio.Actions.RegisterReplicas import RegisterReplicas
 
 
@@ -33,9 +33,8 @@ class MonitorLockStatus:
         # skip locks that already update status to rest
         newDoneFileDocs = [doc for doc in okFileDocs if not doc['name'] in self.transfer.bookkeepingOKLocks]
         self.updateRESTFileDocsStateToDone(newDoneFileDocs)
+        # bookkeeping, also to be used in `Cleanup` action.
         self.transfer.updateOKLocks([x['name'] for x in newDoneFileDocs])
-
-        self.cleanupTempArea(newDoneFileDocs)
 
         # NOTE: See https://github.com/dmwm/CRABServer/issues/7940
         ## Filter only files need to publish

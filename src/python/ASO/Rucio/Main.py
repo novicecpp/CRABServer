@@ -71,6 +71,12 @@ def main():
     opt.add_argument("--ignore-lfn2pfn-map", dest="ignore_lfn2pfn_map",
                      action='store_true',
                      help="")
+    opt.add_argument("--cleaned-files-path", dest="cleaned_files_path",
+                     default='task_process/transfers/cleaned_files.json',
+                     help="Bookkeeping path of cleanedFiles")
+    opt.add_argument("--ignore-cleaned-files", dest="ignore_cleaned_files",
+                     action='store_true',
+                     help="")
     opt.add_argument("--gfal-log-path", dest="gfal_log_path",
                      default='task_process/transfers/gfal.log',
                      help="gfal log path")

@@ -53,14 +53,19 @@ def containerRuleIDJSONContent():
     path = 'test/assets/container_ruleid.json'
     with open(path, 'r', encoding='utf-8') as r:
         return r.read()
-
-@pytest.fixture
-def LFN2PFNMapJSON():
+# https://stackoverflow.com/a/57015304
+@pytest.fixture(name='LFN2PFNMapJSON')
+def fixture_LFN2PFNMapJSON():
     path = 'test/assets/LFN2PFNMap.json'
     with open(path, 'r', encoding='utf-8') as r:
         return json.load(r)
 
-
+@pytest.fixture(name='cleanedFiles')
+def fixture_cleanedFiles():
+    path = 'test/assets/transferDicts.json'
+    with open(path, 'r', encoding='utf-8') as r:
+        transfersItem = json.load(r)
+    return [xdict['destination_lfn'] for xdict in transfersItem]
 
 #old relic
 #def test_Transfer_readInfo():
@@ -337,7 +342,6 @@ def test_readLFN2PFNMap(LFN2PFNMapJSON):
         mo.assert_called_once_with(path, 'r', encoding='utf-8')
         assert t.LFN2PFNMap == LFN2PFNMapJSON
 
-
 def test_updateLFN2PFNMap(LFN2PFNMapJSON, fs):
     path = '/path/to/lfn2pfn.json'
     config.args = Namespace(lfn2pfn_map_path=path)
@@ -352,3 +356,28 @@ def test_updateLFN2PFNMap(LFN2PFNMapJSON, fs):
     with open(path, 'r', encoding='utf-8') as mock_file:
         fileContent = json.loads(mock_file.read())
         assert fileContent == LFN2PFNMapJSON
+
+def test_readCleanedFiles(cleanedFiles):
+    path = '/path/to/files.txt'
+    config.args = Namespace(cleaned_files_path=path, ignore_cleaned_files=False)
+    with patch('ASO.Rucio.Transfer.open', new_callable=mock_open, read_data=json.dumps(cleanedFiles)) as mo:
+        t = Transfer()
+        t.readCleanedFiles()
+        # check if open correct file
+        mo.assert_called_once_with(path, 'r', encoding='utf-8')
+        assert t.cleanedFiles == cleanedFiles
+
+def test_updateCleanedFiles(cleanedFiles, fs):
+    path = '/path/to/files.txt'
+    config.args = Namespace(cleaned_files_path=path, ignore_cleaned_files=False)
+    fs.create_file(path)
+    with open(path, 'w', encoding='utf-8') as mock_file:
+        with patch('ASO.Rucio.Transfer.writePath') as mock_writePath:
+            mock_writePath.return_value.__enter__.return_value = mock_file
+            t = Transfer()
+            t.cleanedFiles = cleanedFiles
+            t.updateCleanedFiles()
+            mock_writePath.assert_called_once_with(path)
+    with open(path, 'r', encoding='utf-8') as mock_file:
+        fileContent = json.loads(mock_file.read())
+        assert fileContent == cleanedFiles

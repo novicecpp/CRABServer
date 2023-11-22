@@ -53,6 +53,9 @@ class RunTransfer:
         RegisterReplicas(self.transfer, self.rucioClient, self.crabRESTClient).execute()
         # do 2
         MonitorLockStatus(self.transfer, self.rucioClient, self.crabRESTClient).execute()
+        # cleanup
+        # For now, only delete files in temp RSE
+        Cleanup(self.transfer).execute()
 
     def _initRucioClient(self, username, proxypath='/tmp/x509_uXXXX'):
         """
