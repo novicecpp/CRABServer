@@ -380,8 +380,8 @@ class RegisterReplicas:
     def bookkeepingPFN(self, prepareReplicas):
         """
         Store lfn to pfn map to `self.transfer.LFN2PFNMap` and bookkeeping it to
-        disk. `prepareReplicas` is the same object that feed to
-        `addFilesToRucio()`
+        disk. `prepareReplicas` is the same dict that passing to
+        `addFilesToRucio()`.
 
         :param prepareReplicas: dict return from `prepare()` method.
         :type prepareReplicas: dict
