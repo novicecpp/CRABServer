@@ -45,13 +45,15 @@ class Transfer:
         # map of destination_lfn to transferItems
         self.LFN2transferItemMap = None
 
-        # bookkeeping
-        self.lastTransferLine = 0
-        self.containerRuleID = ''
-        self.publishRuleID = ''
+        # Bookkeeping variable
+        # All variable here should be `None` and get assiged in `read*` method
+        # to make it fail (fast) when we forgot to add `read*` in readInfo.
+        self.lastTransferLine = None
+        self.containerRuleID = None
+        self.publishRuleID = None
         self.bookkeepingOKLocks = None
         self.bookkeepingBlockComplete = None
-        self.LFN2PFNMap = {}
+        self.LFN2PFNMap = None
         self.cleanedFiles = None
 
     def readInfo(self):
@@ -74,6 +76,7 @@ class Transfer:
         self.readContainerRuleID()
         self.readOKLocks()
         self.readBlockComplete()
+        self.readLFN2PFNMap()
         self.readCleanedFiles()
 
     def readInfoFromRucio(self, rucioClient):
@@ -202,6 +205,7 @@ class Transfer:
                                  f' Transfer Container rule ID: {self.containerRuleID}'\
                                  f' Publish Container rule ID: {self.publishRuleID}')
         except FileNotFoundError:
+            self.containerRuleID = ''
             self.logger.info(f'Bookkeeping rules "{path}" does not exist. Assume it is first time it run.')
 
     def updateContainerRuleID(self):
