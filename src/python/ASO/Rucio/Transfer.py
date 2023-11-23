@@ -81,11 +81,12 @@ class Transfer:
 
     def readInfoFromRucio(self, rucioClient):
         """
-        Read the information from Rucio.
+        Like `readInfo` but read the information from Rucio.
 
         :param rucioClient: Rucio client
         :type rucioClient: rucio.client.client.Client
         """
+        # Currently, we do not use this method.
 
     def readLastTransferLine(self):
         """
