@@ -4,7 +4,6 @@ default:
     - tseethon
 stages:
   - build docker
-  - test2
 
 build_rest_image:
   stage: build docker
@@ -12,7 +11,8 @@ build_rest_image:
     name: gcr.io/kaniko-project/executor:v1.14.0-debug
     entrypoint: [""]
   script:
+    - echo "{\"auths\":{\"$CMSCRAB_REGISTRY_URL\":{\"auth\":\"$(echo -n $CMSCRAB_REGISTRY_USER:$CMSCRAB_REGISTRY_PASSWORD | base64)\"}}}" > /kaniko/.docker/config.json
     - /kaniko/executor
       --context "${CI_PROJECT_DIR}"
       --dockerfile "${CI_PROJECT_DIR}/cicd/crabserver_pypi/Dockerfile"
-      --destination "registry.cern.ch/cmscrab/crabserver:pypi-${CI_COMMIT_REF_SLUG}"
+      --destination "registry.cern.ch/cmscrab/crabserver:pypi-${CI_COMMIT_SHA}"
