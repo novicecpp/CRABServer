@@ -36,7 +36,7 @@ deploy_server:
   stage: deploy
   image:
     name: docker.io/bitnami/kubectl:1.27
-    entrypoint: ["/bin/bash", "-x", "-l", "-c"]
+    entrypoint: [""]
   script:
     - echo $KUBECONFIG_FILE
     #- export KUBECONFIG=$KUBECONFIG_FILE
