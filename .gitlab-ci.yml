@@ -32,25 +32,26 @@ stages:
 #      --dockerfile "${CI_PROJECT_DIR}/cicd/crabtaskworker_pypi/Dockerfile"
 #      --destination "registry.cern.ch/cmscrab/crabserver:pypi-${CI_COMMIT_SHA}"
 
-deploy_server:
-  stage: deploy
-  image:
-    name: docker.io/bitnami/kubectl:1.27
-    entrypoint: ["/bin/bash", "-x", "-c"]
-  script:
-    - echo $KUBECONFIG_FILE
-    - export KUBECONFIG=$KUBECONFIG_FILE
-    - kubectl -n crab set image deployment/crabserver "crabserver=registry.cern.ch/cmscrab/crabtaskworker:pypi-${CI_COMMIT_SHA}"
+#deploy_server:
+#  stage: deploy
+#  image:
+#    name: docker.io/bitnami/kubectl:1.27
+#    entrypoint: ["/bin/bash", "-x", "-l", "-c"]
+#  script:
+#    - echo $KUBECONFIG_FILE
+#    - export KUBECONFIG=$KUBECONFIG_FILE
+#    - kubectl -n crab set image deployment/crabserver "crabserver=registry.cern.ch/cmscrab/crabtaskworker:pypi-${CI_COMMIT_SHA}"
 
 
 deploy_tw:
   stage: deploy
   image:
     name: registry.cern.ch/cmscrab/buildtools:latest
-    entrypoint: ["/bin/bash", "-x", "-c"]
+    entrypoint: ["/bin/bash", "-x", "-l", "-c"]
   script:
-    - export Environment=crab-dev-tw03
-    - export Service=TaskWorker
-    - export Image="registry.cern.ch/cmscrab/crabtaskworker:pypi-${CI_COMMIT_SHA}"
-    - export SSH_KEY=$CRAB_TW_SSH_KEY
-    - bash -x cicd/jenkins/deploy_tw.sh
+    - echo "${CRAB_TW_SSH_KEY}"
+#    - export Environment=crab-dev-tw03
+#    - export Service=TaskWorker
+#    - export Image="registry.cern.ch/cmscrab/crabtaskworker:pypi-${CI_COMMIT_SHA}"
+#    - export SSH_KEY=$CRAB_TW_SSH_KEY
+#    - bash -x cicd/jenkins/deploy_tw.sh
