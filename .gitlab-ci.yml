@@ -36,7 +36,7 @@ deploy_server:
   stage: deploy
   image:
     name: docker.io/bitnami/kubectl:1.27
-    entrypoint: ["/bin/bash", "-x", "-l", "-c"]
+    entrypoint: ["/bin/bash", "-x", "-c"]
   script:
     - echo $KUBECONFIG_FILE
     - export KUBECONFIG=$KUBECONFIG_FILE
@@ -47,7 +47,7 @@ deploy_tw:
   stage: deploy
   image:
     name: registry.cern.ch/cmscrab/buildtools:latest
-    entrypoint: ["/bin/bash", "-x", "-l", "-c"]
+    entrypoint: ["/bin/bash", "-x", "-c"]
   script:
     - export Environment=crab-dev-tw03
     - export Service=TaskWorker
