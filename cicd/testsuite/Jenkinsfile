@@ -1,0 +1,97 @@
+#!/usr/bin/env groovy
+
+pipeline {
+    agent { node { label 'cms-dmwm-cc7' } }
+    //options {
+    //    skipDefaultCheckout(true)
+    //}
+    //environment {
+    //    IMAGE_TAG = "pypi-${BUILD_TAG}"
+    //    CMSCRAB_REGISTRY_CRED = credentials('edcd5106-7325-45be-a595-2a769fee0c9c') // robot-cmscrab+jenkins/****** (cmscrab robot account)
+    //}
+    stages {
+        //stage('clean and checkout built-in node') {
+        //    steps {
+        //        cleanWs()
+        //        // We need to explicitly checkout from SCM here
+        //        checkout scm
+        //        sh """
+        //            pwd; ls -alh
+        //        """
+        //    }
+        //}
+        //stage('clean and checkout docker node') {
+        //    agent { node { label 'docker-build && amd64' } }
+        //    steps {
+        //        cleanWs()
+        //        // We need to explicitly checkout from SCM here
+        //        checkout scm
+        //        sh """
+        //            pwd; ls -alh
+        //        """
+        //    }
+        //}
+        stage('Execute Tests') {
+            steps {
+                sh '''
+                    set -e
+
+                    export CRABClient_version=GH
+                    export CRABServer_tag=HEAD
+                    export REST_Instance=test12
+                    export CMSSW_release=CMSSW_13_0_2
+                    export Task_Submission_Status_Tracking=true
+                    export Check_Publication_Status=true
+                    export Repo_GH_Issue=novicecpp/CRABServer
+                    export Repo_Testing_Scripts=dmwm/CRABServer
+                    export Branch_Testing_Scripts=master
+                    export Test_Docker_Image=registry.cern.ch/cmscrab/crabtesting:231009
+
+                    bash -x cicd/testsuite/execute_test.sh
+
+                '''
+                stash(name: 'artifacts',
+                      includes: 'artifacts/*',
+                )
+
+            }
+        }
+        stage('Check test result') {
+            steps {
+                unstash 'artifacts'
+                sh '''
+                    set -a
+                    . ./artifacts/parameters
+                    set +a
+                '''
+                sh '''
+                    #export Repo_GH_Issue=novicecpp/CRABServer
+                    #export Repo_Testing_Scripts=dmwm/CRABServer
+                    #export Branch_Testing_Scripts=master
+                    #export Test_Docker_Image=registry.cern.ch/cmscrab/crabtesting:231009
+                    ls -alh artifacts
+
+                    bash cicd/testsuite/check_test_result.sh
+                '''
+            }
+        }
+    }
+    post {
+
+
+        // Clean after build
+        always {
+            archiveArtifacts(artifacts: 'artifacts/*',
+                             allowEmptyArchive: true,
+                             fingerprint: true,
+                             onlyIfSuccessful: false
+            )
+
+            cleanWs(cleanWhenNotBuilt: false,
+                    deleteDirs: true,
+                    disableDeferredWipeout: true,
+                    notFailBuild: true,
+            )
+        }
+    }
+}

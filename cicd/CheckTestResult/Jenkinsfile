@@ -1,0 +1,96 @@
+#!/usr/bin/env groovy
+
+pipeline {
+    agent { node { label 'cms-dmwm-cc7' } }
+    //options {
+    //    skipDefaultCheckout(true)
+    //}
+    //environment {
+    //    IMAGE_TAG = "pypi-${BUILD_TAG}"
+    //    CMSCRAB_REGISTRY_CRED = credentials('edcd5106-7325-45be-a595-2a769fee0c9c') // robot-cmscrab+jenkins/****** (cmscrab robot account)
+    //}
+    parameters {
+        string(name: 'issueTitle')
+        string(name: 'Repo_GH_Issue', defaultValue: 'novicecpp/CRABServer')
+        string(name: 'Repo_Testing_Scripts', defaultValue: 'novicecpp/CRABServer')
+        string(name: 'Branch_Testing_Scripts', defaultValue: 'master')
+        string(name: 'Test_Docker_Image', defaultValue: 'registry.cern.ch/cmscrab/crabtesting:231009')
+        string(name: 'Manual_Task_Names', defaultValue: '')
+
+        // inherit from parent tasks
+        string(name: 'CRABClient_version', defaultValue: 'prod')
+        string(name: 'CRABServer_tag', defaultValue: 'HEAD')
+        string(name: 'REST_Instance', defaultValue: 'preprod')
+        choice(name: 'CMSSW_release',
+               choices: ['CMSSW_13_0_2', 'CMSSW_10_6_26'])
+        booleanParam(name: 'Task_Submission_Status_Tracking', defaultValue: true)
+        booleanParam(name: 'Check_Publication_Status', defaultValue: true)
+        string(name: 'RETRY', defaultValue: '1')
+        string(name: 'MAX_RETRY', defaultValue: '3')
+    }
+    stages {
+        stage('Check test result') {
+            steps {
+                script {
+                    try {
+                        sh '''
+                            #! /bin/bash
+                            printenv | sort
+                            bash cicd/CheckTestResult/CheckTestResult.sh
+                        '''
+                    } catch (err) {
+                        int retry = params.RETRY.toInteger()
+                        int max_retry = params.MAX_RETRY.toInteger()
+                        int retry_next = retry + 1
+                        echo '(debug): ${retry} ${max_retry} ${retry_next}'
+                        echo "(debug): ${retry} ${max_retry} ${retry_next}"
+                        if (retry >= max_retry) {
+                            error 'Error. Give up.'
+                        } else {
+                            echo 'triggering self jobs'
+                            build(
+                                wait: false,
+                                job: env.JOB_NAME,
+                                parameters: [
+                                    string(name: 'issueTitle', value: params.issueTitle),
+                                    string(name: 'Repo_GH_Issue', value: params.Repo_GH_Issue),
+                                    string(name: 'Repo_Testing_Scripts', value: params.Repo_Testing_Scripts),
+                                    string(name: 'Branch_Testing_Scripts', value: params.Branch_Testing_Scripts),
+                                    string(name: 'Test_Docker_Image', value: params.Test_Docker_Image),
+                                    string(name: 'Manual_Task_Names', value: params.Manual_Task_Names),
+                                    string(name: 'CRABClient_version', value: params.CRABClient_version),
+                                    string(name: 'CRABServer_tag', value: params.CRABServer_tag),
+                                    string(name: 'REST_Instance', value: params.REST_Instance),
+                                    string(name: 'CMSSW_release', value: params.CMSSW_release),
+                                    booleanParam(name: 'Task_Submission_Status_Tracking', value: params.Task_Submission_Status_Tracking),
+                                    string(name: 'RETRY', value: retry_next.toString()),
+                                    string(name: 'MAX_RETRY', value: max_retry.toString()),
+                                ],
+                                quietPeriod: 300,
+                                waitForStart: false,
+                            )
+                            error 'retry triggered.'
+                        }
+                    }
+                }
+            }
+        }
+    }
+    post {
+        // Clean after build
+        always {
+            archiveArtifacts(artifacts: '*',
+                             allowEmptyArchive: true,
+                             fingerprint: true,
+                             onlyIfSuccessful: false,
+                             caseSensitive: true,
+                             defaultExcludes: true,
+            )
+            cleanWs(cleanWhenNotBuilt: false,
+                    deleteDirs: true,
+                    disableDeferredWipeout: true,
+                    notFailBuild: true,
+            )
+        }
+    }
+}

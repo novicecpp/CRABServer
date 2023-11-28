@@ -1,0 +1,15 @@
+FROM registry.cern.ch/cmscrab/crabtaskworker:wmcore-pypi-devthree
+RUN unlink /data/srv/TaskManager/logs \
+    && unlink /data/srv/TaskManager/cfg \
+    && mkdir /data/srv/TaskManager/cfg /data/srv/TaskManager/logs \
+    && chown crab3:crab3 -R /data/srv/TaskManager
+COPY TaskWorkerConfig.py /data/srv/TaskManager/cfg
+RUN mkdir /data/certs
+#cert
+COPY proxy_crab-dev-tw03.pem /data/certs/servicecert.pem
+COPY proxy_crab-dev-tw03.pem /data/certs/servicekey.pem
+RUN chown -R crab3:crab3 /data/certs/
+#rucio
+#grid security
+COPY grid-security /etc/grid-security
+USER 1000:1000
