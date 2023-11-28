@@ -51,6 +51,6 @@ deploy_tw:
   script:
     - export Environment=crab-dev-tw03
     - export Service=TaskWorker
-    - export Image=registry.cern.ch/cmscrab/crabtaskworker:pypi-${CI_COMMIT_SHA}"
+    - export Image="registry.cern.ch/cmscrab/crabtaskworker:pypi-${CI_COMMIT_SHA}"
     - export SSH_KEY=$CRAB_TW_SSH_KEY
     - bash -x cicd/jenkins/deploy_tw.sh
