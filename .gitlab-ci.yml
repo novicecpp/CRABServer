@@ -1,0 +1,18 @@
+---
+default:
+  tags:
+    - tseethon
+stages:
+  - build docker
+  - test2
+
+build_rest_image:
+  stage: build docker
+  image:
+    name: gcr.io/kaniko-project/executor:v1.14.0-debug
+    entrypoint: [""]
+  script:
+    - /kaniko/executor
+      --context "${CI_PROJECT_DIR}"
+      --dockerfile "${CI_PROJECT_DIR}/cicd/crabserver_pypi/Dockerfile"
+      --destination "registry.cern.ch/cmscrab/crabserver:pypi-${CI_COMMIT_REF_SLUG}"
