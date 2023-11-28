@@ -1,8 +1,9 @@
 #! /bin/bash
 
 printenv
+WORKSPACE=$PWD
 
-ssh -o StrictHostKeyChecking=no crab3@${Environment}.cern.ch "docker exec ${Service} bash -c './stop.sh'; \
+ssh -i $SSH_KEY -o StrictHostKeyChecking=no crab3@${Environment}.cern.ch "docker exec ${Service} bash -c './stop.sh'; \
 docker stop ${Service}; \
 docker rm ${Service}; \
 ~/runContainer_pypi.sh -r registry.cern.ch/cmscrab -v ${Image} -s ${Service}"
@@ -29,6 +30,8 @@ fi
 #3. Print running containers
 echo -e "\nRunning containers: " >> $WORKSPACE/logFile.txt
 ssh -o StrictHostKeyChecking=no crab3@${Environment}.cern.ch  "docker ps" >> $WORKSPACE/logFile.txt
+
+cat $WORKSPACE/logFile.txt
 
 if [[ "${ERR}" == "true" ]] ; then
 	exit 1
