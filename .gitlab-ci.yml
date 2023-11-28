@@ -47,7 +47,7 @@ deploy_tw:
   stage: deploy
   image:
     name: registry.cern.ch/cmscrab/buildtools:latest
-    entrypoint: ["/bin/bash", "-x", "-l", "-c"]
+    #entrypoint: ["/bin/bash", "-x", "-l", "-c"]
   script:
     - echo "${CRAB_TW_SSH_KEY}"
 #    - export Environment=crab-dev-tw03
