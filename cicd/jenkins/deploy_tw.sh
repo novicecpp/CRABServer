@@ -16,7 +16,7 @@ else
 	processName=RunPublisher
 fi
 
-ssh -o StrictHostKeyChecking=no crab3@${Environment}.cern.ch \
+ssh -i $SSH_KEY -o StrictHostKeyChecking=no crab3@${Environment}.cern.ch \
 "docker exec ${Service} bash -c 'ps exfww | grep $processName | grep -v grep | head -1' || true" > isServiceRunning.log
 cat isServiceRunning.log
 if [ $(cat isServiceRunning.log |wc -l) -ne 1 ] ; then
@@ -29,7 +29,7 @@ fi
 
 #3. Print running containers
 echo -e "\nRunning containers: " >> $WORKSPACE/logFile.txt
-ssh -o StrictHostKeyChecking=no crab3@${Environment}.cern.ch  "docker ps" >> $WORKSPACE/logFile.txt
+ssh -i $SSH_KEY -o StrictHostKeyChecking=no crab3@${Environment}.cern.ch  "docker ps" >> $WORKSPACE/logFile.txt
 
 cat $WORKSPACE/logFile.txt
 
