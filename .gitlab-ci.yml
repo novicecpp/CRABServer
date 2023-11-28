@@ -51,6 +51,7 @@ deploy_tw:
 
   script:
     - echo "${CRAB_TW_SSH_KEY}"
+    - chmod 600 "${CRAB_TW_SSH_KEY}"
     - export Environment=crab-dev-tw03
     - export Service=TaskWorker
     - export Image="registry.cern.ch/cmscrab/crabtaskworker:pypi-${CI_COMMIT_SHA}"
