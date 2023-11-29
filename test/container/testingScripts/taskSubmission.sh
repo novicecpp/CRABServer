@@ -1,6 +1,6 @@
 #!/bin/bash
 
-bash -x
+set -x
 
 #Script submits tasks for testing. 3 types of testing can be started using this script:
 # 1. Client_Validation_Suite: tests different CRABClient commands;
@@ -17,6 +17,7 @@ submitTasks(){
   for file_name in ${filesToSubmit};
   do
       echo -e "\nSubmitting file: ${file_name}"
+      cat "${file_name}"
       output=$(crab submit -c ${file_name} --proxy=${PROXY} 2>&1)
       submitExitCode=$?
       echo ${output}

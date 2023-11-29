@@ -1,6 +1,6 @@
 #!/bin/bash
 
-bash -x
+set -x
 
 #Script can be used to setup CRABClient:
 # 1. dev - CRABClient from Intergration Build (IB);
