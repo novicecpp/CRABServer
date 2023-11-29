@@ -1,5 +1,7 @@
 #!/bin/bash
 
+bash -x
+
 #Script can be used to setup CRABClient:
 # 1. dev - CRABClient from Intergration Build (IB);
 # 2. GH - CRABClient from CRABClient GH repository master branch. This option requires to set which CRABServer tag to use;
@@ -27,7 +29,7 @@ then
 fi
 
 cd ${WORK_DIR}
-[ ! -d 'CRABServer' ] && git clone git@github.com:dmwm/CRABServer
+#[ ! -d 'CRABServer' ] && git clone git@github.com:dmwm/CRABServer
 
 case $CRABClient_version in
   dev)
@@ -58,7 +60,7 @@ case $CRABClient_version in
 	mkdir -p ${GitDir}/WMCore/src/python/WMCore
 	touch ${GitDir}/WMCore/src/python/__init__.py
 	touch ${GitDir}/WMCore/src/python/WMCore/__init__.py
-	cp ${GitDir}/CRABClient/src/python/CRABClient/WMCoreConfiguration.py ${GitDir}/WMCore/src/python/WMCore/Configuration.py 
+	cp ${GitDir}/CRABClient/src/python/CRABClient/WMCoreConfiguration.py ${GitDir}/WMCore/src/python/WMCore/Configuration.py
 
 	export PYTHONPATH=${MY_CRAB}/src/python:$PYTHONPATH
 	export PYTHONPATH=${GitDir}/WMCore/src/python:$PYTHONPATH

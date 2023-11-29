@@ -1,5 +1,7 @@
 #!/bin/bash
 
+bash -x
+
 #Script submits tasks for testing. 3 types of testing can be started using this script:
 # 1. Client_Validation_Suite: tests different CRABClient commands;
 # 2. Client_Configuration_Validation: tests different CRABClient configurations;
@@ -85,9 +87,8 @@ fi
 
 if [ "${Task_Submission_Status_Tracking}" = true ]; then
     echo -e "\nStarting task submission for Status Tracking testing.\n"
-    cd CRABServer/test/statusTrackingTasks/
+    cd test/statusTrackingTasks/
     filesToSubmit=`find . -type f -name '*.py' ! -name '*pset*'`
     submitTasks "${filesToSubmit}" "TS"
     cd ${WORK_DIR}
 fi
-
