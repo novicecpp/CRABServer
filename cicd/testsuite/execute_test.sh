@@ -1,4 +1,5 @@
 #! /bin/bash
+printenv
 
 #00. check parameters
 echo "(DEBUG) client:"
@@ -20,8 +21,9 @@ echo "(DEBUG)   \- Test_Docker_Image: ${Test_Docker_Image}"
 echo "(DEBUG) end"
 
 #0. Prepare environment
-rm -rf /tmp/crabTestConfig/
-docker system prune -af
+#rm -rf /tmp/crabTestConfig/
+#docker system prune -af
+WORKSPACE=$PWD
 mkdir artifacts
 touch message_taskSubmitted
 ls -l /cvmfs/cms-ib.cern.ch/latest/ 2>&1
@@ -43,8 +45,8 @@ export WORK_DIR=`pwd`
 
 #1.1. Get configuration from CMSSW_release
 export CMSSW_release=${CMSSW_release}
-curl -s -O https://raw.githubusercontent.com/$Repo_Testing_Scripts/$Branch_Testing_Scripts/test/testingConfigs
-CONFIG_LINE=$(grep "CMSSW_release=${CMSSW_release};" testingConfigs)
+#curl -s -O https://raw.githubusercontent.com/$Repo_Testing_Scripts/$Branch_Testing_Scripts/test/testingConfigs
+CONFIG_LINE=$(grep "CMSSW_release=${CMSSW_release};" test/testingConfigs)
 export SCRAM_ARCH=$(echo "${CONFIG_LINE}" | tr ';' '\n' | grep SCRAM_ARCH | sed 's|SCRAM_ARCH=||')
 export inputDataset=$(echo "${CONFIG_LINE}" | tr ';' '\n' | grep inputDataset | sed 's|inputDataset=||')
 # see https://github.com/dmwm/WMCore/issues/11051 for info about SCRAM_ARCH formatting
@@ -74,13 +76,13 @@ fi
 
 echo -e "\n**Tests started:**\n" >> message_configuration
 if [ "X$Client_Validation_Suite" == "Xtrue" ]; then
-	echo -e "- [ ] Client_Validation" >> message_configuration
+    echo -e "- [ ] Client_Validation" >> message_configuration
 fi
 if [ "X$Client_Configuration_Validation" == "Xtrue" ]; then
-	echo -e "- [ ] Client_Configuration_Validation" >> message_configuration
+    echo -e "- [ ] Client_Configuration_Validation" >> message_configuration
 fi
 if [ "X$Task_Submission_Status_Tracking" == "Xtrue" ]; then
-	echo -e "- [ ] Task_Submission_Status_Tracking\n" >> message_configuration
+    echo -e "- [ ] Task_Submission_Status_Tracking\n" >> message_configuration
 fi
 
 echo -e "Started at: `(date '+%Y-%m-%d %H:%M:%S')`\nLink to the [job](${BUILD_URL}) " >> message_configuration
@@ -93,44 +95,47 @@ echo "issueTitle=${issueTitle}" >> $WORKSPACE/parameters
 
 #3. Submit tasks
 if [ "X${singularity}" == X6 ] || [ "X${singularity}" == X8 ]; then
-	echo "Starting singularity ${singularity} container."
-    git clone https://github.com/$Repo_Testing_Scripts
-    cd CRABServer
-    if [[ $(git rev-parse --abbrev-ref HEAD) != $Branch_Testing_Scripts ]]; then
-        git checkout -t origin/$Branch_Testing_Scripts
-    fi
-    cd test/container/testingScripts
-    scramprefix=cc${singularity}
-    if [ "X${singularity}" == X6 ]; then scramprefix=cc${singularity}; fi
-    if [ "X${singularity}" == X8 ]; then scramprefix=el${singularity}; fi
-	/cvmfs/cms.cern.ch/common/cmssw-${scramprefix} -- ./taskSubmission.sh || export ERR=true
+    echo 'slc6 does not support'
+    exit 1
+    #echo "Starting singularity ${singularity} container."
+    #git clone https://github.com/$Repo_Testing_Scripts
+    #cd CRABServer
+    #if [[ $(git rev-parse --abbrev-ref HEAD) != $Branch_Testing_Scripts ]]; then
+    #    git checkout -t origin/$Branch_Testing_Scripts
+    #fi
+    #cd test/container/testingScripts
+    #scramprefix=cc${singularity}
+    #if [ "X${singularity}" == X6 ]; then scramprefix=cc${singularity}; fi
+    #if [ "X${singularity}" == X8 ]; then scramprefix=el${singularity}; fi
+    #/cvmfs/cms.cern.ch/common/cmssw-${scramprefix} -- ./taskSubmission.sh || export ERR=true
 elif [ "X${singularity}" == X7 ] || [ "X${singularity}" == X8 ] ; then
-	echo "Starting CRAB testing container for slc${singularity}."
-	export DOCKER_OPT="-u $(id -u):$(id -g) -v /home:/home -v /etc/passwd:/etc/passwd -v /etc/group:/etc/group"
-	export DOCKER_ENV="-e inputDataset -e ghprbPullId -e SCRAM_ARCH -e CRABServer_tag -e Client_Validation_Suite -e Task_Submission_Status_Tracking -e Client_Configuration_Validation -e X509_USER_CERT -e X509_USER_KEY -e CMSSW_release -e REST_Instance -e CRABClient_version"
-	export DOCKER_VOL="-v $WORKSPACE/artifacts/:/data/CRABTesting/artifacts:Z -v /cvmfs/grid.cern.ch/etc/grid-security:/etc/grid-security  -v /cvmfs/grid.cern.ch/etc/grid-security/vomses:/etc/vomses  -v /cvmfs:/cvmfs"
-	docker run --rm $DOCKER_OPT $DOCKER_VOL $DOCKER_ENV --net=host \
-	$Test_Docker_Image -c 	\
-	'source taskSubmission.sh' || export ERR=true
+    echo "Starting CRAB testing container for slc${singularity}."
+    #export DOCKER_OPT="-u $(id -u):$(id -g) -v /home:/home -v /etc/passwd:/etc/passwd -v /etc/group:/etc/group"
+    #export DOCKER_ENV="-e inputDataset -e ghprbPullId -e SCRAM_ARCH -e CRABServer_tag -e Client_Validation_Suite -e Task_Submission_Status_Tracking -e Client_Configuration_Validation -e X509_USER_CERT -e X509_USER_KEY -e CMSSW_release -e REST_Instance -e CRABClient_version"
+    #export DOCKER_VOL="-v $WORKSPACE/artifacts/:/data/CRABTesting/artifacts:Z -v /cvmfs/grid.cern.ch/etc/grid-security:/etc/grid-security  -v /cvmfs/grid.cern.ch/etc/grid-security/vomses:/etc/vomses  -v /cvmfs:/cvmfs"
+    #docker run --rm $DOCKER_OPT $DOCKER_VOL $DOCKER_ENV --net=host \
+    #$Test_Docker_Image -c     \
+    #'source taskSubmission.sh' || export ERR=true
+    source taskSubmission.sh || export ERR=true
 else
-	echo "!!! I am not prepared to run for slc${singularity}."
+    echo "!!! I am not prepared to run for slc${singularity}."
     exit 1
 fi
 
-cd ${WORK_DIR}
+#cd ${WORK_DIR}
 mv $WORKSPACE/artifacts/* $WORKSPACE/
 
 #4. Update issue with submission results
 if $ERR ; then
-	echo -e "Something went wrong during task submission. Find submission log [here](${BUILD_URL}console). None of the downstream jobs were triggered." >> message_taskSubmitted
+    echo -e "Something went wrong during task submission. Find submission log [here](${BUILD_URL}console). None of the downstream jobs were triggered." >> message_taskSubmitted
 else
-	declare -A tests=( ["Task_Submission_Status_Tracking"]=submitted_tasks_TS ["Client_Validation_Suite"]=submitted_tasks_CV ["Client_Configuration_Validation"]=submitted_tasks_CCV)
-	for test in "${!tests[@]}";
-	do
+    declare -A tests=( ["Task_Submission_Status_Tracking"]=submitted_tasks_TS ["Client_Validation_Suite"]=submitted_tasks_CV ["Client_Configuration_Validation"]=submitted_tasks_CCV)
+    for test in "${!tests[@]}";
+    do
         if [ -s "${tests[$test]}" ]; then
-			echo -e "Task submission for **${test}** successfully ended.\n\`\`\`\n`cat ${tests[$test]}`\n\`\`\`\n" >> message_taskSubmitted
-		fi
-	done
+            echo -e "Task submission for **${test}** successfully ended.\n\`\`\`\n`cat ${tests[$test]}`\n\`\`\`\n" >> message_taskSubmitted
+        fi
+    done
     echo -e "Finished at: `(date '+%Y-%m-%d %H:%M:%S')`\nFind submission log [here](${BUILD_URL}console)" >> message_taskSubmitted
 fi
 
@@ -140,5 +145,5 @@ $WORKSPACE/cms-bot/create-gh-issue.py -r $Repo_GH_Issue -t "$issueTitle" -R mess
 cp parameters $WORKSPACE/artifacts
 
 if $ERR ; then
-	exit 1
+    exit 1
 fi
