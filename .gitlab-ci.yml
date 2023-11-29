@@ -69,6 +69,8 @@ task_submission_status_tracking:
   stage: run_testsuite
   tags:
     - tseethon-apptainer
+  variables:
+    GIT_STRATEGY: clone
   script:
     - export CRABClient_version=prod
     - export CRABServer_tag=HEAD
