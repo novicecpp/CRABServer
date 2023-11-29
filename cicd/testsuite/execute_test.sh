@@ -28,13 +28,14 @@ mkdir artifacts
 touch message_taskSubmitted
 ls -l /cvmfs/cms-ib.cern.ch/latest/ 2>&1
 
-git clone https://github.com/cms-sw/cms-bot
+#git clone https://github.com/cms-sw/cms-bot
 
-voms-proxy-init -rfc -voms cms -valid 192:00
-export X509_USER_CERT=/home/cmsbld/.globus/usercert.pem
-export X509_USER_KEY=/home/cmsbld/.globus/userkey.pem
-export PROXY=$(voms-proxy-info -path 2>&1)
-voms-proxy-info -all
+#voms-proxy-init -rfc -voms cms -valid 192:00
+#export X509_USER_CERT=/home/cmsbld/.globus/usercert.pem
+#export X509_USER_KEY=/home/cmsbld/.globus/userkey.pem
+#export PROXY=$(voms-proxy-info -path 2>&1)
+export PROXY=$X509_USER_PROXY
+#voms-proxy-info -all
 
 export PYTHONPATH=/cvmfs/cms-ib.cern.ch/jenkins-env/python/shared
 export ERR=false
