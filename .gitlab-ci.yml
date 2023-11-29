@@ -61,7 +61,7 @@ deploy_tw:
     - chmod 600 "${CRAB_TW_SSH_KEY_COPY}"
     - export Environment=crab-dev-tw03
     - export Service=TaskWorker
-    - export Image="registry.cern.ch/cmscrab/crabtaskworker:${IMAGE_TAG}"
+    - export Image="${IMAGE_TAG}"
     - export SSH_KEY=$CRAB_TW_SSH_KEY_COPY
     - bash -x cicd/jenkins/deploy_tw.sh
 
