@@ -11,59 +11,59 @@ stages:
   - deploy
   - run_testsuite
 
-build_rest_image:
-  stage: build_docker
-  image:
-    name: gcr.io/kaniko-project/executor:v1.14.0-debug
-    entrypoint: [""]
-  script:
-    - echo "{\"auths\":{\"$CMSCRAB_REGISTRY_URL\":{\"auth\":\"$(echo -n $CMSCRAB_REGISTRY_USER:$CMSCRAB_REGISTRY_PASSWORD | base64)\"}}}" > /kaniko/.docker/config.json
-    - cat /kaniko/.docker/config.json
-    - /kaniko/executor
-      --context "${CI_PROJECT_DIR}"
-      --dockerfile "${CI_PROJECT_DIR}/cicd/crabserver_pypi/Dockerfile"
-      --destination "registry.cern.ch/cmscrab/crabserver:${IMAGE_TAG}"
-
-build_tw_image:
-  stage: build_docker
-  image:
-    name: gcr.io/kaniko-project/executor:v1.14.0-debug
-    entrypoint: [""]
-  script:
-    - echo "{\"auths\":{\"$CMSCRAB_REGISTRY_URL\":{\"auth\":\"$(echo -n $CMSCRAB_REGISTRY_USER:$CMSCRAB_REGISTRY_PASSWORD | base64)\"}}}" > /kaniko/.docker/config.json
-    - cat /kaniko/.docker/config.json
-    - /kaniko/executor
-      --context "${CI_PROJECT_DIR}"
-      --dockerfile "${CI_PROJECT_DIR}/cicd/crabtaskworker_pypi/Dockerfile"
-      --destination "registry.cern.ch/cmscrab/crabtaskworker:${IMAGE_TAG}"
-
-deploy_server:
-  stage: deploy
-  image:
-    name: docker.io/bitnami/kubectl:1.27
-    entrypoint: [""]
-  script:
-    - echo $KUBECONFIG_FILE
-    - export KUBECONFIG=$KUBECONFIG_FILE
-    - kubectl -n crab set image deployment/crabserver "crabserver=registry.cern.ch/cmscrab/crabtaskworker:${IMAGE_TAG}"
-
-
-deploy_tw:
-  stage: deploy
-  image:
-    name: registry.cern.ch/cmscrab/buildtools:latest
-    entrypoint: [""]
-  script:
-    - echo "${CRAB_TW_SSH_KEY}"
-    - export CRAB_TW_SSH_KEY_COPY="${CRAB_TW_SSH_KEY}_copy"
-    - cp ${CRAB_TW_SSH_KEY} ${CRAB_TW_SSH_KEY_COPY}
-    - echo >> ${CRAB_TW_SSH_KEY_COPY}
-    - chmod 600 "${CRAB_TW_SSH_KEY_COPY}"
-    - export Environment=crab-dev-tw03
-    - export Service=TaskWorker
-    - export Image="${IMAGE_TAG}"
-    - export SSH_KEY=$CRAB_TW_SSH_KEY_COPY
-    - bash -x cicd/jenkins/deploy_tw.sh
+#build_rest_image:
+#  stage: build_docker
+#  image:
+#    name: gcr.io/kaniko-project/executor:v1.14.0-debug
+#    entrypoint: [""]
+#  script:
+#    - echo "{\"auths\":{\"$CMSCRAB_REGISTRY_URL\":{\"auth\":\"$(echo -n $CMSCRAB_REGISTRY_USER:$CMSCRAB_REGISTRY_PASSWORD | base64)\"}}}" > /kaniko/.docker/config.json
+#    - cat /kaniko/.docker/config.json
+#    - /kaniko/executor
+#      --context "${CI_PROJECT_DIR}"
+#      --dockerfile "${CI_PROJECT_DIR}/cicd/crabserver_pypi/Dockerfile"
+#      --destination "registry.cern.ch/cmscrab/crabserver:${IMAGE_TAG}"
+#
+#build_tw_image:
+#  stage: build_docker
+#  image:
+#    name: gcr.io/kaniko-project/executor:v1.14.0-debug
+#    entrypoint: [""]
+#  script:
+#    - echo "{\"auths\":{\"$CMSCRAB_REGISTRY_URL\":{\"auth\":\"$(echo -n $CMSCRAB_REGISTRY_USER:$CMSCRAB_REGISTRY_PASSWORD | base64)\"}}}" > /kaniko/.docker/config.json
+#    - cat /kaniko/.docker/config.json
+#    - /kaniko/executor
+#      --context "${CI_PROJECT_DIR}"
+#      --dockerfile "${CI_PROJECT_DIR}/cicd/crabtaskworker_pypi/Dockerfile"
+#      --destination "registry.cern.ch/cmscrab/crabtaskworker:${IMAGE_TAG}"
+#
+#deploy_server:
+#  stage: deploy
+#  image:
+#    name: docker.io/bitnami/kubectl:1.27
+#    entrypoint: [""]
+#  script:
+#    - echo $KUBECONFIG_FILE
+#    - export KUBECONFIG=$KUBECONFIG_FILE
+#    - kubectl -n crab set image deployment/crabserver "crabserver=registry.cern.ch/cmscrab/crabtaskworker:${IMAGE_TAG}"
+#
+#
+#deploy_tw:
+#  stage: deploy
+#  image:
+#    name: registry.cern.ch/cmscrab/buildtools:latest
+#    entrypoint: [""]
+#  script:
+#    - echo "${CRAB_TW_SSH_KEY}"
+#    - export CRAB_TW_SSH_KEY_COPY="${CRAB_TW_SSH_KEY}_copy"
+#    - cp ${CRAB_TW_SSH_KEY} ${CRAB_TW_SSH_KEY_COPY}
+#    - echo >> ${CRAB_TW_SSH_KEY_COPY}
+#    - chmod 600 "${CRAB_TW_SSH_KEY_COPY}"
+#    - export Environment=crab-dev-tw03
+#    - export Service=TaskWorker
+#    - export Image="${IMAGE_TAG}"
+#    - export SSH_KEY=$CRAB_TW_SSH_KEY_COPY
+#    - bash -x cicd/jenkins/deploy_tw.sh
 
 task_submission_status_tracking:
   stage: run_testsuite
