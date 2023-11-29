@@ -55,7 +55,10 @@ deploy_tw:
     entrypoint: [""]
   script:
     - echo "${CRAB_TW_SSH_KEY}"
-    - chmod 600 "${CRAB_TW_SSH_KEY}"
+    - export CRAB_TW_SSH_KEY_COPY="${CRAB_TW_SSH_KEY}_copy"
+    - cp ${CRAB_TW_SSH_KEY} ${CRAB_TW_SSH_KEY_COPY}
+    - echo >> ${CRAB_TW_SSH_KEY_COPY}
+    - chmod 600 "${CRAB_TW_SSH_KEY_COPY}"
     - export Environment=crab-dev-tw03
     - export Service=TaskWorker
     - export Image="registry.cern.ch/cmscrab/crabtaskworker:${IMAGE_TAG}"
