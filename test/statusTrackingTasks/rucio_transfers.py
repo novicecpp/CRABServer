@@ -3,7 +3,7 @@ import time
 from WMCore.Configuration import Configuration
 import os
 import datetime
-from UserUtilities import getUsernameFromCRIC
+from CRABClient.UserUtilities import getUsernameFromCRIC
 
 now_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 CRAB_ENV = os.getenv('REST_Instance','test12')
