@@ -3,8 +3,12 @@ import time
 from WMCore.Configuration import Configuration
 import os
 import datetime
+from UserUtilities import getUsernameFromCRIC
+
 now_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 CRAB_ENV = os.getenv('REST_Instance','test12')
+rucio_account_path = getUsernameFromCRIC()
+rucio_account_type = 'user'
 SCHEDD_NAME = 'crab3@vocms059.cern.ch'
 filename_nopy =  __file__.split('/')[-1][:-3]
 
@@ -30,12 +34,12 @@ config.Data.unitsPerJob = 1
 config.JobType.maxJobRuntimeMin = 60
 config.Data.totalUnits = 100
 
-config.Data.publication = False
+config.Data.publication = True
 testName = "ruciotransfers-%d" % int(time.time())
 #testName = 'ruciotransfers-1'
 config.Data.outputDatasetTag = testName
 # rucio
-config.Data.outLFNDirBase = '/store/user/rucio/cmsbot/%s' % (testName,)
+config.Data.outLFNDirBase = '/store/%s/rucio/%s/%s' % (rucio_account_type, rucio_account_path, testName,)
 
 config.section_("User")
 

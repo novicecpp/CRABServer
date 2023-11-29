@@ -5,6 +5,9 @@ import os
 import datetime
 now_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 CRAB_ENV = os.getenv('REST_Instance','test12')
+rucio_account = os.getenv('RUCIO_GROUP_ACCOUNT', 'crab_test_group')
+rucio_account_path = rucio_account.rsplit('_', 1)[0]
+rucio_account_type = 'group'
 SCHEDD_NAME = 'crab3@vocms059.cern.ch'
 filename_nopy =  __file__.split('/')[-1][:-3]
 
@@ -30,12 +33,12 @@ config.Data.unitsPerJob = 1
 config.JobType.maxJobRuntimeMin = 60
 config.Data.totalUnits = 100
 
-config.Data.publication = False
+config.Data.publication = True
 testName = "ruciotransfers-%d" % int(time.time())
 #testName = 'ruciotransfers-1'
 config.Data.outputDatasetTag = testName
 # rucio
-config.Data.outLFNDirBase = '/store/group/rucio/crab_test/%s' % (testName,)
+config.Data.outLFNDirBase = '/store/%s/rucio/%s/%s' % (rucio_account_type, rucio_account_path, testName,)
 
 config.section_("User")
 
