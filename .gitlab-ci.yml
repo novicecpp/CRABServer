@@ -88,7 +88,7 @@ task_submission_status_tracking:
 
 check_test_result:
   stage: check_testsuite
-  retry: 5
+  retry: 2
   script:
     # Create counter file if it doesn't exist
     - "[ -f .counter ] || echo 0 > .counter"
