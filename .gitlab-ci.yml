@@ -10,6 +10,7 @@ stages:
   - build_docker
   - deploy
   - run_testsuite
+  - check_testsuite
 
 #build_rest_image:
 #  stage: build_docker
@@ -83,3 +84,30 @@ task_submission_status_tracking:
     - export Branch_Testing_Scripts=wmcore_pypi
     - export Test_Docker_Image=registry.cern.ch/cmscrab/crabtesting:231009
     - bash -x cicd/testsuite/execute_test.sh
+
+
+check_test_result:
+  stage: check_testsuite
+  retry: 5
+  script:
+    # Create counter file if it doesn't exist
+    - "[ -f .counter ] || echo 0 > .counter"
+    - export RETRY=$(cat .counter)
+    # Do whatever you need knowing it is retried
+    - bash -x cicid/gitlab/check_test_result.sh || rc=$?
+    # Increment value and update it to file
+    - >
+      if [[ $rc -ne 0 ]]; then
+          RETRY=$((RETRY+1))
+          echo $RETRY > .counter
+          sleep 300
+          exit 1
+      else
+          exit 0
+      fi
+  cache:
+    # Pay attention to the key, you may want to to adjust to your needs, but I consider job is retried by having branch or tag identifier as CI_COMMIT_REF_SLUG and commit sha
+    - key: $CI_PIPELINE_ID
+      paths:
+        - .counter
+      policy: pull-push

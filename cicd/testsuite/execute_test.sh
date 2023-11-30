@@ -23,7 +23,7 @@ echo "(DEBUG) end"
 #0. Prepare environment
 #rm -rf /tmp/crabTestConfig/
 #docker system prune -af
-WORKSPACE=$PWD
+export WORKSPACE=$PWD
 mkdir artifacts
 touch message_taskSubmitted
 ls -l /cvmfs/cms-ib.cern.ch/latest/ 2>&1
