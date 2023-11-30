@@ -131,8 +131,9 @@ else
     declare -A tests=( ["Task_Submission_Status_Tracking"]=submitted_tasks_TS ["Client_Validation_Suite"]=submitted_tasks_CV ["Client_Configuration_Validation"]=submitted_tasks_CCV)
     for test in "${!tests[@]}";
     do
-        if [ -s "${tests[$test]}" ]; then
-            echo -e "Task submission for **${test}** successfully ended.\n\`\`\`\n`cat ${tests[$test]}`\n\`\`\`\n" >> message_taskSubmitted
+        path="$WORKSPACE/artifacts/${tests[$test]}"
+        if [ -s "$path"  ]; then
+            echo -e "Task submission for **${test}** successfully ended.\n\`\`\`\n`cat "$path"`\n\`\`\`\n" >> message_taskSubmitted
         fi
     done
     echo -e "Finished at: `(date '+%Y-%m-%d %H:%M:%S')`\nFind submission log [here](${BUILD_URL}console)" >> message_taskSubmitted

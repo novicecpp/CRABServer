@@ -108,6 +108,7 @@ def main():
     listOfTasks = []
     instance = os.getenv('REST_Instance', 'preprod')
     work_dir = os.getenv('WORK_DIR', 'dummy_workdir')
+    proxypath = os.getenv('X509_USER_PROXY', os.getenv('PROXY', f'/tmp/x509up_u{os.getuid()}'))
     Check_Publication_Status = os.getenv('Check_Publication_Status', 'No')
     print("Check_Publication_Status is : ", Check_Publication_Status )
     checkPublication = True if Check_Publication_Status == 'Yes' else False
@@ -122,7 +123,7 @@ def main():
             remake_dict = {'task': task, 'instance': instance}
             remake_dir = crab_cmd({'cmd': 'remake', 'args': remake_dict})
 
-        status_dict = {'dir': remake_dir}
+        status_dict = {'dir': remake_dir, 'proxy': proxypath}
         status_command_output = crab_cmd({'cmd': 'status', 'args': status_dict})
         status_command_output.update({'taskName': task.rstrip()})
         status_command_output['workdir'] = remake_dir
