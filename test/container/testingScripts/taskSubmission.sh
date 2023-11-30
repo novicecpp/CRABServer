@@ -93,3 +93,6 @@ if [ "${Task_Submission_Status_Tracking}" = true ]; then
     submitTasks "${filesToSubmit}" "TS"
     cd ${WORK_DIR}
 fi
+
+
+realpath ${WORK_DIR}/artifacts/
