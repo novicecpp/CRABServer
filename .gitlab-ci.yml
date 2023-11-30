@@ -91,6 +91,8 @@ check_test_result:
   retry: 2
   tags:
     - tseethon-apptainer
+  variables:
+    GIT_STRATEGY: clone
   script:
     # Create counter file if it doesn't exist
     - "[ -f .counter ] || echo 0 > .counter"
