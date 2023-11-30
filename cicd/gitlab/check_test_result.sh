@@ -61,9 +61,11 @@ echo $CMSSW_release
 #docker run --rm $DOCKER_OPT $DOCKER_VOL $DOCKER_ENV --net=host \
 #$Test_Docker_Image -c 	\
 #'source setupCRABClient.sh; ./testingScripts/statusTracking.py' || export ERR=true
-
-source test/container/testingScripts/setupCRABClient.sh;
-test/container/testingScripts/statusTracking.py || export ERR=true
+export singularity=$(echo ${SCRAM_ARCH} | cut -d"_" -f 1 | tail -c 2)
+scramprefix=cc${singularity}
+if [ "X${singularity}" == X6 ]; then scramprefix=cc${singularity}; fi
+if [ "X${singularity}" == X8 ]; then scramprefix=el${singularity}; fi
+/cvmfs/cms.cern.ch/common/cmssw-${scramprefix} -- ./cicd/gitlab/execute_status_tracking.sh || export ERR=true
 
 #cd ${WORK_DIR}
 mv $WORKSPACE/artifacts/* $WORKSPACE/
