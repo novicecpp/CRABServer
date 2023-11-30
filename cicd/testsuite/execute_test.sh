@@ -122,7 +122,7 @@ else
 fi
 
 #cd ${WORK_DIR}
-mv $WORKSPACE/artifacts/* $WORKSPACE/
+#mv $WORKSPACE/artifacts/* $WORKSPACE/
 
 #4. Update issue with submission results
 if $ERR ; then
