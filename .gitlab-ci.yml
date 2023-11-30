@@ -89,6 +89,8 @@ task_submission_status_tracking:
 check_test_result:
   stage: check_testsuite
   retry: 2
+  tags:
+    - tseethon-apptainer
   script:
     # Create counter file if it doesn't exist
     - "[ -f .counter ] || echo 0 > .counter"
