@@ -98,6 +98,9 @@ check_test_result:
     - "[ -f .counter ] || echo 0 > .counter"
     - export RETRY=$(cat .counter)
     # Do whatever you need knowing it is retried
+    - export REST_Instance=test12
+    - export CMSSW_release=CMSSW_13_0_2
+    - export Check_Publication_Status=Yes
     - bash -x cicd/gitlab/check_test_result.sh || rc=$?
     # Increment value and update it to file
     - >
