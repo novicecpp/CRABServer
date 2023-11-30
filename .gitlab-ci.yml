@@ -98,7 +98,7 @@ check_test_result:
     - "[ -f .counter ] || echo 0 > .counter"
     - export RETRY=$(cat .counter)
     # Do whatever you need knowing it is retried
-    - bash -x cicid/gitlab/check_test_result.sh || rc=$?
+    - bash -x cicd/gitlab/check_test_result.sh || rc=$?
     # Increment value and update it to file
     - >
       if [[ $rc -ne 0 ]]; then
