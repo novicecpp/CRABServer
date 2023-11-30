@@ -108,7 +108,7 @@ def main():
     listOfTasks = []
     instance = os.getenv('REST_Instance', 'preprod')
     work_dir = os.getenv('WORK_DIR', 'dummy_workdir')
-    proxypath = os.getenv('X509_USER_PROXY', os.getenv('PROXY', f'/tmp/x509up_u{os.getuid()}'))
+    proxypath = os.getenv('X509_USER_PROXY', os.getenv('PROXY', '/tmp/x509up_u%s' % os.getuid()))
     Check_Publication_Status = os.getenv('Check_Publication_Status', 'No')
     print("Check_Publication_Status is : ", Check_Publication_Status )
     checkPublication = True if Check_Publication_Status == 'Yes' else False
