@@ -102,6 +102,7 @@ check_test_result:
     # Increment value and update it to file
     - >
       if [[ $rc -ne 0 ]]; then
+          trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
           RETRY=$((RETRY+1))
           echo $RETRY > .counter
           sleep 300
