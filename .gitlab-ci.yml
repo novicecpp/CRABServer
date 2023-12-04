@@ -12,7 +12,7 @@ stages:
   - run_testsuite
   - check_testsuite
 
-build_rest_image:
+.build_rest_image:
   stage: build_docker
   image:
     name: gcr.io/kaniko-project/executor:v1.14.0-debug
@@ -25,7 +25,7 @@ build_rest_image:
       --dockerfile "${CI_PROJECT_DIR}/cicd/crabserver_pypi/Dockerfile"
       --destination "registry.cern.ch/cmscrab/crabserver:${IMAGE_TAG}"
 
-build_tw_image:
+.build_tw_image:
   stage: build_docker
   image:
     name: gcr.io/kaniko-project/executor:v1.14.0-debug
