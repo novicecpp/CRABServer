@@ -106,7 +106,7 @@ if [ "X${singularity}" == X6 ] || [ "X${singularity}" == X8 ]; then
     scramprefix=cc${singularity}
     if [ "X${singularity}" == X6 ]; then scramprefix=cc${singularity}; fi
     if [ "X${singularity}" == X8 ]; then scramprefix=el${singularity}; fi
-    /cvmfs/cms.cern.ch/common/cmssw-${scramprefix} -- ./gitlab/taskSubmission.sh || export ERR=true
+    /cvmfs/cms.cern.ch/common/cmssw-${scramprefix} -- ./cicd/gitlab/taskSubmission.sh || export ERR=true
 elif [ "X${singularity}" == X7 ] || [ "X${singularity}" == X8 ] ; then
     echo "Starting CRAB testing container for slc${singularity}."
     echo 'slc7 does not support'
