@@ -6,13 +6,18 @@ default:
 variables:
   IMAGE_TAG: "pypi-${CI_COMMIT_REF_SLUG}"
 
+.pipeline_rules: &pipeline_rules
+  rules:
+    - if: $CI_COMMIT_BRANCH == "devthree"
+
 stages:
   - build_docker
   - deploy
   - run_testsuite
   - check_testsuite
 
-.build_rest_image:
+build_rest_image:
+  <<: *pipeline_rules
   stage: build_docker
   image:
     name: gcr.io/kaniko-project/executor:v1.14.0-debug
@@ -25,7 +30,8 @@ stages:
       --dockerfile "${CI_PROJECT_DIR}/cicd/crabserver_pypi/Dockerfile"
       --destination "registry.cern.ch/cmscrab/crabserver:${IMAGE_TAG}"
 
-.build_tw_image:
+build_tw_image:
+  <<: *pipeline_rules
   stage: build_docker
   image:
     name: gcr.io/kaniko-project/executor:v1.14.0-debug
@@ -38,7 +44,8 @@ stages:
       --dockerfile "${CI_PROJECT_DIR}/cicd/crabtaskworker_pypi/Dockerfile"
       --destination "registry.cern.ch/cmscrab/crabtaskworker:${IMAGE_TAG}"
 
-.deploy_server:
+deploy_server:
+  <<: *pipeline_rules
   stage: deploy
   image:
     name: docker.io/bitnami/kubectl:1.27
@@ -49,7 +56,8 @@ stages:
     - kubectl -n crab set image deployment/crabserver "crabserver=registry.cern.ch/cmscrab/crabtaskworker:${IMAGE_TAG}"
 
 
-.deploy_tw:
+deploy_tw:
+  <<: *pipeline_rules
   stage: deploy
   image:
     name: registry.cern.ch/cmscrab/buildtools:latest
@@ -66,7 +74,8 @@ stages:
     - export SSH_KEY=$CRAB_TW_SSH_KEY_COPY
     - bash -x cicd/gitlab/deploy_tw.sh
 
-.task_submission_status_tracking:
+task_submission_status_tracking:
+  <<: *pipeline_rules
   stage: run_testsuite
   tags:
     - tseethon-apptainer
@@ -92,6 +101,7 @@ stages:
       policy: push
 
 check_test_result:
+  <<: *pipeline_rules
   stage: check_testsuite
   retry: 2
   tags:
