@@ -38,7 +38,7 @@ stages:
       --dockerfile "${CI_PROJECT_DIR}/cicd/crabtaskworker_pypi/Dockerfile"
       --destination "registry.cern.ch/cmscrab/crabtaskworker:${IMAGE_TAG}"
 
-deploy_server:
+.deploy_server:
   stage: deploy
   image:
     name: docker.io/bitnami/kubectl:1.27
@@ -49,7 +49,7 @@ deploy_server:
     - kubectl -n crab set image deployment/crabserver "crabserver=registry.cern.ch/cmscrab/crabtaskworker:${IMAGE_TAG}"
 
 
-deploy_tw:
+.deploy_tw:
   stage: deploy
   image:
     name: registry.cern.ch/cmscrab/buildtools:latest
