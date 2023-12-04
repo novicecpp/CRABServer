@@ -9,7 +9,9 @@ set -x
 #Variabiles ${REST_Instance}, ${Client_Validation_Suite}, ${Client_Configuration_Validation} and ${Task_Submission_Status_Tracking} comes from
 #Jenkins job CRABServer_ExecuteTests configuration.
 
-source setupCRABClient.sh
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+source ${SCRIPT_DIR}/setupCRABClient.sh
 
 submitTasks(){
 #Submit tasks and based on the exit code add task name / file name respectively to submitted_tasks or failed_tasks file
