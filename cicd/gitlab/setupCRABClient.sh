@@ -9,6 +9,8 @@ set -x
 # Variables ${SCRAM_ARCH}, ${CMSSW_release}, ${CRABServer_tag}, ${CRABClient_version}
 # comes from Jenkins job CRABServer_ExecuteTests configuration.
 
+CURRENT_DIR=$PWD
+
 source /cvmfs/cms-ib.cern.ch/latest/cmsset_default.sh
 scramv1 project ${CMSSW_release}
 cd ${CMSSW_release}/src
@@ -72,5 +74,7 @@ case $CRABClient_version in
 	source /cvmfs/cms.cern.ch/common/crab-setup.sh
 esac
 
-cd ${WORK_DIR}
+#cd ${WORK_DIR}
+# restore cwd
+cd "${CURRENT_DIR}"
 crab --version
