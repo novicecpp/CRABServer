@@ -5,27 +5,20 @@
 #    && rpm2archive tnsnames.rpm \
 #    && tar -zxvf tnsnames.rpm.tgz  --strip-components=1 \
 #    && ls -ahl
-<<<<<<< HEAD
 # Get it from cmsweb images instead.
-=======
->>>>>>> e1694450 (copy from poc branch (wmcore_pypi))
 FROM registry.cern.ch/cmsweb/cmsweb:20230427-stable as tnsnames
 
 FROM registry.cern.ch/cmsweb/wmagent-base:pypi-20230705
 SHELL ["/bin/bash", "-c"]
 ENV WDIR=/data
 ENV USER=crab3
-<<<<<<< HEAD
 
 # install package from debian official repo
-=======
->>>>>>> e1694450 (copy from poc branch (wmcore_pypi))
 RUN apt-get update && apt-get install -y tini && apt-get clean all
 RUN mkdir /build
 WORKDIR /build
 COPY cicd/crabserver_pypi/ .
 RUN pip install -r requirements.txt
-<<<<<<< HEAD
 RUN req=($(./requirementsParse.py)) \
     && pip install --no-deps WMCore==${req[1]}
 RUN useradd ${USER} \
@@ -37,32 +30,13 @@ COPY --from=tnsnames /etc/tnsnames.ora /etc/tnsnames.ora
 
 # Install CRAB, will convert to pypi later
 # Will convert to pip install step later
-=======
-RUN useradd ${USER} \
-    && install -o ${USER} -d ${WDIR} \
-    && mkdir -p /opt/rucio/etc/
-#USER ${USER}
-
->>>>>>> e1694450 (copy from poc branch (wmcore_pypi))
 COPY src/python/ /data/srv/current/lib/python3.8/site-packages
 COPY src/script/ /data/srv/current/data/script/
 COPY src/html/ /data/srv/current/data/html/
 COPY src/css/ /data/srv/current/data/css/
 
-<<<<<<< HEAD
 WORKDIR /data
 RUN rm -rf /build
-=======
-RUN req=($(./requirementsParse.py)) \
-    && git clone ${req[0]} -b ${req[1]} WMCore \
-    && ( cd WMCore; git status )
-RUN mkdir -p \
-    /data/srv/current/bin \
-    && cp -r WMCore/src/python/WMCore /data/srv/current/lib/python3.8/site-packages/ \
-    && cp -r WMCore/src/python/Utils /data/srv/current/lib/python3.8/site-packages/ \
-    && cp WMCore/bin/wmc-httpd /data/srv/current/bin \
-    && rm -rf /build
->>>>>>> e1694450 (copy from poc branch (wmcore_pypi))
 RUN ls /data/srv/current/ \
     && install -d -o ${USER} -g ${USER} /data/srv/logs/crabserver \
     && install -d -o ${USER} -g ${USER} /data/srv/state/crabserver \
@@ -71,7 +45,6 @@ RUN ls /data/srv/current/ \
 
 RUN echo "${USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/01-crab3
 
-<<<<<<< HEAD
 # copy running script files
 COPY cicd/crabserver_pypi/run.sh cicd/crabserver_pypi/manage cicd/crabserver_pypi/entrypoint.sh cicd/crabserver_pypi/env.sh /data/
 
@@ -80,14 +53,3 @@ RUN chown -R 1000:1000 /data
 
 USER ${USER}
 CMD /data/run.sh
-=======
-COPY cicd/crabserver_pypi/run.sh cicd/crabserver_pypi/manage cicd/crabserver_pypi/entrypoint.sh cicd/crabserver_pypi/env.sh /data/
-COPY --from=tnsnames /etc/tnsnames.ora /etc/tnsnames.ora
-
-RUN chown -R 1000:1000 /data
-WORKDIR ${WDIR}
-USER ${USER}
-CMD /data/run.sh
-
-# test
->>>>>>> e1694450 (copy from poc branch (wmcore_pypi))
