@@ -102,11 +102,11 @@ if [ "X${singularity}" == X6 ] || [ "X${singularity}" == X8 ]; then
     #if [[ $(git rev-parse --abbrev-ref HEAD) != $Branch_Testing_Scripts ]]; then
     #    git checkout -t origin/$Branch_Testing_Scripts
     #fi
-    cd test/container/testingScripts
+    #cd test/container/testingScripts
     scramprefix=cc${singularity}
     if [ "X${singularity}" == X6 ]; then scramprefix=cc${singularity}; fi
     if [ "X${singularity}" == X8 ]; then scramprefix=el${singularity}; fi
-    /cvmfs/cms.cern.ch/common/cmssw-${scramprefix} -- ./taskSubmission.sh || export ERR=true
+    /cvmfs/cms.cern.ch/common/cmssw-${scramprefix} -- ./gitlab/taskSubmission.sh || export ERR=true
 elif [ "X${singularity}" == X7 ] || [ "X${singularity}" == X8 ] ; then
     echo "Starting CRAB testing container for slc${singularity}."
     echo 'slc7 does not support'
