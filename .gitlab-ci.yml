@@ -1,0 +1,131 @@
+---
+default:
+  tags:
+    - tseethon
+
+variables:
+  IMAGE_TAG: "pypi-${CI_COMMIT_REF_SLUG}"
+
+stages:
+  - build_docker
+  - deploy
+  - run_testsuite
+  - check_testsuite
+
+build_rest_image:
+  stage: build_docker
+  image:
+    name: gcr.io/kaniko-project/executor:v1.14.0-debug
+    entrypoint: [""]
+  script:
+    - echo "{\"auths\":{\"$CMSCRAB_REGISTRY_URL\":{\"auth\":\"$(echo -n $CMSCRAB_REGISTRY_USER:$CMSCRAB_REGISTRY_PASSWORD | base64)\"}}}" > /kaniko/.docker/config.json
+    - cat /kaniko/.docker/config.json
+    - /kaniko/executor
+      --context "${CI_PROJECT_DIR}"
+      --dockerfile "${CI_PROJECT_DIR}/cicd/crabserver_pypi/Dockerfile"
+      --destination "registry.cern.ch/cmscrab/crabserver:${IMAGE_TAG}"
+
+build_tw_image:
+  stage: build_docker
+  image:
+    name: gcr.io/kaniko-project/executor:v1.14.0-debug
+    entrypoint: [""]
+  script:
+    - echo "{\"auths\":{\"$CMSCRAB_REGISTRY_URL\":{\"auth\":\"$(echo -n $CMSCRAB_REGISTRY_USER:$CMSCRAB_REGISTRY_PASSWORD | base64)\"}}}" > /kaniko/.docker/config.json
+    - cat /kaniko/.docker/config.json
+    - /kaniko/executor
+      --context "${CI_PROJECT_DIR}"
+      --dockerfile "${CI_PROJECT_DIR}/cicd/crabtaskworker_pypi/Dockerfile"
+      --destination "registry.cern.ch/cmscrab/crabtaskworker:${IMAGE_TAG}"
+
+deploy_server:
+  stage: deploy
+  image:
+    name: docker.io/bitnami/kubectl:1.27
+    entrypoint: [""]
+  script:
+    - echo $KUBECONFIG_FILE
+    - export KUBECONFIG=$KUBECONFIG_FILE
+    - kubectl -n crab set image deployment/crabserver "crabserver=registry.cern.ch/cmscrab/crabtaskworker:${IMAGE_TAG}"
+
+
+deploy_tw:
+  stage: deploy
+  image:
+    name: registry.cern.ch/cmscrab/buildtools:latest
+    entrypoint: [""]
+  script:
+    - echo "${CRAB_TW_SSH_KEY}"
+    - export CRAB_TW_SSH_KEY_COPY="${CRAB_TW_SSH_KEY}_copy"
+    - cp ${CRAB_TW_SSH_KEY} ${CRAB_TW_SSH_KEY_COPY}
+    - echo >> ${CRAB_TW_SSH_KEY_COPY}
+    - chmod 600 "${CRAB_TW_SSH_KEY_COPY}"
+    - export Environment=crab-dev-tw03
+    - export Service=TaskWorker
+    - export Image="${IMAGE_TAG}"
+    - export SSH_KEY=$CRAB_TW_SSH_KEY_COPY
+    - bash -x cicd/gitlab/deploy_tw.sh
+
+task_submission_status_tracking:
+  stage: run_testsuite
+  tags:
+    - tseethon-apptainer
+  variables:
+    GIT_STRATEGY: clone
+  script:
+    - export CRABClient_version=prod
+    - export CRABServer_tag=HEAD
+    - export REST_Instance=test12
+    - export CMSSW_release=CMSSW_13_0_2
+    - export Task_Submission_Status_Tracking=true
+    - export Check_Publication_Status=true
+    - export Repo_GH_Issue=novicecpp/CRABServer
+    - export Repo_Testing_Scripts=novicecpp/CRABServer
+    - export Branch_Testing_Scripts=wmcore_pypi
+    - export Test_Docker_Image=registry.cern.ch/cmscrab/crabtesting:231009
+    - bash -x cicd/gitlab/execute_test.sh
+  cache:
+    # Pay attention to the key, you may want to to adjust to your needs, but I consider job is retried by having branch or tag identifier as CI_COMMIT_REF_SLUG and commit sha
+    - key: $CI_COMMIT_REF_NAME
+      paths:
+        - artifacts/submitted_tasks_TS
+      policy: push
+
+check_test_result:
+  stage: check_testsuite
+  retry: 2
+  tags:
+    - tseethon-apptainer
+  variables:
+    GIT_STRATEGY: clone
+  script:
+    # Create counter file if it doesn't exist
+    - "[ -f .counter ] || echo 0 > .counter"
+    - export RETRY=$(cat .counter)
+    # Do whatever you need knowing it is retried
+    - export REST_Instance=test12
+    - export CMSSW_release=CMSSW_13_0_2
+    - export Check_Publication_Status=Yes
+    - export CRABClient_version=prod
+    - cp artifacts/submitted_tasks_TS artifacts/submitted_tasks
+    - bash -x cicd/gitlab/check_test_result.sh || rc=$?
+    # Increment value and update it to file
+    - >
+      if [[ $rc -ne 0 ]]; then
+          trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
+          RETRY=$((RETRY+1))
+          echo $RETRY > .counter
+          sleep 300
+          exit 1
+      else
+          exit 0
+      fi
+  cache:
+    - key: $CI_PIPELINE_ID
+      paths:
+        - .counter
+      policy: pull-push
+    - key: $CI_COMMIT_REF_NAME
+      paths:
+        - artifacts/submitted_tasks_TS
+      policy: pull
