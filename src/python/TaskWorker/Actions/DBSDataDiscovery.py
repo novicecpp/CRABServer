@@ -188,6 +188,8 @@ class DBSDataDiscovery(DataDiscovery):
             self.logger.info("Will not use Rucio for this dataset")
 
         totalSizeBytes = 0
+        locationsMap = {}
+        partialLocationsMap = {}
 
         if useRucioForLocations:
             scope = "cms"
@@ -196,8 +198,6 @@ class DBSDataDiscovery(DataDiscovery):
             if isUserDataset:
                 scope = f"user.{self.username}"
             self.logger.info("Looking up data location with Rucio in %s scope.", scope)
-            locationsMap = {}
-            partialLocationsMap = {}
             try:
                 for blockName in list(blocks):
                     partialReplicas = set()
@@ -236,7 +236,8 @@ class DBSDataDiscovery(DataDiscovery):
                 self.logger.info("USER dataset. Looking up data locations using origin site in DBS")
                 try:
                     # locationsMap is a dictionary {blockName:[RSEs], ...}
-                    locationsMap = self.dbs.listFileBlockLocation(list(blocks))
+                    #locationsMap = self.dbs.listFileBlockLocation(list(blocks))
+                    pass
                 except Exception as ex:
                     raise TaskWorkerException(
                         "CRAB server could not get file locations from DBS for a USER dataset.\n"+\
