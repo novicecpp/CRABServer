@@ -67,12 +67,10 @@ RUN apt-get update \
 COPY cicd/crabserver_pypi/requirementsParse.py cicd/crabserver_pypi/wmcore_requirements.txt /build
 
 # install dependencies
-COPY --from=wmcore-src /WMCore/requirements.txt requirements.txt
-COPY --from=wmcore-src /wmcore_version wmcore_version
+COPY --from=wmcore-src /wmcore_version .
+COPY cicd/crabtaskworker_pypi/requirements.txt .
 RUN WMCORE_TAG=$(cat wmcore_version) \
-    && cat requirements.txt | grep -v gfal2 > req.txt \
-    && pip install -r req.txt \
-    && pip install python-ldap==3.4.3 \
+    && pip install -r requirements.txt \
     && pip install --no-deps wmcore==${WMCORE_TAG}
 
 # copy cern openldap config
