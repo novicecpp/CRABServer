@@ -53,7 +53,7 @@ deploy_server:
   script:
     - echo $KUBECONFIG_FILE
     - export KUBECONFIG=$KUBECONFIG_FILE
-    - kubectl -n crab set image deployment/crabserver "crabserver=registry.cern.ch/cmscrab/crabtaskworker:${IMAGE_TAG}"
+    - kubectl -n crab set image deployment/crabserver "crabserver=registry.cern.ch/cmscrab/crabserver:${IMAGE_TAG}"
 
 
 deploy_tw:
