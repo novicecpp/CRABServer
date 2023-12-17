@@ -1,1 +1,1 @@
-wmcore @ git+https://github.com/novicecpp/WMCore@ea4a0ea0312f4636cc28d0427bd6bc75d1997bd3
+wmcore @ git+https://github.com/novicecpp/WMCore@pr11816
