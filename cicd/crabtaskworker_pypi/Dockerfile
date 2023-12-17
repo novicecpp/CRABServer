@@ -45,6 +45,10 @@ SHELL ["/bin/bash", "-c"]
 ENV USER=crab3
 ENV WDIR=/data
 
+# add new user and switch to user
+RUN useradd ${USER} \
+    && install -o ${USER} -d ${WDIR}
+
 # prepare build
 RUN mkdir /build
 WORKDIR /build
@@ -67,13 +71,18 @@ RUN apt-get update \
 COPY cicd/crabserver_pypi/requirementsParse.py cicd/crabserver_pypi/wmcore_requirements.txt /build
 
 # install dependencies
-COPY --from=wmcore-src /WMCore/requirements.txt requirements.txt
-COPY --from=wmcore-src /wmcore_version wmcore_version
+COPY --from=wmcore-src /wmcore_version .
+COPY cicd/crabtaskworker_pypi/requirements.txt .
 RUN WMCORE_TAG=$(cat wmcore_version) \
-    && cat requirements.txt | grep -v gfal2 > req.txt \
-    && pip install -r req.txt \
-    && pip install python-ldap==3.4.3 \
-    && pip install --no-deps wmcore==${WMCORE_TAG}
+    && pip install -r requirements.txt
+RUN install -d -o ${USER} -g ${USER} /data/srv/current/bin \
+    && install -d -o ${USER} -g ${USER} /data/srv/current/lib/python3.8/site-packages \
+    && req=($(./requirementsParse.py)) \
+    && git clone ${req[0]} -b ${req[1]} WMCore \
+    && ( cd WMCore; git status ) \
+    && mkdir -p /data/srv/current/bin \
+    && cp -r WMCore/src/python/* /data/srv/current/lib/python3.8/site-packages/ \
+    && cp WMCore/bin/wmc-httpd /data/srv/current/bin
 
 # copy cern openldap config
 COPY --from=cern-cc7 /etc/openldap /etc/openldap
@@ -89,12 +98,9 @@ COPY src/python/ ${WDIR}/srv/current/lib/python3.8/site-packages/
 COPY --from=build-data /build/install_dir/data ${WDIR}/srv/current/lib/python3.8/site-packages/data
 
 # clean up
-WORKDIR /data
 RUN rm -rf /build
 
-# add new user and switch to user
-RUN useradd ${USER} \
-    && install -o ${USER} -d ${WDIR}
+WORKDIR /data
 
 # create working directory
 RUN mkdir -p ${WDIR}/srv/tmp \

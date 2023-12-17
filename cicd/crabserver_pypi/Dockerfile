@@ -13,17 +13,25 @@ SHELL ["/bin/bash", "-c"]
 ENV WDIR=/data
 ENV USER=crab3
 
+RUN useradd ${USER} \
+    && install -o ${USER} -d ${WDIR} \
+    && mkdir -p /opt/rucio/etc/
+
 # install package from debian official repo
 RUN apt-get update && apt-get install -y tini && apt-get clean all
 RUN mkdir /build
 WORKDIR /build
 COPY cicd/crabserver_pypi/ .
 RUN pip install -r requirements.txt
-RUN req=($(./requirementsParse.py)) \
-    && pip install --no-deps WMCore==${req[1]}
-RUN useradd ${USER} \
-    && install -o ${USER} -d ${WDIR} \
-    && mkdir -p /opt/rucio/etc/
+RUN install -d -o ${USER} -g ${USER} /data/srv/current/bin \
+    && install -d -o ${USER} -g ${USER} /data/srv/current/lib/python3.8/site-packages \
+    && req=($(./requirementsParse.py)) \
+    && git clone ${req[0]} -b ${req[1]} WMCore \
+    && ( cd WMCore; git status ) \
+    && mkdir -p /data/srv/current/bin \
+    && cp -r WMCore/src/python/* /data/srv/current/lib/python3.8/site-packages/ \
+    && cp WMCore/bin/wmc-httpd /data/srv/current/bin \
+    && rm -rf /build
 
 # install cern tnsnames.ora
 COPY --from=tnsnames /etc/tnsnames.ora /etc/tnsnames.ora
