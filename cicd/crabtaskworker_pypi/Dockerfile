@@ -64,7 +64,7 @@ RUN ln -sf /data/miniconda/bin/gfal-ls /usr/bin/gfal-ls \
 # install package from debian repository
 # deps for openldap: libsasl2-dev python3-dev libldap-dev libssl-dev
 RUN apt-get update \
-    && apt-get install -y tini libsasl2-dev python3-dev libldap-dev libssl-dev \
+    && apt-get install -y tini fd-find libsasl2-dev python3-dev libldap-dev libssl-dev \
     && apt-get clean all
 
 

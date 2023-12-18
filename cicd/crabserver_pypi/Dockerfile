@@ -18,7 +18,7 @@ RUN useradd ${USER} \
     && mkdir -p /opt/rucio/etc/
 
 # install package from debian official repo
-RUN apt-get update && apt-get install -y tini && apt-get clean all
+RUN apt-get update && apt-get install -y tini fd-find && apt-get clean all
 RUN mkdir /build
 WORKDIR /build
 COPY cicd/crabserver_pypi/ .
