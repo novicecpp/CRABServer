@@ -1,6 +1,5 @@
 #! /bin/bash
-
-#export SERVICENAME=${SERVICENAME:-crabserver}
+# Original script from https://github.com/dmwm/CMSKubernetes/blob/2b0454f9205cb8f97fecb91bf6661b59e4b31424/docker/crabserver/run.sh
 
 # for kubernetes
 if [ -f /etc/robots/robotkey.pem ]; then
