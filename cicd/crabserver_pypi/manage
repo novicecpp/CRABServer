@@ -35,8 +35,8 @@ CFGFILE=$CFGDIR/config.py
 # necessary env settings for all WM services
 ## config
 PYTHONPATH=/data/srv/current/config/$srv:${PYTHONPATH}
-## secrets (it should be $AUTHDIR, will fix later).
-PYTHONPATH=/etc/secrets:${PYTHONPATH}
+## secrets
+PYTHONPATH=/etc/secrets:${PYTHONPATH} # (it should be $AUTHDIR, will fix later).
 ## app
 PYTHONPATH=/data/srv/current/lib/python3.8/site-packages/:$PYTHONPATH
 export PYTHONPATH
