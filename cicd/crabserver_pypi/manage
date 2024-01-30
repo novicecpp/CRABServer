@@ -1,10 +1,10 @@
 #!/bin/bash
 # This scripts originate from dmwm-base/manage
 # https://github.com/dmwm/CMSKubernetes/blob/2b0454f9205cb8f97fecb91bf6661b59e4b31424/docker/pypi/dmwm-base/manage
-# However, scripts is heavily edited to suit new CRAB pypi docker image.
+# However, scripts is heavily edited to suit new CRAB PyPI.
 # 2 things that we may need to keep up with original scripts:
-#   - service setting: Convention of where WMCore/REST app (CRAB REST) read necessary files from.
-#   - how we start the rest (`wmc-httpd` line).
+#   - Deployment Convention: WMCore/REST app (CRAB REST) read necessary files from.
+#   - `wmc-httpd` line.
 
 ##H Usage: manage ACTION [ATTRIBUTE] [SECURITY-STRING]
 ##H
@@ -35,7 +35,7 @@ CFGFILE=$CFGDIR/config.py
 # necessary env settings for all WM services
 ## config
 PYTHONPATH=/data/srv/current/config/$srv:${PYTHONPATH}
-## secrets
+## secrets (it should be $AUTHDIR, will fix later).
 PYTHONPATH=/etc/secrets:${PYTHONPATH}
 ## app
 PYTHONPATH=/data/srv/current/lib/python3.8/site-packages/:$PYTHONPATH
