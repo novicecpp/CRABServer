@@ -1,10 +1,9 @@
 # Get CERN tsanames.ora from cmsweb rpm image
 FROM registry.cern.ch/cmsweb/cmsweb:20230427-stable as tnsnames
 
-# Use wmagent-base image as our base image:
+# Use `wmagent-base` image as our baseimage:
 # https://github.com/dmwm/CMSKubernetes/blob/2b0454f9205cb8f97fecb91bf6661b59e4b31424/docker/pypi/wmagent-base/Dockerfile
-# wmagent-base is based on dwmw-base:
-# https://github.com/dmwm/CMSKubernetes/blob/2b0454f9205cb8f97fecb91bf6661b59e4b31424/docker/pypi/dmwm-base/Dockerfile
+
 FROM registry.cern.ch/cmsweb/wmagent-base:pypi-20230705
 SHELL ["/bin/bash", "-c"]
 ENV WDIR=/data
