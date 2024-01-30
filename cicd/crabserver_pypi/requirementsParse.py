@@ -1,10 +1,12 @@
 #! /usr/bin/env python3
-# Parsing wmcore_requirements.txt's format (same format that can use in `pip install -r requirements.txt`).
-# Output print repo url and version, separate by space.
+# Parsing pip repo/version from wmcore_requirements.txt
+# Print repo url and version, separate by space as an output.
 # For example:
 #   wmcore @ git+https://github.com/dmwm/WMCore@2.2.4rc6
 # Output:
-#
+#   shell> ./requirementsParse.py -f wmcore_requirements.txt
+#   https://github.com/dmwm/WMCore 2.2.4rc6
+#   shell>
 
 import argparse
 parser = argparse.ArgumentParser()
