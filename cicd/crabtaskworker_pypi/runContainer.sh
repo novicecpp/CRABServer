@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# runContainer.sh: script to pull specified CRAB TW image from defined repo and run it
+# modified runContainer.sh, copy from https://github.com/novicecpp/CRABServer/blob/39cc2039f14afc368956d7ee06a4b3b5eda814da/src/script/Container/runContainer.sh
 
 helpFunction(){
   echo -e "\nUsage example: ./runContainer.sh -v v3.201118 -s TaskWorker"
