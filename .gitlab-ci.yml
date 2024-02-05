@@ -109,7 +109,7 @@ check_test_result:
   variables:
     GIT_STRATEGY: clone
   script:
-    - tini -s -- bash cicd/giltab/st.sh
+    - tini -s -- bash cicd/gitlab/st.sh
   cache:
     - key: $CI_PIPELINE_ID
       paths:
