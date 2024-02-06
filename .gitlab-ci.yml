@@ -12,14 +12,14 @@ variables:
 .tagonly_rules:
   rules:
     - if: $CI_COMMIT_TAG
-.skipbuild_rules:
-  rules:
-    - changes:
-        - cicd/crabserver_pypi/*
-        - cicd/crabtaskworker_pypi/*-
-        - src/*
-        - bin/*
-        - scripts/*
+#.skipbuild_rules:
+#  rules:
+#    - changes:
+#        - cicd/crabserver_pypi/*
+#        - cicd/crabtaskworker_pypi/*
+#        - src/*
+#        - bin/*
+#        - scripts/*
 
 stages:
   - build_docker
@@ -30,7 +30,7 @@ stages:
 build_rest_image:
   rules:
     - !reference [.default_rules, rules]
-    - !reference [.skipbuild_rules, rules]
+    - !reference [.tagonly_rules, rules]
   stage: build_docker
   image:
     name: gcr.io/kaniko-project/executor:v1.14.0-debug
@@ -46,7 +46,7 @@ build_rest_image:
 build_tw_image:
   rules:
     - !reference [.default_rules, rules]
-    - !reference [.skipbuild_rules, rules]
+    - !reference [.tagonly_rules, rules]
   stage: build_docker
   image:
     name: gcr.io/kaniko-project/executor:v1.14.0-debug
@@ -62,7 +62,7 @@ build_tw_image:
 deploy_server:
   rules:
     - !reference [.default_rules, rules]
-    - !reference [.skipbuild_rules, rules]
+    - !reference [.tagonly_rules, rules]
   stage: deploy
   image:
     name: docker.io/bitnami/kubectl:1.27
@@ -76,7 +76,7 @@ deploy_server:
 deploy_tw:
   rules:
     - !reference [.default_rules, rules]
-    - !reference [.skipbuild_rules, rules]
+    - !reference [.tagonly_rules, rules]
   stage: deploy
   image:
     name: registry.cern.ch/cmscrab/buildtools:latest
