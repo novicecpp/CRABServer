@@ -7,6 +7,7 @@ export CMSSW_release=CMSSW_13_0_2
 export Check_Publication_Status=Yes
 export CRABClient_version=prod
 cp artifacts/submitted_tasks_TS artifacts/submitted_tasks
+cat artifacts/submitted_tasks
 RETRY_COUNT=1
 while true; do
     echo "$RETRY_COUNT/$RETRY attempt."
