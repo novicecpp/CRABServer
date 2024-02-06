@@ -95,7 +95,7 @@ task_submission_status_tracking:
     - bash -x cicd/gitlab/execute_test.sh
   cache:
     # Pay attention to the key, you may want to to adjust to your needs, but I consider job is retried by having branch or tag identifier as CI_COMMIT_REF_SLUG and commit sha
-    - key: $CI_COMMIT_REF_NAME
+    - key: $CI_PIPELINE_ID
       paths:
         - artifacts/submitted_tasks_TS
       policy: push
@@ -103,19 +103,14 @@ task_submission_status_tracking:
 check_test_result:
   <<: *pipeline_rules
   stage: check_testsuite
-  retry: 2
   tags:
     - tseethon-apptainer
   variables:
     GIT_STRATEGY: clone
   script:
-    - tini -s -- bash cicd/gitlab/st.sh
+    - bash cicd/gitlab/st.sh
   cache:
     - key: $CI_PIPELINE_ID
-      paths:
-        - .counter
-      policy: pull-push
-    - key: $CI_COMMIT_REF_NAME
       paths:
         - artifacts/submitted_tasks_TS
       policy: pull
