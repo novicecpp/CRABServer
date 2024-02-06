@@ -131,3 +131,5 @@ check_test_result:
       paths:
         - artifacts/submitted_tasks_TS
       policy: pull
+
+# trigger submit
