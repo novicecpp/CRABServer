@@ -116,11 +116,6 @@ task_submission_status_tracking:
       paths:
         - artifacts/submitted_tasks_TS
       policy: push
-    - key: $
-      paths:
-        - artifacts/submitted_tasks_TS
-      policy: push
-
 
 check_test_result:
   rules:
