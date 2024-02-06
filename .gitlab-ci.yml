@@ -130,7 +130,8 @@ check_test_result:
     - bash cicd/gitlab/st.sh
   cache:
     - key: $MANUAL_CI_PIPELINE_ID
-      fallback_keys: $CI_PIPELINE_ID
+      fallback_keys:
+        - $CI_PIPELINE_ID
       paths:
         - artifacts/submitted_tasks_TS
       policy: pull
