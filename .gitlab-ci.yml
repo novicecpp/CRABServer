@@ -96,8 +96,6 @@ deploy_tw:
 task_submission_status_tracking:
   rules:
     - !reference [.default_rules, rules]
-    - if: $SKIP_SUBMIT_TASKS
-      when: never
   stage: run_testsuite
   tags:
     - tseethon-apptainer
@@ -117,7 +115,7 @@ task_submission_status_tracking:
     - bash -x cicd/gitlab/execute_test.sh
   cache:
     # Pay attention to the key, you may want to to adjust to your needs, but I consider job is retried by having branch or tag identifier as CI_COMMIT_REF_SLUG and commit sha
-    - key: $CI_PIPELINE_ID
+    - key: $CI_COMMIT_SHA
       paths:
         - artifacts/submitted_tasks_TS
       policy: push
@@ -133,7 +131,7 @@ check_test_result:
   script:
     - bash cicd/gitlab/st.sh
   cache:
-    - key: $CI_PIPELINE_ID
+    - key: $CI_COMMIT_SHA
       paths:
         - artifacts/submitted_tasks_TS
       policy: pull
