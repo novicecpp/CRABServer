@@ -31,6 +31,7 @@ def parse_result(listOfTasks, checkPublication=False):
     for task in listOfTasks:
         task['pubSummary'] = 'None'  # make sure this is initialized
         needToResubmit = False
+        needToResubmitPublication = False
         if task['dbStatus'] == 'SUBMITTED':
             # remove failed probe jobs (job id of X-Y kind) if any from count
             for job in task['jobs'].keys():
@@ -63,7 +64,7 @@ def parse_result(listOfTasks, checkPublication=False):
                     result = 'TestPassed'
                 else:
                     needToResubmit = True
-                if checkPublication:
+                if checkPublication and 'nopublication' not in task['taskName']:
                     # remove probe jobs (job id of X-Y kind) if any from count
                     jobsToPublish = total_jobs
                     for job in task['jobs'].keys():
@@ -72,7 +73,8 @@ def parse_result(listOfTasks, checkPublication=False):
                     if published_in_transfersdb == jobsToPublish and published_in_dbs == jobsToPublish:
                         result = 'TestPassed'
                     elif failedPublications:
-                        result = 'TestFailed'
+                        #result = 'TestFailed'
+                        needToResubmitPublication = True
                     else:
                         result = 'TestRunning'
             elif any(k in task['jobsPerStatus'] for k in ('failed', 'held')):
@@ -85,6 +87,9 @@ def parse_result(listOfTasks, checkPublication=False):
             needToResubmit = True
         if needToResubmit:
             resubmit = crab_cmd({'cmd': 'resubmit', 'args': {'dir': task['workdir']}})
+            result = 'TestResubmitted'
+        if needToResubmitPublication:
+            resubmit = crab_cmd({'cmd': 'resubmit', 'args': {'dir': task['workdir'], 'publication': True}})
             result = 'TestResubmitted'
 
         testResult.append({'TN': task['taskName'], 'testResult': result, 'dbStatus': task['dbStatus'],
@@ -108,7 +113,6 @@ def main():
     listOfTasks = []
     instance = os.getenv('REST_Instance', 'preprod')
     work_dir = os.getenv('WORK_DIR', 'dummy_workdir')
-    proxypath = os.getenv('X509_USER_PROXY', os.getenv('PROXY', '/tmp/x509up_u%s' % os.getuid()))
     Check_Publication_Status = os.getenv('Check_Publication_Status', 'No')
     print("Check_Publication_Status is : ", Check_Publication_Status )
     checkPublication = True if Check_Publication_Status == 'Yes' else False
@@ -121,9 +125,10 @@ def main():
         remake_dir = '_'.join(task.rstrip().split('_')[-3:])
         if not os.path.isdir(remake_dir):
             remake_dict = {'task': task, 'instance': instance}
-            remake_dir = crab_cmd({'cmd': 'remake', 'args': remake_dict})
+            outputDict = crab_cmd({'cmd': 'remake', 'args': remake_dict})
+            remake_dir = outputDict['workDir']
 
-        status_dict = {'dir': remake_dir, 'proxy': proxypath}
+        status_dict = {'dir': remake_dir}
         status_command_output = crab_cmd({'cmd': 'status', 'args': status_dict})
         status_command_output.update({'taskName': task.rstrip()})
         status_command_output['workdir'] = remake_dir

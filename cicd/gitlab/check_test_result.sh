@@ -4,26 +4,35 @@ set -x
 #set -euo pipefail
 
 #00. check parameters
-echo "(DEBUG) variables from upstream jenkin job:"
-echo "(DEBUG)   \- issueTitle: ${issueTitle}"
-echo "(DEBUG)   \- Test_Docker_Image: ${Test_Docker_Image}"
-echo "(DEBUG)   \- Repo_Testing_Scripts: ${Repo_Testing_Scripts}"
-echo "(DEBUG)   \- Branch_Testing_Scripts: ${Branch_Testing_Scripts}"
-echo "(DEBUG)   \- Repo_GH_Issue: ${Repo_GH_Issue}"
-echo "(DEBUG)   \- Repo_GH_Issue: ${Repo_GH_Issue}"
-echo "(DEBUG) end"
+#echo "(DEBUG) variables from upstream jenkin job:"
+#echo "(DEBUG)   \- issueTitle: ${issueTitle}"
+#echo "(DEBUG)   \- Test_Docker_Image: ${Test_Docker_Image}"
+#echo "(DEBUG)   \- Repo_Testing_Scripts: ${Repo_Testing_Scripts}"
+#echo "(DEBUG)   \- Branch_Testing_Scripts: ${Branch_Testing_Scripts}"
+#echo "(DEBUG)   \- Repo_GH_Issue: ${Repo_GH_Issue}"
+#echo "(DEBUG)   \- Repo_GH_Issue: ${Repo_GH_Issue}"
+#echo "(DEBUG) end"
 
 #0. Prepare environment
-#docker system prune -af
-export WORKSPACE=$PWD
-#mkdir artifacts
-ls -l /cvmfs/cms-ib.cern.ch/latest/ 2>&1
+# root dir can only be the root of crabserver repository
+export ROOT_DIR=${ROOT_DIR:-${PWD}}
+export WORKSPACE=${WORKSPACE:-testsuite}
+#if [[ -d $WORKSPACE ]]; then
+#    mv ${WORKSPACE} "${WORKSPACE}_$(printf '%(%Y%m%d_%H%M%S)T\n' -1)"
+#fi
+mkdir -p $WORKSPACE
 
-#voms-proxy-init -rfc -voms cms -valid 192:00
+pushd $WORKSPACE || exit
+
+#ls -l /cvmfs/cms-ib.cern.ch/latest/ 2>&1
+
+#voms-proxy-init -rfc -voms cms -valid 192:00 || rc=$?
+#[[ -n $rc ]] && exit $rc
 #export X509_USER_CERT=/home/cmsbld/.globus/usercert.pem
 #export X509_USER_KEY=/home/cmsbld/.globus/userkey.pem
 #export PROXY=$(voms-proxy-info -path 2>&1)
-export PROXY=$X509_USER_PROXY
+export X509_USER_PROXY="${X509_USER_PROXY:-/tmp/x509up_u$(id -u)}"
+echo "$X509_USER_PROXY"
 
 #git clone https://github.com/cms-sw/cms-bot
 
@@ -31,22 +40,26 @@ export PROXY=$X509_USER_PROXY
 export ERR=false
 #be aware that when running in singularity, we use ${WORK_DIR} set below,
 #while if we run in CRAB Docker container, then ${WORK_DIR} set in Dockerfile.
-export WORK_DIR=`pwd`
+#export WORK_DIR=`pwd`
+
+# temp create artifacts dir.
+# should pass filepath to the script directly (fix statusTracking.py script)
+mkdir -p artifacts
 if [[ -z "${Manual_Task_Names}" ]]; then
-    cp submitted_tasks $WORKSPACE/artifacts
+    cp $ROOT_DIR/artifacts/submitted_tasks artifacts
 else
-    echo "${Manual_Task_Names}" > $WORKSPACE/artifacts/submitted_tasks
+    echo "${Manual_Task_Names}" > artifacts/submitted_tasks
 fi
 
-export CMSSW_release_Initial=$CMSSW_release
-echo $CMSSW_release_Initial
+#export CMSSW_release_Initial=$CMSSW_release
+#echo $CMSSW_release_Initial
 
 #1.1. Get configuration from CMSSW_release for master config line
 #curl -s -O https://raw.githubusercontent.com/$Repo_Testing_Scripts/$Branch_Testing_Scripts/test/testingConfigs
 #CONFIG_LINE=$(grep "master=yes;" testingConfigs)
-CONFIG_LINE=$(grep "CMSSW_release=${CMSSW_release};" test/testingConfigs)
-export SCRAM_ARCH=$(echo "${CONFIG_LINE}" | tr ';' '\n' | grep SCRAM_ARCH | sed 's|SCRAM_ARCH=||')
-export CMSSW_release=$(echo "${CONFIG_LINE}" | tr ';' '\n' | grep CMSSW_release | sed 's|CMSSW_release=||')
+#CONFIG_LINE=$(grep "CMSSW_release=${CMSSW_release};" test/testingConfigs)
+#export SCRAM_ARCH=$(echo "${CONFIG_LINE}" | tr ';' '\n' | grep SCRAM_ARCH | sed 's|SCRAM_ARCH=||')
+#export CMSSW_release=$(echo "${CONFIG_LINE}" | tr ';' '\n' | grep CMSSW_release | sed 's|CMSSW_release=||')
 
 echo $SCRAM_ARCH
 echo $CMSSW_release
@@ -65,16 +78,19 @@ export singularity=$(echo ${SCRAM_ARCH} | cut -d"_" -f 1 | tail -c 2)
 scramprefix=cc${singularity}
 if [ "X${singularity}" == X6 ]; then scramprefix=cc${singularity}; fi
 if [ "X${singularity}" == X8 ]; then scramprefix=el${singularity}; fi
-/cvmfs/cms.cern.ch/common/cmssw-${scramprefix} -- bash cicd/gitlab/execute_status_tracking.sh || export ERR=true
+
+
+/cvmfs/cms.cern.ch/common/cmssw-${scramprefix} -- bash -x $ROOT_DIR/cicd/gitlab/execute_status_tracking.sh $ROOT_DIR || export ERR=true
+cp artifacts/result . || true
 
 #cd ${WORK_DIR}
-mv $WORKSPACE/artifacts/* $WORKSPACE/
+#mv $WORKSPACE/artifacts/* $WORKSPACE/
 
 #export RETRY=${NAGINATOR_COUNT:-0}
 #export MAX_RETRY=${NAGINATOR_MAXCOUNT:-4}
 
-export RETRY=${RETRY:-0}
-export MAX_RETRY=${MAX_RETRY:-4}
+#export RETRY=${RETRY:-0}
+#export MAX_RETRY=${MAX_RETRY:-4}
 
 
 #3. Update issue with submission results
@@ -83,12 +99,11 @@ if [ ! -s "./result" ]; then
 	MESSAGE='Something went wrong. Investigate manually.'
    	ERR=true
 elif grep "TestRunning" result || grep "TestResubmitted" result; then
-	if [ $RETRY -ge $MAX_RETRY ] ; then
-		MESSAGE='Exceeded configured retries. If needed restart manually.'
-    else
-    	MESSAGE='Will run again.'
-    fi
-   	ERR=true
+	#if [ $RETRY -ge $MAX_RETRY ] ; then
+	#	MESSAGE='Exceeded configured retries. If needed restart manually.'
+    #else
+    #fi
+    MESSAGE='Will run again.'
    	TEST_RESULT='FULL-STATUS-UNKNOWN'
 elif grep "TestFailed" result ; then
 	MESSAGE='Test failed. Investigate manually'
@@ -108,7 +123,10 @@ echo -e "\`\`\`\n`cat result`\n\`\`\`" >> message_TSResult || true
 
 #$WORKSPACE/cms-bot/create-gh-issue.py -r $Repo_GH_Issue -t "$issueTitle" -R message_TSResult
 
-
 if $ERR ; then
 	exit 1
 fi
+if [[ $TEST_RESULT == 'FULL-STATUS-UNKNOWN' ]]; then
+    exit 4
+fi
+popd
