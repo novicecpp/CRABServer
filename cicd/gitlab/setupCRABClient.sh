@@ -10,6 +10,7 @@ set -x
 # comes from Jenkins job CRABServer_ExecuteTests configuration.
 
 CURRENT_DIR=$PWD
+WORK_DIR=$CURRENT_DIR
 
 source /cvmfs/cms-ib.cern.ch/latest/cmsset_default.sh
 scramv1 project ${CMSSW_release}
@@ -71,7 +72,7 @@ case $CRABClient_version in
 	source ${MY_CRAB}/etc/crab-bash-completion.sh
     ;;
   prod)
-	source /cvmfs/cms.cern.ch/common/crab-setup.sh
+	source /cvmfs/cms.cern.ch/common/crab-setup.sh prod
 esac
 
 #cd ${WORK_DIR}
