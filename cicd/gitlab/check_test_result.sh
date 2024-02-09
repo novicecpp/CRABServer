@@ -15,14 +15,12 @@ set -x
 
 #0. Prepare environment
 # root dir can only be the root of crabserver repository
-export ROOT_DIR=${ROOT_DIR:-${PWD}}
-export WORKSPACE=${WORKSPACE:-testsuite}
+export ROOT_DIR=${ROOT_DIR:-$PWD/../}
+export WORKSPACE=${WORKSPACE:$PWD}
 #if [[ -d $WORKSPACE ]]; then
 #    mv ${WORKSPACE} "${WORKSPACE}_$(printf '%(%Y%m%d_%H%M%S)T\n' -1)"
 #fi
-mkdir -p $WORKSPACE
 
-pushd $WORKSPACE || exit
 
 #ls -l /cvmfs/cms-ib.cern.ch/latest/ 2>&1
 
@@ -31,14 +29,14 @@ pushd $WORKSPACE || exit
 #export X509_USER_CERT=/home/cmsbld/.globus/usercert.pem
 #export X509_USER_KEY=/home/cmsbld/.globus/userkey.pem
 # default value when running in local machine
-export X509_USER_PROXY="${X509_USER_PROXY:-/tmp/x509up_u$(id -u)}"
-echo "$X509_USER_PROXY"
-cat $X509_USER_PROXY
-cp $X509_USER_PROXY proxyfile
-chmod 600 proxyfile
-chown $(id -u);$(id -g) proxyfile
-export X509_USER_PROXY=$PWD/proxyfile
-cat $X509_USER_PROXY | head -n10
+#export X509_USER_PROXY="${X509_USER_PROXY:-/tmp/x509up_u$(id -u)}"
+#echo "$X509_USER_PROXY"
+#cat $X509_USER_PROXY
+#cp $X509_USER_PROXY proxyfile
+#chmod 600 proxyfile
+#chown $(id -u);$(id -g) proxyfile
+#export X509_USER_PROXY=$PWD/proxyfile
+#cat $X509_USER_PROXY | head -n10
 #git clone https://github.com/cms-sw/cms-bot
 
 #export PYTHONPATH=/cvmfs/cms-ib.cern.ch/jenkins-env/python/shared
@@ -48,13 +46,13 @@ export ERR=false
 #export WORK_DIR=`pwd`
 
 # temp create artifacts dir.
-# should pass filepath to the script directly (fix statusTracking.py script)
-mkdir -p artifacts
-if [[ -z "${Manual_Task_Names}" ]]; then
-    cp $ROOT_DIR/artifacts/submitted_tasks artifacts
-else
-    echo "${Manual_Task_Names}" > artifacts/submitted_tasks
-fi
+## should pass filepath to the script directly (fix statusTracking.py script)
+#mkdir -p artifacts
+#if [[ -z "${Manual_Task_Names}" ]]; then
+#    cp $ROOT_DIR/artifacts/submitted_tasks artifacts
+#else
+#    echo "${Manual_Task_Names}" > artifacts/submitted_tasks
+#fi
 
 #export CMSSW_release_Initial=$CMSSW_release
 #echo $CMSSW_release_Initial

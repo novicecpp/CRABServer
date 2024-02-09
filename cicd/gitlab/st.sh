@@ -13,16 +13,36 @@ export CRABClient_version=prod
 
 export SUBMITTED_TASKS_PATH=artifacts/submitted_tasks_TS
 
+export WORKSPACE=testsuite
+export ROOT_DIR=$PWD
 
+# copy proxyfile and correct permission
+# not sure why need, but fix like this is worked when run in runner
+X509_USER_PROXY="${X509_USER_PROXY:-/tmp/x509up_u$(id -u)}"
+echo "$X509_USER_PROXY"
+ls -alh $X509_USER_PROXY
+cp $X509_USER_PROXY $WORKSPACE/proxyfile
+chmod 600 $WORKSPACE/proxyfile
+chown $(id -u):$(id -g) $WORKSPACE/proxyfile
+export X509_USER_PROXY=$(realpath $WORKSPACE/proxyfile)
+cat $X509_USER_PROXY | head -n10
 
-echo "\"${SUBMITTED_TASKS_PATH}\" content: "
-cat "${SUBMITTED_TASKS_PATH}" || rc="$?"
-[[ -n "$rc" ]] && exit $rc
-cp "${SUBMITTED_TASKS_PATH}" artifacts/submitted_tasks
+# temp create workspace and artifacts dir
+# the artifacts dir should not hardcode in statusTracking.py script)
+mkdir -p $WORKSPACE/artifacts
+if [[ -z "${Manual_Task_Names}" ]]; then
+    cp artifacts/submitted_tasks_TS artifacts/submitted_tasks || exit
+else
+    echo "${Manual_Task_Names}" > $WORKSPACE/artifacts/submitted_tasks
+fi
+
+# retry machanism
 RETRY_COUNT=1
 while true; do
     echo "$RETRY_COUNT/$RETRY attempt."
-    bash -x cicd/gitlab/check_test_result.sh || rc=$?
+    pushd $WORKSPACE || exit
+    bash -x ../cicd/gitlab/check_test_result.sh || rc=$?
+    popd || exit
     if [[ -n $rc ]]; then
         echo "check_test_result.sh is fail with exit code $rc"
         if [[ $rc == 4 ]]; then
