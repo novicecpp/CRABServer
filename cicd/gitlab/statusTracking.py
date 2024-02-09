@@ -110,6 +110,9 @@ def main():
     if TestRunning is present: run the test again after some time
     if TestFailed is present" declare the test FAILED
     """
+    import json
+    import os
+    print(json.dumps(dict(os.environ), indent=4))
     listOfTasks = []
     instance = os.getenv('REST_Instance', 'preprod')
     work_dir = os.getenv('WORK_DIR', 'dummy_workdir')
