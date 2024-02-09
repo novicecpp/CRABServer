@@ -36,7 +36,9 @@ echo "$X509_USER_PROXY"
 cat $X509_USER_PROXY
 cp $X509_USER_PROXY proxyfile
 chmod 600 proxyfile
+chown $(id -u);$(id -g) proxyfile
 export X509_USER_PROXY=$PWD/proxyfile
+cat $X509_USER_PROXY | head -n10
 #git clone https://github.com/cms-sw/cms-bot
 
 #export PYTHONPATH=/cvmfs/cms-ib.cern.ch/jenkins-env/python/shared
