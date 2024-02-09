@@ -35,7 +35,8 @@ export X509_USER_PROXY="${X509_USER_PROXY:-/tmp/x509up_u$(id -u)}"
 echo "$X509_USER_PROXY"
 cat $X509_USER_PROXY
 cp $X509_USER_PROXY proxyfile
-X509_USER_PROXY=$PWD/proxyfile
+chmod 600 proxyfile
+export X509_USER_PROXY=$PWD/proxyfile
 #git clone https://github.com/cms-sw/cms-bot
 
 #export PYTHONPATH=/cvmfs/cms-ib.cern.ch/jenkins-env/python/shared
