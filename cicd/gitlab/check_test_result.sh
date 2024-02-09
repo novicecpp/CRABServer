@@ -30,9 +30,10 @@ pushd $WORKSPACE || exit
 #[[ -n $rc ]] && exit $rc
 #export X509_USER_CERT=/home/cmsbld/.globus/usercert.pem
 #export X509_USER_KEY=/home/cmsbld/.globus/userkey.pem
-#export PROXY=$(voms-proxy-info -path 2>&1)
+# default value when running in local machine
 export X509_USER_PROXY="${X509_USER_PROXY:-/tmp/x509up_u$(id -u)}"
 echo "$X509_USER_PROXY"
+cat $X509_USER_PROXY
 
 #git clone https://github.com/cms-sw/cms-bot
 
