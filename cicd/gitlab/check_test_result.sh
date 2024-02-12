@@ -132,4 +132,3 @@ fi
 if [[ $TEST_RESULT == 'FULL-STATUS-UNKNOWN' ]]; then
     exit 4
 fi
-popd
