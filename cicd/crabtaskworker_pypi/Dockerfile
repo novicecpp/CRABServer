@@ -3,12 +3,12 @@ FROM python:3.8 as wmcore-src
 SHELL ["/bin/bash", "-c"]
 # Use the "magic" requirements.txt from crabserver pypi
 COPY cicd/crabserver_pypi/ .
-RUN req=($(./requirementsParse.py)) \
+RUN req=($(grep -v '^\s*#' < wmcore_requirements.txt)) \
     && git clone ${req[0]} -b ${req[1]} /WMCore \
     && ( cd /WMCore; git status ) \
     && echo "${req[1]}" > /wmcore_version
 
-# create TaskManagerRun.tar.gz
+# create TaskManagerRun.tar.gz and other data files
 FROM python:3.8 as build-data
 SHELL ["/bin/bash", "-c"]
 RUN mkdir /build \
@@ -19,7 +19,6 @@ WORKDIR /build
 COPY cicd/crabtaskworker_pypi/new_htcondor_make_runtime.sh /build
 COPY . /build
 COPY --from=wmcore-src /WMCore /build/WMCore
-
 RUN bash new_htcondor_make_runtime.sh
 RUN mkdir /build/install_dir \
     && python3 setup.py install_system -s TaskWorker --prefix=/build/install_dir \
@@ -45,17 +44,13 @@ SHELL ["/bin/bash", "-c"]
 ENV USER=crab3
 ENV WDIR=/data
 
-# prepare build
-RUN mkdir /build
-WORKDIR /build
-
 # install gfal
 # symlink to workaround calling gfal from absolute path
-COPY --from=wmcore-gfal /data/miniconda /data/miniconda
-RUN ln -sf /data/miniconda/bin/gfal-ls /usr/bin/gfal-ls \
-    && ln -sf /data/miniconda/bin/gfal-rm /usr/bin/gfal-rm \
-    && ln -sf /data/miniconda/bin/gfal-copy /usr/bin/gfal-copy \
-    && ln -sf /data/miniconda/bin/gfal-sum /usr/bin/gfal-sum
+COPY --from=wmcore-gfal ${WDIR}/miniconda ${WDIR}/miniconda
+RUN ln -sf ${WDIR}/miniconda/bin/gfal-ls /usr/bin/gfal-ls \
+    && ln -sf ${WDIR}/miniconda/bin/gfal-rm /usr/bin/gfal-rm \
+    && ln -sf ${WDIR}/miniconda/bin/gfal-copy /usr/bin/gfal-copy \
+    && ln -sf ${WDIR}/miniconda/bin/gfal-sum /usr/bin/gfal-sum
 
 # install package from debian repository
 # deps for openldap: libsasl2-dev python3-dev libldap-dev libssl-dev
@@ -63,17 +58,21 @@ RUN apt-get update \
     && apt-get install -y tini libsasl2-dev python3-dev libldap-dev libssl-dev \
     && apt-get clean all
 
-
-COPY cicd/crabserver_pypi/requirementsParse.py cicd/crabserver_pypi/wmcore_requirements.txt /build
+# prepare build
+RUN mkdir /build
+WORKDIR /build
 
 # install dependencies
-COPY --from=wmcore-src /WMCore/requirements.txt requirements.txt
-COPY --from=wmcore-src /wmcore_version wmcore_version
-RUN WMCORE_TAG=$(cat wmcore_version) \
-    && cat requirements.txt | grep -v gfal2 > req.txt \
-    && pip install -r req.txt \
-    && pip install python-ldap==3.4.3 \
-    && pip install --no-deps wmcore==${WMCORE_TAG}
+COPY --from=wmcore-src /wmcore_version .
+COPY cicd/crabtaskworker_pypi/requirements.txt .
+RUN pip install -r requirements.txt \
+    && pip install --no-deps wmcore==$(cat wmcore_version)
+
+# install crabserver
+# will replace with pip later
+COPY src/python/ ${WDIR}/srv/current/lib/python3.8/site-packages/
+# copy TaskManagerRun.tar.gz
+COPY --from=build-data /build/install_dir/data ${WDIR}/srv/current/lib/python3.8/site-packages/data
 
 # copy cern openldap config
 COPY --from=cern-cc7 /etc/openldap /etc/openldap
@@ -82,14 +81,8 @@ COPY --from=cern-cc7 /etc/openldap /etc/openldap
 RUN mkdir -p /opt/rucio/etc/
 COPY cicd/crabtaskworker_pypi/rucio.cfg /opt/rucio/etc/
 
-# install crabserver
-# will replace with pip later
-COPY src/python/ ${WDIR}/srv/current/lib/python3.8/site-packages/
-# copy TaskManagerRun.tar.gz
-COPY --from=build-data /build/install_dir/data ${WDIR}/srv/current/lib/python3.8/site-packages/data
-
 # clean up
-WORKDIR /data
+WORKDIR ${WDIR}
 RUN rm -rf /build
 
 # add new user and switch to user
@@ -110,14 +103,8 @@ COPY cicd/crabtaskworker_pypi/start.sh  cicd/crabtaskworker_pypi/run.sh ${WDIR}/
 RUN echo "${USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/01-crab3
 
 # make sure all /data own by running user
-RUN chown -R 1000:1000 /data
-
-## add github script
-#COPY --chown=${USER}:${USER} addGH.sh ./
-## add GitHub repositories
-#RUN ./addGH.sh
+RUN chown -R 1000:1000 ${WDIR}
 
 USER ${USER}
 
 ENTRYPOINT ["tini", "--"]
-CMD bash
