@@ -121,10 +121,10 @@ task_submission_status_tracking:
       policy: push
 
 check_test_result:
-  rules:
-    - !reference [.default_rules, rules]
-    - if: $SUBMIT_STATUS_TRACKING
-    - if: $MANUAL_CI_PIPELINE_ID
+  #rules:
+  #  - !reference [.default_rules, rules]
+  #  - if: $SUBMIT_STATUS_TRACKING
+  #  - if: $MANUAL_CI_PIPELINE_ID
   stage: check_testsuite
   tags:
     - tseethon-apptainer
