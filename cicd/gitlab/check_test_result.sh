@@ -15,8 +15,8 @@ set -x
 
 #0. Prepare environment
 # root dir can only be the root of crabserver repository
-export ROOT_DIR=${ROOT_DIR:-$PWD/../}
-export WORKSPACE=${WORKSPACE:$PWD}
+export ROOT_DIR="${ROOT_DIR:-$PWD/../}"
+export WORKSPACE="${WORKSPACE:-$PWD}"
 #if [[ -d $WORKSPACE ]]; then
 #    mv ${WORKSPACE} "${WORKSPACE}_$(printf '%(%Y%m%d_%H%M%S)T\n' -1)"
 #fi
