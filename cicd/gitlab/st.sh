@@ -28,6 +28,7 @@ cp $X509_USER_PROXY $WORKSPACE/proxyfile
 chmod 600 $WORKSPACE/proxyfile
 chown $(id -u):$(id -g) $WORKSPACE/proxyfile
 export X509_USER_PROXY=$(realpath $WORKSPACE/proxyfile)
+ls -alh $X509_USER_PROXY
 cat $X509_USER_PROXY | head -n10
 
 # manual task name
