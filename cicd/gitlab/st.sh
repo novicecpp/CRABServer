@@ -29,6 +29,7 @@ chmod 600 $WORKSPACE/proxyfile
 chown $(id -u):$(id -g) $WORKSPACE/proxyfile
 export X509_USER_PROXY=$(realpath $WORKSPACE/proxyfile)
 ls -alh $X509_USER_PROXY
+openssl x509 -in $X509_USER_PROXY -noout -dates
 cat $X509_USER_PROXY | head -n10
 
 # manual task name
