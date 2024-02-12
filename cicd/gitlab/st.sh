@@ -17,6 +17,7 @@ export ROOT_DIR=$PWD
 
 # temp create workspace and artifacts dir
 # the artifacts dir should not hardcode in statusTracking.py script)
+rm -rf $WORKSPACE
 mkdir -p $WORKSPACE/artifacts
 
 # copy proxyfile and correct permission
