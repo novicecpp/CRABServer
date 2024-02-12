@@ -111,8 +111,11 @@ task_submission_status_tracking:
     - export Test_Docker_Image=registry.cern.ch/cmscrab/crabtesting:231009
     - bash -x cicd/gitlab/execute_test.sh
   cache:
-    # Pay attention to the key, you may want to to adjust to your needs, but I consider job is retried by having branch or tag identifier as CI_COMMIT_REF_SLUG and commit sha
     - key: $CI_PIPELINE_ID
+      paths:
+        - artifacts/submitted_tasks_TS
+      policy: push
+    - key: submitted_tasks_TS_latest
       paths:
         - artifacts/submitted_tasks_TS
       policy: push
@@ -134,8 +137,7 @@ check_test_result:
     - key: $MANUAL_CI_PIPELINE_ID
       fallback_keys:
         - $CI_PIPELINE_ID
+        - submitted_tasks_TS_latest
       paths:
         - artifacts/submitted_tasks_TS
       policy: pull
-
-# trigger submit
