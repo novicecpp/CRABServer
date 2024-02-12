@@ -11,8 +11,6 @@ export Check_Publication_Status=Yes
 export CRABClient_version=prod
 
 
-export SUBMITTED_TASKS_PATH=artifacts/submitted_tasks_TS
-
 export WORKSPACE=testsuite
 export ROOT_DIR=$PWD
 
@@ -34,7 +32,7 @@ cat $X509_USER_PROXY | head -n10
 
 # manual task name
 if [[ -z "${Manual_Task_Names}" ]]; then
-    cp artifacts/submitted_tasks_TS artifacts/submitted_tasks || exit
+    cp artifacts/submitted_tasks_TS $WORKSPACE/artifacts/submitted_tasks || exit
 else
     echo "${Manual_Task_Names}" > $WORKSPACE/artifacts/submitted_tasks
 fi
