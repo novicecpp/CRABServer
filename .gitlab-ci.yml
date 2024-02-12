@@ -129,7 +129,7 @@ check_test_result:
     GIT_STRATEGY: clone
   script:
     - echo $MANUAL_CI_PIPELINE_ID
-    - bash cicd/gitlab/st.sh
+    - bash -x cicd/gitlab/st.sh
   cache:
     - key: $MANUAL_CI_PIPELINE_ID
       fallback_keys:

@@ -16,6 +16,11 @@ export SUBMITTED_TASKS_PATH=artifacts/submitted_tasks_TS
 export WORKSPACE=testsuite
 export ROOT_DIR=$PWD
 
+
+# temp create workspace and artifacts dir
+# the artifacts dir should not hardcode in statusTracking.py script)
+mkdir -p $WORKSPACE/artifacts
+
 # copy proxyfile and correct permission
 # not sure why need, but fix like this is worked when run in runner
 X509_USER_PROXY="${X509_USER_PROXY:-/tmp/x509up_u$(id -u)}"
@@ -27,9 +32,7 @@ chown $(id -u):$(id -g) $WORKSPACE/proxyfile
 export X509_USER_PROXY=$(realpath $WORKSPACE/proxyfile)
 cat $X509_USER_PROXY | head -n10
 
-# temp create workspace and artifacts dir
-# the artifacts dir should not hardcode in statusTracking.py script)
-mkdir -p $WORKSPACE/artifacts
+# manual task name
 if [[ -z "${Manual_Task_Names}" ]]; then
     cp artifacts/submitted_tasks_TS artifacts/submitted_tasks || exit
 else
