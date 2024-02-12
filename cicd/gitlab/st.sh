@@ -25,13 +25,13 @@ mkdir -p $WORKSPACE/artifacts
 # not sure why need, but fix like this is worked when run in runner
 #X509_USER_PROXY="${X509_USER_PROXY:-/tmp/x509up_u$(id -u)}"
 X509_USER_PROXY="${X509_USER_PROXY:-/tmp/x509up_u$(id -u)}"
-#echo "$X509_USER_PROXY"
-#ls -alh $X509_USER_PROXY
-#cp $X509_USER_PROXY $WORKSPACE/proxyfile
-#chmod 600 $WORKSPACE/proxyfile
-#chown $(id -u):$(id -g) $WORKSPACE/proxyfile
-#export X509_USER_PROXY=$(realpath $WORKSPACE/proxyfile)
+echo "$X509_USER_PROXY"
 ls -alh $X509_USER_PROXY
+cp $X509_USER_PROXY $WORKSPACE/proxyfile
+chmod 600 $WORKSPACE/proxyfile
+chown $(id -u):$(id -g) $WORKSPACE/proxyfile
+export X509_USER_PROXY=$(realpath $WORKSPACE/proxyfile)
+ls -alh $X509_USER_PROXY || exit #exit if proxy file does not exist
 openssl x509 -in $X509_USER_PROXY -noout -dates
 cat $X509_USER_PROXY | head -n10
 
