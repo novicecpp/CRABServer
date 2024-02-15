@@ -161,7 +161,7 @@ def handleNewTask(resthost, dbInstance, config, task, procnum, *args, **kwargs):
     # Temporary use `crab_input` account to checking other account quota.
     # See discussion in https://mattermost.web.cern.ch/cms-o-and-c/pl/ej7zwkr747rifezzcyyweisx9r
     if hasattr(config.TaskWorker, 'checkStageout') and not config.TaskWorker.checkStageout:
-        pass
+        privilegedRucioClient=ruicoClient
     else:
         tmpConfig = copy.deepcopy(config)
         tmpConfig.Services.Rucio_account = 'crab_input'
