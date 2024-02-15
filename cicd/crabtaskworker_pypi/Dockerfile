@@ -16,12 +16,12 @@ RUN mkdir /build \
     && apt-get install -y curl zip git \
     && apt-get clean all
 WORKDIR /build
-COPY cicd/crabtaskworker_pypi/new_htcondor_make_runtime.sh cicd/crabtaskworker_pypi/build_data_files.sh /build/cicd/crabtaskworker_pypi/
+COPY cicd/crabtaskworker_pypi/new_htcondor_make_runtime.sh cicd/crabtaskworker_pypi/build_data_files.sh /build/
 COPY setup.py /build
 COPY src /build/src
 COPY scripts /build/scripts
 COPY --from=wmcore-src /WMCore /build/WMCore
-RUN WMCOREDIR=./WMCore CRABSERVERDIR=. bash cicd/crabtaskworker_pypi/build_data_files.sh
+RUN WMCOREDIR=./WMCore CRABSERVERDIR=. bash build_data_files.sh
 
 # gfal, wmcore only has gfal lib but not cli
 FROM registry.cern.ch/cmsweb/gfal:latest as wmcore-gfal
@@ -88,7 +88,7 @@ WORKDIR ${WDIR}
 RUN rm -rf /build
 
 # add new user and switch to user
-RUN useradd ${USER} \
+RUN useradd -m ${USER} \
     && install -o ${USER} -d ${WDIR}
 
 # create working directory
