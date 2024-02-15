@@ -14,12 +14,12 @@ set -e
 ORIGDIR=$PWD
 STARTDIR=$PWD/runtime
 
-WMCOREDIR=$ORIGDIR/WMCore
+WMCOREDIR=${WMCOREDIR:-$ORIGDIR/WMCore}
 pushd $WMCOREDIR
 python3 setup.py build_system -s crabtaskworker --skip-docs
 popd
 
-CRABSERVERDIR=$ORIGDIR
+CRABSERVERDIR=${CRABSERVERDIR:-$ORIGDIR}
 pushd $CRABSERVERDIR
 python3 setup.py build_system -s TaskWorker --skip-docs=d
 popd
