@@ -11,7 +11,7 @@ CRABSERVERDIR=/data/repos/CRABServer
 mkdir -p "${INSTALL_DIR}" "${RUNTIME_DIR}"
 export INSTALL_DIR RUNTIME_DIR WMCOREDIR CRABSERVERDIR
 pushd "${CRABSERVERDIR}"
-bash cicd/crabtaskworker_pyp/build_data_files.sh
+bash cicd/crabtaskworker_pypi/build_data_files.sh
 popd
 
 DATA_DIR="$(dirname "$(find /data/srv/current -name TaskManagerRun.tar.gz)")"
