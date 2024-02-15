@@ -13,7 +13,7 @@ FROM python:3.8 as build-data
 SHELL ["/bin/bash", "-c"]
 RUN mkdir /build \
     && apt-get update \
-    && apt-get install -y curl zip git \
+    && apt-get install -y curl zip git fd-find ripgrep \
     && apt-get clean all
 WORKDIR /build
 COPY cicd/crabtaskworker_pypi/new_htcondor_make_runtime.sh cicd/crabtaskworker_pypi/build_data_files.sh /build/cicd/crabtaskworker_pypi/
