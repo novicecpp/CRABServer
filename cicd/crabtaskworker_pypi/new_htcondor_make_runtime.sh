@@ -8,28 +8,43 @@
 # See cicd/crabtaskworker_pypi/Dockerfile at wmcore-src and build-data layer.
 # To avoid mess with local directory, run this script inside docker.
 
+set -euo pipefail
 set -x
-set -e
 
-ORIGDIR=$PWD
-STARTDIR=$PWD/runtime
+# env var can override.
+RUNTIME_DIR="${RUNTIME_DIR:-./make_runtime}"
+WMCOREDIR="${WMCOREDIR:-../WMCore}"
+CRABSERVERDIR="${CRABSERVERDIR:-.}"
 
-WMCOREDIR=${WMCOREDIR:-$ORIGDIR/WMCore}
-pushd $WMCOREDIR
+# get absolute path
+RUNTIME_DIR="$(realpath "${RUNTIME_DIR}")"
+WMCOREDIR="$(realpath "${WMCOREDIR}")"
+CRABSERVERDIR="$(realpath "${CRABSERVERDIR}")"
+
+BUILDDIR="${RUNTIME_DIR}"
+STARTDIR="${BUILDDIR}/runtime"
+WMCORE_BUILD_PREFIX="${WMCOREDIR}/build/lib"
+CRABSERVER_BUILD_PREFIX="${CRABSERVERDIR}/build/lib"
+
+# cleanup $BUILDDIR
+rm -rf "${BUILDDIR}"
+# create neccessary dir
+mkdir -p "${BUILDDIR}" "${STARTDIR}" "${CRABSERVER_BUILD_PREFIX}" "${WMCORE_BUILD_PREFIX}"
+
+pushd "${WMCOREDIR}" || exit
 python3 setup.py build_system -s crabtaskworker --skip-docs
 popd
 
-CRABSERVERDIR=${CRABSERVERDIR:-$ORIGDIR}
-pushd $CRABSERVERDIR
+pushd "${CRABSERVERDIR}" || exit
 python3 setup.py build_system -s TaskWorker --skip-docs=d
 popd
 
 
-[[ -d $STARTDIR ]] || mkdir -p $STARTDIR
-
 pushd $STARTDIR
 
 # make sure there's always a CRAB3.zip to avoid errors in other parts
+pwd
+echo $STARTDIR
 touch $STARTDIR/dummyFile
 zip -r $STARTDIR/CRAB3.zip $STARTDIR/dummyFile
 rm -f $STARTDIR/dummyFile
@@ -38,12 +53,12 @@ rm -f $STARTDIR/dummyFile
 RELEASE=1
 if [[ "x$RELEASE" != "x" ]]; then
     # I am inside  a release building
-    pushd $WMCOREDIR/build/lib/
+    pushd "${WMCORE_BUILD_PREFIX}"
     zip -r $STARTDIR/WMCore.zip *
     zip -rq $STARTDIR/CRAB3.zip WMCore PSetTweaks Utils -x \*.pyc || exit 3
     popd
 
-    pushd $CRABSERVERDIR/build/lib
+    pushd "${CRABSERVER_BUILD_PREFIX}"
     zip -rq $STARTDIR/CRAB3.zip RESTInteractions.py HTCondorUtils.py HTCondorLocator.py TaskWorker CRABInterface  TransferInterface ASO -x \*.pyc || exit 3
     popd
 
@@ -54,7 +69,9 @@ fi
 
 pwd
 echo "Making TaskManagerRun tarball"
-tar zcf $ORIGDIR/TaskManagerRun.tar.gz CRAB3.zip TweakPSet.py CMSRunAnalysis.py task_process ServerUtilities.py RucioUtils.py CMSGroupMapper.py RESTInteractions.py || exit 4
+tar zcf $BUILDDIR/TaskManagerRun.tar.gz CRAB3.zip TweakPSet.py CMSRunAnalysis.py task_process ServerUtilities.py RucioUtils.py CMSGroupMapper.py RESTInteractions.py || exit 4
 echo "Making CMSRunAnalysis tarball"
-tar zcf $ORIGDIR/CMSRunAnalysis.tar.gz WMCore.zip TweakPSet.py CMSRunAnalysis.py ServerUtilities.py CMSGroupMapper.py RESTInteractions.py || exit 4
+tar zcf $BUILDDIR/CMSRunAnalysis.tar.gz WMCore.zip TweakPSet.py CMSRunAnalysis.py ServerUtilities.py CMSGroupMapper.py RESTInteractions.py || exit 4
+# cleanup. $BUILDDIR (current directory) should only have TaskManagerRun.tar.gz and CMSRunAnalysis.tar.gz
+rm -rf "${STARTDIR}" "${WMCORE_BUILD_PREFIX}" "${CRABSERVER_BUILD_PREFIX}"
 popd
