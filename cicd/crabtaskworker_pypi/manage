@@ -14,7 +14,8 @@ CONFIG=$TASKWORKER_HOME/cfg/TaskWorkerConfig.py
 # export PYTHONPATH of app
 export PYTHONPATH=$APP_PATH:$PYTHONPATH
 # CRABTASKWORKER_ROOT is a mandatory variable for getting data directory in `DagmanCreator.getLocation()`
-export CRABTASKWORKER_ROOT=$APP_PATH
+# Hardcode path and use new_updateTMRuntime.sh to build from source and copy to this path.
+export CRABTASKWORKER_ROOT=/data/srv/current/lib/python3.8/site-packages/data/TaskManagerRun.tar.gz
 
 usage()
 {
