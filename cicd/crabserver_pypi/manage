@@ -38,11 +38,12 @@ PYTHONPATH=/data/srv/current/config/$srv:${PYTHONPATH}
 ## secrets
 PYTHONPATH=/etc/secrets:${PYTHONPATH} # (it should be $AUTHDIR, will fix later).
 ## app
-PYTHONPATH=/data/srv/current/lib/python/site-packages/:$PYTHONPATH
+## need to export existing pythonpath first to let `./start.sh -g` mode override path
+PYTHONPATH=$PYTHONPATH:/data/srv/current/lib/python3.8/site-packages/
 export PYTHONPATH
 ## to get wmc-httpd path
 export PATH=/data/srv/current/bin:$PATH
-## service creds
+
 export X509_USER_CERT=${X509_USER_CERT:-${AUTHDIR}/dmwm-service-cert.pem}
 export X509_USER_KEY=${X509_USER_KEY:-${AUTHDIR}/dmwm-service-key.pem}
 

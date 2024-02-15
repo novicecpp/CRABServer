@@ -2,12 +2,11 @@
 FROM python:3.8 as wmcore-src
 SHELL ["/bin/bash", "-c"]
 # Use the "magic" requirements.txt from crabserver pypi
-COPY cicd/crabserver_pypi/ .
-RUN wmcore_repo="$(grep -v '^\s*#' wmcore_requirements.txt | cut -d' ' -f1)" \
-    && wmcore_version="$(grep -v '^\s*#' wmcore_requirements.txt | cut -d' ' -f2)" \
-    && git clone ${wmcore_repo} -b "${wmcore_version}" /WMCore \
+COPY cicd/crabserver_pypi/wmcore_requirements.txt .
+RUN req=($(grep -v '^\s*#' < wmcore_requirements.txt)) \
+    && git clone ${req[0]} -b ${req[1]} /WMCore \
     && ( cd /WMCore; git status ) \
-    && echo "${wmcore_version}" > /wmcore_version
+    && echo "${req[1]}" > /wmcore_version
 
 # create TaskManagerRun.tar.gz and other data files
 FROM python:3.8 as build-data
@@ -18,7 +17,9 @@ RUN mkdir /build \
     && apt-get clean all
 WORKDIR /build
 COPY cicd/crabtaskworker_pypi/new_htcondor_make_runtime.sh /build
-COPY . /build
+COPY setup.py /build
+COPY src /build/src
+COPY scripts /build/scripts
 COPY --from=wmcore-src /WMCore /build/WMCore
 RUN bash new_htcondor_make_runtime.sh
 RUN mkdir /build/install_dir \
@@ -71,9 +72,9 @@ RUN pip install -r requirements.txt \
 
 # install crabserver
 # will replace with pip later
-COPY src/python/ ${WDIR}/srv/current/lib/python/site-packages/
+COPY src/python/ ${WDIR}/srv/current/lib/python3.8/site-packages/
 # copy TaskManagerRun.tar.gz
-COPY --from=build-data /build/install_dir/data ${WDIR}/srv/current/lib/python/site-packages/data
+COPY --from=build-data /build/install_dir/data ${WDIR}/srv/current/lib/python3.8/site-packages/data
 
 # copy cern openldap config
 COPY --from=cern-cc7 /etc/openldap /etc/openldap
@@ -81,6 +82,9 @@ COPY --from=cern-cc7 /etc/openldap /etc/openldap
 # copy rucio config
 RUN mkdir -p /opt/rucio/etc/
 COPY cicd/crabtaskworker_pypi/rucio.cfg /opt/rucio/etc/
+
+COPY cicd/crabserver_pypi/addGH.sh .
+RUN bash addGH.sh
 
 # clean up
 WORKDIR ${WDIR}
@@ -97,8 +101,10 @@ RUN mkdir -p ${WDIR}/srv/tmp \
 
 RUN cd ${WDIR}/srv/TaskManager \
     && ln -sf ${WDIR}/hostdisk/TaskWorker/cfg cfg \
-    && ln -sf ${WDIR}/hostdisk/TaskWorker/logs logs
-COPY cicd/crabtaskworker_pypi/start.sh  cicd/crabtaskworker_pypi/run.sh ${WDIR}/srv/TaskManager/
+    && ln -sf ${WDIR}/hostdisk/TaskWorker/logs logs \
+    && rm /data/manage /data/run.sh
+
+COPY cicd/crabtaskworker_pypi/start.sh cicd/crabtaskworker_pypi/stop.sh cicd/crabtaskworker_pypi/run.sh cicd/crabtaskworker_pypi/manage ${WDIR}/srv/TaskManager/
 
 # for debuggin purpose
 RUN echo "${USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/01-crab3
