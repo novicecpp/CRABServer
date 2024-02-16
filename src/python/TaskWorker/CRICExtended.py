@@ -7,7 +7,7 @@ class CRICExtended(CRIC):
     def __init__(self, *args, **kwargs):
         """
         """
-        super(CRIC, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def _CRICGroupQuery(self, callname, groupname, unflatJson=True):
         """
@@ -23,4 +23,7 @@ class CRICExtended(CRIC):
         cms-crab-HighPrioUsers
         https://cms-cric.cern.ch/api/accounts/group/query/?json&name=CMS_CRAB_HighPrioUsers&preset=default
         """
-        self._CRICGroupQuery(self, 'default', groupname)
+        groupinfo = self._CRICGroupQuery(self, 'default', groupname)
+        import pdb; pdb.set_trace()
+        Exception()
+        return

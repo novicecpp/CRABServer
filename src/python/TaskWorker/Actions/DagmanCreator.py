@@ -1170,9 +1170,7 @@ class DagmanCreator(TaskAction):
         from TaskWorker.CRICExtended import CRICExtended
         configDict = {"cacheduration": 1, "pycurl": True}
         resourceCatalog = CRICExtended(logger=self.logger, configDict=configDict)
-        resourceCatalog.listUserInGroup(groupname='cms-crab-HighPrioUsers')
-        import pdb; pdb.set_trace()
-        Exception()
+        highPrioUsers = resourceCatalog.listUserInGroup(groupname='cms-crab-HighPrioUsers')
         return highPrioUsers
 
 
