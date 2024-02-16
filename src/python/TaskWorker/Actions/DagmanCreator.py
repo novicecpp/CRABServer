@@ -1158,15 +1158,21 @@ class DagmanCreator(TaskAction):
         # in the TW (where ldap is installed) during submission.
 
         highPrioUsers = set()
-        try:
-            for egroup in egroups:
-                highPrioUsers.update(get_egroup_users(egroup))
-        except Exception as ex:  # pylint: disable=broad-except
-            msg = "Error when getting the high priority users list." \
-                  " Will ignore the high priority list and continue normally." \
-                  " Error reason: %s" % str(ex)
-            self.uploadWarning(msg, userProxy, workflow)
-            return []
+        #try:
+        #    for egroup in egroups:
+        #        highPrioUsers.update(get_egroup_users(egroup))
+        #except Exception as ex:  # pylint: disable=broad-except
+        #    msg = "Error when getting the high priority users list." \
+        #          " Will ignore the high priority list and continue normally." \
+        #          " Error reason: %s" % str(ex)
+        #    self.uploadWarning(msg, userProxy, workflow)
+        #    return []
+        from TaskWorker.CRICExtended import CRICExtended
+        configDict = {"cacheduration": 1, "pycurl": True}
+        resourceCatalog = CRICExtended(logger=self.logger, configDict=configDict)
+        resourceCatalog.listUserInGroup(groupname='cms-crab-HighPrioUsers')
+        import pdb; pdb.set_trace()
+        Exception()
         return highPrioUsers
 
 
