@@ -1171,7 +1171,7 @@ class DagmanCreator(TaskAction):
         with self.config.TaskWorker.envForCMSWEB:
             configDict = {"cacheduration": 1, "pycurl": True}
             resourceCatalog = CRICExtended(logger=self.logger, configDict=configDict)
-            highPrioUsers = resourceCatalog.listUserInGroup(groupname='cms-crab-HighPrioUsers')
+            highPrioUsers = resourceCatalog.listUserInGroup(groupname='CMS_CRAB_HighPrioUsers')
         return highPrioUsers
 
 
