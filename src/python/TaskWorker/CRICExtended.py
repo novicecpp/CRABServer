@@ -9,13 +9,13 @@ class CRICExtended(CRIC):
         """
         super().__init__(*args, **kwargs)
 
-    def _CRICGroupQuery(self, callname, groupname, unflatJson=True):
+    def _CRICGroupQuery(self, callname, groupname):
         """
         """
 
         uri = "/api/accounts/group/query/"
         args = {"name": groupname}
-        groupinfo = self._getResult(uri, callname=callname, args=args, unflatJson=unflatJson)
+        groupinfo = self._getResult(uri, callname=callname, args=args, unflatJson=False)
         return groupinfo
 
     def listUserInGroup(self, groupname):
