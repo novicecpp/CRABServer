@@ -61,16 +61,16 @@ rm -f "${STARTDIR}/dummyFile"
 
 # Take the libraries from the build environment.
 pushd "${WMCORE_BUILD_PREFIX}"
-zip -r "${STARTDIR}"/WMCore.zip ./*
-zip -rq "${STARTDIR}"/CRAB3.zip WMCore PSetTweaks Utils -x \*.pyc || exit 3
+zip -r "${STARTDIR}/WMCore.zip" ./*
+zip -rq "${STARTDIR}/CRAB3.zip" WMCore PSetTweaks Utils -x \*.pyc || exit 3
 popd
 
 pushd "${CRABSERVER_BUILD_PREFIX}"
-zip -rq "${STARTDIR}"/CRAB3.zip RESTInteractions.py HTCondorUtils.py HTCondorLocator.py TaskWorker CRABInterface  TransferInterface ASO -x \*.pyc || exit 3
+zip -rq "${STARTDIR}/CRAB3.zip" RESTInteractions.py HTCondorUtils.py HTCondorLocator.py TaskWorker CRABInterface  TransferInterface ASO -x \*.pyc || exit 3
 popd
 
-cp -r "${CRABSERVERDIR}/scripts/{TweakPSet.py,CMSRunAnalysis.py,task_process}" .
-cp "${CRABSERVERDIR}/src/python/{ServerUtilities.py,RucioUtils.py,CMSGroupMapper.py,RESTInteractions.py}" .
+cp -r "${CRABSERVERDIR}/scripts"/{TweakPSet.py,CMSRunAnalysis.py,task_process} .
+cp "${CRABSERVERDIR}/src/python"/{ServerUtilities.py,RucioUtils.py,CMSGroupMapper.py,RESTInteractions.py} .
 
 echo "Making TaskManagerRun tarball"
 tar zcf "${RUNTIME_DIR}/TaskManagerRun.tar.gz" CRAB3.zip TweakPSet.py CMSRunAnalysis.py task_process ServerUtilities.py RucioUtils.py CMSGroupMapper.py RESTInteractions.py || exit 4
