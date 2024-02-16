@@ -1168,9 +1168,10 @@ class DagmanCreator(TaskAction):
         #    self.uploadWarning(msg, userProxy, workflow)
         #    return []
         from TaskWorker.CRICExtended import CRICExtended
-        configDict = {"cacheduration": 1, "pycurl": True}
-        resourceCatalog = CRICExtended(logger=self.logger, configDict=configDict)
-        highPrioUsers = resourceCatalog.listUserInGroup(groupname='cms-crab-HighPrioUsers')
+        with self.config.TaskWorker.envForCMSWEB:
+            configDict = {"cacheduration": 1, "pycurl": True}
+            resourceCatalog = CRICExtended(logger=self.logger, configDict=configDict)
+            highPrioUsers = resourceCatalog.listUserInGroup(groupname='cms-crab-HighPrioUsers')
         return highPrioUsers
 
 
