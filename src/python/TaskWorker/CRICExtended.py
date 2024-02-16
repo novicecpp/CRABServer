@@ -23,7 +23,8 @@ class CRICExtended(CRIC):
         cms-crab-HighPrioUsers
         https://cms-cric.cern.ch/api/accounts/group/query/?json&name=CMS_CRAB_HighPrioUsers&preset=default
         """
-        groupinfo = self._CRICGroupQuery('default', groupname)
+        groupinfo = self._CRICGroupQuery('merged', groupname)
+        users = groupinfo['groupname']['users']
         import pdb; pdb.set_trace()
         Exception()
-        return
+        return users
