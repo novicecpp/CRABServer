@@ -1,4 +1,11 @@
 #!/bin/bash
+# This scripts originate from dmwm-base/manage
+# https://github.com/dmwm/CMSKubernetes/blob/2b0454f9205cb8f97fecb91bf6661b59e4b31424/docker/pypi/dmwm-base/manage
+# However, scripts is heavily edited to suit new CRAB PyPI.
+# 2 things that we may need to keep up with original scripts:
+#   - Deployment Convention: WMCore/REST app (CRAB REST) read necessary files from.
+#   - `wmc-httpd` line.
+
 ##H Usage: manage ACTION [ATTRIBUTE] [SECURITY-STRING]
 ##H
 ##H Available actions:
@@ -19,7 +26,7 @@ COLOR_NORMAL="\\033[0;39m"
 srv=crabserver
 
 # service settings
-LOGDIR=/data/srv/logs/$srv
+#LOGDIR=/data/srv/logs/$srv # we write logs to fifo instead of logdir
 AUTHDIR=/data/srv/current/auth/$srv
 STATEDIR=/data/srv/state/$srv
 CFGDIR=/data/srv/current/config/$srv
@@ -29,13 +36,14 @@ CFGFILE=$CFGDIR/config.py
 ## config
 PYTHONPATH=/data/srv/current/config/$srv:${PYTHONPATH}
 ## secrets
-PYTHONPATH=/etc/secrets:${PYTHONPATH}
+PYTHONPATH=/etc/secrets:${PYTHONPATH} # (it should be $AUTHDIR, will fix later).
 ## app
-PYTHONPATH=/data/srv/current/lib/python3.8/site-packages/:$PYTHONPATH
+## need to export existing pythonpath first to let `./start.sh -g` mode override path
+PYTHONPATH=$PYTHONPATH:/data/srv/current/lib/python3.8/site-packages/
 export PYTHONPATH
 ## to get wmc-httpd path
 export PATH=/data/srv/current/bin:$PATH
-## service creds
+
 export X509_USER_CERT=${X509_USER_CERT:-${AUTHDIR}/dmwm-service-cert.pem}
 export X509_USER_KEY=${X509_USER_KEY:-${AUTHDIR}/dmwm-service-key.pem}
 
@@ -49,7 +57,7 @@ usage()
 }
 start_srv()
 {
-    # Wa: originally from wmcore
+    # Wa: originally from dmwm-base
     #wmc-httpd -r -d $STATEDIR -l "|rotatelogs $LOGDIR/$srv-%Y%m%d-`hostname -s`.log 86400" $CFGFILE
     wmc-httpd -r -d $STATEDIR -l "$STATEDIR/crabserver-fifo" $CFGFILE
     # Wa: debug
