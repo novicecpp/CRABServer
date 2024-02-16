@@ -12,7 +12,6 @@ class CRICExtended(CRIC):
     def _CRICGroupQuery(self, callname, groupname):
         """
         """
-
         uri = "/api/accounts/group/query/"
         args = {"name": groupname}
         groupinfo = self._getResult(uri, callname=callname, args=args, unflatJson=False)
@@ -25,6 +24,4 @@ class CRICExtended(CRIC):
         """
         groupinfo = self._CRICGroupQuery('merged', groupname)
         users = groupinfo[groupname]['users']
-        import pdb; pdb.set_trace()
-        Exception()
         return users

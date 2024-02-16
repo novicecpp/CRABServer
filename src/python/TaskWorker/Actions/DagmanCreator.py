@@ -23,7 +23,7 @@ import TaskWorker.DataObjects.Result
 from TaskWorker.Actions.TaskAction import TaskAction
 from TaskWorker.WorkerExceptions import TaskWorkerException
 from RucioUtils import getWritePFN
-from CMSGroupMapper import get_egroup_users
+from TaskWorker.CRICExtended import CRICExtended
 
 import classad
 
@@ -1158,20 +1158,21 @@ class DagmanCreator(TaskAction):
         # in the TW (where ldap is installed) during submission.
 
         highPrioUsers = set()
-        #try:
-        #    for egroup in egroups:
-        #        highPrioUsers.update(get_egroup_users(egroup))
-        #except Exception as ex:  # pylint: disable=broad-except
-        #    msg = "Error when getting the high priority users list." \
-        #          " Will ignore the high priority list and continue normally." \
-        #          " Error reason: %s" % str(ex)
-        #    self.uploadWarning(msg, userProxy, workflow)
-        #    return []
-        from TaskWorker.CRICExtended import CRICExtended
-        with self.config.TaskWorker.envForCMSWEB:
-            configDict = {"cacheduration": 1, "pycurl": True}
-            resourceCatalog = CRICExtended(logger=self.logger, configDict=configDict)
-            highPrioUsers = resourceCatalog.listUserInGroup(groupname='CMS_CRAB_HighPrioUsers')
+        try:
+            for egroup in egroups:
+
+                with self.config.TaskWorker.envForCMSWEB:
+                    configDict = {"cacheduration": 1, "pycurl": True}
+                    resourceCatalog = CRICExtended(logger=self.logger, configDict=configDict)
+                    users = resourceCatalog.listUserInGroup(groupname=egroup)
+                highPrioUsers.update(users)
+        except Exception as ex:  # pylint: disable=broad-except
+            msg = "Error when getting the high priority users list." \
+                  " Will ignore the high priority list and continue normally." \
+                  " Error reason: %s" % str(ex)
+            self.uploadWarning(msg, userProxy, workflow)
+            return []
+
         return highPrioUsers
 
 
