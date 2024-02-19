@@ -160,13 +160,16 @@ def handleNewTask(resthost, dbInstance, config, task, procnum, *args, **kwargs):
     rucioClient = getNativeRucioClient(config=config, logger=handler.logger)
     # Temporary use `crab_input` account to checking other account quota.
     # See discussion in https://mattermost.web.cern.ch/cms-o-and-c/pl/ej7zwkr747rifezzcyyweisx9r
-    #tmpConfig = copy.deepcopy(config)
-    #tmpConfig.Services.Rucio_account = 'crab_input'
-    #privilegedRucioClient = getNativeRucioClient(tmpConfig, handler.logger)
+    if hasattr(config.TaskWorker, 'checkStageout') and not config.TaskWorker.checkStageout:
+        privilegedRucioClient=rucioClient
+    else:
+        tmpConfig = copy.deepcopy(config)
+        tmpConfig.Services.Rucio_account = 'crab_input'
+        privilegedRucioClient = getNativeRucioClient(tmpConfig, handler.logger)
 
     # start to work
     handler.addWork(MyProxyLogon(config=config, crabserver=crabserver, procnum=procnum, myproxylen=60 * 60 * 24))
-    handler.addWork(StageoutCheck(config=config, crabserver=crabserver, procnum=procnum, rucioClient=rucioClient))
+    handler.addWork(StageoutCheck(config=config, crabserver=crabserver, procnum=procnum, rucioClient=privilegedRucioClient))
     if task['tm_job_type'] == 'Analysis':
         if task.get('tm_user_files'):
             handler.addWork(UserDataDiscovery(config=config, crabserver=crabserver, procnum=procnum))
