@@ -5,6 +5,10 @@
 # 2 things that we may need to keep up with original scripts:
 #   - Deployment Convention: WMCore/REST app (CRAB REST) read necessary files from.
 #   - `wmc-httpd` line.
+# This script needs following environment variables:
+#   - DEBUG:   if `true`, setup debug mode environment .
+#   - APP_DIR: PYTHONPATH of the app.
+
 
 set -euo pipefail
 
