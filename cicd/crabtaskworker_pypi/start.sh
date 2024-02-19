@@ -1,5 +1,7 @@
 #!/bin/bash
 
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
 helpFunction() {
     echo -e "Usage example: ./start.sh -c | -g [-d]"
     echo -e "\t-c start current crabserver instance"
@@ -30,12 +32,14 @@ case $MODE in
         ;;
     fromGH)
         # private mode: run private instance from GH
-        APP_PATH=/data/repos/CRABServer/src/python
+        APP_PATH=/data/repos/CRABServer/src/python:/data/repos/WMCore/src/python
+        # update runtime (create TaskManagerRun.tar.gz from source)
         ./new_updateTMRuntime.sh
         ;;
     *) echo "Unimplemented mode: $MODE\n"; helpFunction ;;
 esac
 
+# export APP_PATH and DEBUG to ./manage
 export APP_PATH
 export DEBUG
-bash -x /data/srv/TaskManager/manage start
+"${SCRIPT_DIR}/manage" start

@@ -1,2 +1,5 @@
 #! /bin/bash
-/data/srv/TaskManager/manage stop
+
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+"${SCRIPT_DIR}/manage" stop

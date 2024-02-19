@@ -40,4 +40,4 @@ esac
 # passing DEBUG/APP_PATH to ./manage scripts
 export DEBUG
 export APP_PATH
-"${SCRIPT_DIR}"/manage start
+"${SCRIPT_DIR}/manage" start
