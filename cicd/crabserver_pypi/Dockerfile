@@ -38,6 +38,7 @@ COPY src/script/ /data/srv/current/data/script/
 COPY src/html/ /data/srv/current/data/html/
 COPY src/css/ /data/srv/current/data/css/
 
+# add github repos
 COPY cicd/crabserver_pypi/addGH.sh .
 RUN bash addGH.sh
 
