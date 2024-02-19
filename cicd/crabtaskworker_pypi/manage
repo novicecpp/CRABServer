@@ -24,7 +24,10 @@ CONFIG=$TASKWORKER_HOME/cfg/TaskWorkerConfig.py
 # Hardcoded the path and use new_updateTMRuntime.sh to build it from source and copy to this path.
 export CRABTASKWORKER_ROOT=/data/srv/current/lib/python/site-packages/
 ## app
-export PYTHONPATH=$APP_PATH:$PYTHONPATH
+# default PYTHONPATH to emptystring to prevent script exit from `set -u`
+PYTHONPATH=${PYTHONPATH:-}
+PYTHONPATH=$APP_PATH:$PYTHONPATH
+export PYTHONPATH
 
 usage()
 {
