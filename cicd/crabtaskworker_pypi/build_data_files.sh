@@ -31,8 +31,11 @@ rm -rf "${INSTALL_DIR}"
 mkdir -p "${INSTALL_DIR}"
 
 # build tar files
-# assume new_htcondor_make_runtime.sh live in the same directory of
-# this script.
+# passing args
+export RUNTIME_DIR
+export CRABSERVERDIR
+export WMCOREDIR
+# assume new_htcondor_make_runtime.sh live in the same directory of this script.
 bash "${SCRIPT_DIR}/new_htcondor_make_runtime.sh"
 # build script files
 pushd "${CRABSERVERDIR}"
