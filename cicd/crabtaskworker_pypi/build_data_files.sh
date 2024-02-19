@@ -42,4 +42,6 @@ popd
 cp "${RUNTIME_DIR}/CMSRunAnalysis.tar.gz" \
    "${RUNTIME_DIR}/TaskManagerRun.tar.gz" \
    "${INSTALL_DIR}/data"
+
+# remove unuse lib dir from `install_system`
 rm -rf "${INSTALL_DIR:?}/lib"

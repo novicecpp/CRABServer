@@ -81,6 +81,7 @@ COPY --from=cern-cc7 /etc/openldap /etc/openldap
 RUN mkdir -p /opt/rucio/etc/
 COPY cicd/crabtaskworker_pypi/rucio.cfg /opt/rucio/etc/
 
+# add github repos, reuse script in crabserver_pypi
 COPY cicd/crabserver_pypi/addGH.sh .
 RUN bash addGH.sh
 
