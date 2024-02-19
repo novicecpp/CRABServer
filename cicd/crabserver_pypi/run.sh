@@ -1,9 +1,12 @@
 #! /bin/bash
 # Container main process.
 
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+cd "${SCRIPT_DIR}"
+
 # run monitoring script
-if [ -f /data/monitor.sh ]; then
-    /data/monitor.sh &
+if [ -f ./monitor.sh ]; then
+    ./monitor.sh &
 fi
 
 # create named pipe to pipe log to stdout
@@ -14,7 +17,7 @@ cat /data/srv/state/crabserver/crabserver-fifo &
 
 #start the service
 #export CRYPTOGRAPHY_ALLOW_OPENSSL_102=true
-/data/manage start
+./start.sh -c
 
 # cat fifo forever to read logs
 while true;
