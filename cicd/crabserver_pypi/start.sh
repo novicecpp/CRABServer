@@ -1,5 +1,7 @@
 #! /bin/bash
 
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
 helpFunction() {
     echo -e "Usage example: ./start.sh -c | -g [-d]"
     echo -e "\t-c start current crabserver instance"
@@ -23,15 +25,19 @@ if ! [[ -v MODE ]]; then
   echo "Please set how you want to start crabserver (add -c or -g option)." && helpFunction
 fi
 
-if [[ "${DEBUG}" == true ]]; then
-  # this will direct WMCore/REST/Main.py to run in the foreground rather than as a demon
-  # allowing among other things to insert pdb calls in the crabserver code and debug interactively
-  export DONT_DAEMONIZE_REST=True
-  # this will start crabserver with only one thread (default is 25) to make it easier to run pdb
-  export CRABSERVER_THREAD_POOL=1
-fi
+case $MODE in
+    current)
+        # current mode: run current instance
+        APP_PATH=/data/srv/current/lib/python/site-packages
+        ;;
+    fromGH)
+        # private mode: run private instance from GH
+        APP_PATH=/data/repos/WMCore/src/python:/data/repos/CRABServer/src/python
+        ;;
+    *) echo "Unimplemented mode: $MODE\n"; helpFunction ;;
+esac
 
-if [[ "${MODE}" == fromGH ]]; then
-    export PYTHONPATH=/data/repos/CRABServer/src/python:/data/repos/WMCore/src/python/:${PYTHONPATH}
-fi
-/data/manage start
+# passing DEBUG/APP_PATH to ./manage scripts
+export DEBUG
+export APP_PATH
+"${SCRIPT_DIR}"/manage start
