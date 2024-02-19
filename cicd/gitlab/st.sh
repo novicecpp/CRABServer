@@ -1,7 +1,7 @@
 #! /bin/bash
 
 export SLEEP_SECONDS=900
-export RETRY=${RETRY:-5}
+export RETRY=${RETRY:-10}
 
 # use in check_test_result.sh and statusTracking.py
 export CMSSW_release=CMSSW_13_0_2
