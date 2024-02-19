@@ -23,7 +23,7 @@ bash cicd/crabtaskworker_pypi/build_data_files.sh
 popd
 
 # backup container's data files
-DATA_DIR=/data/srv/current/lib/python3.8/site-packages/data
+DATA_DIR=/data/srv/current/lib/python/site-packages/data
 BACKUP_DIR="$(realpath "${DATA_DIR}/../../../")"
 ORIGINAL_DATA_FILES_PATH=$BACKUP_DIR/Original_data_files.tar.gz
 if [[ ! -f "${ORIGINAL_DATA_FILES_PATH}" ]]; then

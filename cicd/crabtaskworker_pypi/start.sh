@@ -28,7 +28,7 @@ fi
 case $MODE in
     current)
         # current mode: run current instance
-        APP_PATH=/data/srv/current/lib/python3.8/site-packages
+        APP_PATH=/data/srv/current/lib/python/site-packages
         ;;
     fromGH)
         # private mode: run private instance from GH
