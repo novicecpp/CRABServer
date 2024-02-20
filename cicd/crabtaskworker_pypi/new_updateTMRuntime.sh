@@ -16,15 +16,18 @@ CRABSERVERDIR=/data/repos/CRABServer
 # building data files
 echo "Building data files from source."
 mkdir -p "${INSTALL_DIR}" "${RUNTIME_DIR}"
-export INSTALL_DIR RUNTIME_DIR WMCOREDIR CRABSERVERDIR
 pushd "${CRABSERVERDIR}"
 echo "Running build_data_files.sh script from $CRABSERVERDIR"
+export INSTALL_DIR
+export RUNTIME_DIR
+export WMCOREDIR
+export CRABSERVERDIR
 bash cicd/crabtaskworker_pypi/build_data_files.sh
 popd
 
 # backup container's data files
 DATA_DIR=/data/srv/current/lib/python/site-packages/data
-BACKUP_DIR="$(realpath "${DATA_DIR}/../../../")"
+BACKUP_DIR=/data/srv/current/lib/
 ORIGINAL_DATA_FILES_PATH=$BACKUP_DIR/Original_data_files.tar.gz
 if [[ ! -f "${ORIGINAL_DATA_FILES_PATH}" ]]; then
     echo "Backing up container's data files to $ORIGINAL_DATA_FILES_PATH"
