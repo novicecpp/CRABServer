@@ -86,26 +86,16 @@ if [ "X${singularity}" == X8 ]; then scramprefix=el${singularity}; fi
 /cvmfs/cms.cern.ch/common/cmssw-${scramprefix} -- bash -x $ROOT_DIR/cicd/gitlab/execute_status_tracking.sh $ROOT_DIR || export ERR=true
 cp artifacts/result . || true
 
-#cd ${WORK_DIR}
-#mv $WORKSPACE/artifacts/* $WORKSPACE/
-
-#export RETRY=${NAGINATOR_COUNT:-0}
-#export MAX_RETRY=${NAGINATOR_MAXCOUNT:-4}
-
-#export RETRY=${RETRY:-0}
-#export MAX_RETRY=${MAX_RETRY:-4}
-
 
 #3. Update issue with submission results
 TEST_RESULT='FAILED'
 if [ ! -s "./result" ]; then
 	MESSAGE='Something went wrong. Investigate manually.'
    	ERR=true
+elif grep "SUBMITFAILED"; then
+    MESSAGE='Task(s) has "SUBMITFAILED" status. Investigate manually.'
+   	ERR=true
 elif grep "TestRunning" result || grep "TestResubmitted" result; then
-	#if [ $RETRY -ge $MAX_RETRY ] ; then
-	#	MESSAGE='Exceeded configured retries. If needed restart manually.'
-    #else
-    #fi
     MESSAGE='Will run again.'
    	TEST_RESULT='FULL-STATUS-UNKNOWN'
 elif grep "TestFailed" result ; then
@@ -124,7 +114,6 @@ echo -e "**Test:** Task Submission Status Tracking\n\
 
 echo -e "\`\`\`\n`cat result`\n\`\`\`" >> message_TSResult || true
 
-#$WORKSPACE/cms-bot/create-gh-issue.py -r $Repo_GH_Issue -t "$issueTitle" -R message_TSResult
 
 if $ERR ; then
 	exit 1
