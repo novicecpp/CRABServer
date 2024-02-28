@@ -13,7 +13,7 @@ stages:
     # parallel version
     - export CMSSW_release=$CMSSW_release
     # fixed vars
-    - export CRABClient_version=GH
+    - export CRABClient_version=prod
     - export CRABServer_tag=HEAD
     - export REST_Instance=test12
     - export Client_Validation_Suite=true
