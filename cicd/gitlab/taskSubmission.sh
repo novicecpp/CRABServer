@@ -71,7 +71,7 @@ immediateCheck(){
 
 if [ "${Client_Validation_Suite}" = true ]; then
     echo -e "\nStarting task submission for Client Validation testing.\n"
-    cd CRABServer/test/clientValidationTasks/
+    cd test/clientValidationTasks/
     filesToSubmit=`find . -type f -name '*.py' ! -name '*pset*'`
     submitTasks "${filesToSubmit}" "CV"
     cd ${WORK_DIR}
