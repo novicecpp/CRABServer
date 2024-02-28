@@ -20,10 +20,19 @@ variables:
 #        - scripts/*
 
 stages:
+  - child_pipeline
   - build_docker
   - deploy
   - run_testsuite
   - check_testsuite
+
+trigger_child_pipeline:
+  rules:
+    - if: $Client_Validation_Suite
+  stage: child_pipeline
+  trigger:
+    include: cicd/cv/.gitlab-ci.yml
+    strategy: depend
 
 build_rest_image:
   rules:
@@ -121,10 +130,10 @@ task_submission_status_tracking:
       policy: push
 
 check_test_result:
-  #rules:
-  #  - !reference [.default_rules, rules]
-  #  - if: $SUBMIT_STATUS_TRACKING
-  #  - if: $MANUAL_CI_PIPELINE_ID
+  rules:
+    - !reference [.default_rules, rules]
+    - if: $SUBMIT_STATUS_TRACKING
+    - if: $MANUAL_CI_PIPELINE_ID
   stage: check_testsuite
   tags:
     - tseethon-apptainer

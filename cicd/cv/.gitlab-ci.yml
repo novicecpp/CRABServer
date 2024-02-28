@@ -1,0 +1,40 @@
+---
+stages:
+  - run_cv
+  - check_cv
+
+.execute_cv_template:
+  stage: run_cv
+  tags:
+    - tseethon-apptainer
+  variables:
+    GIT_STRATEGY: clone
+  script:
+    # parallel version
+    - export CMSSW_release=$CMSSW_release
+    # fixed vars
+    - export CRABClient_version=GH
+    - export CRABServer_tag=HEAD
+    - export REST_Instance=test12
+    - export Client_Validation_Suite=true
+    # it should not need in future
+    - export Repo_GH_Issue=novicecpp/CRABServer
+    - export Repo_Testing_Scripts=novicecpp/CRABServer
+    - export Branch_Testing_Scripts=wmcore_pypi
+    - export Test_Docker_Image=registry.cern.ch/cmscrab/crabtesting:231009
+    - bash -x cicd/gitlab/execute_test.sh
+  cache:
+    - key: $CI_PIPELINE_ID
+      paths:
+        - artifacts/submitted_tasks_CV
+      policy: push
+
+execute_cv_CMSSW_13_0_2:
+  extends: ".execute_cv_template"
+  variables:
+    CMSSW_release: CMSSW_13_0_2
+
+execute_cv_CMSSW_10_6_26:
+  extends: ".execute_cv_template"
+  variables:
+    CMSSW_release: CMSSW_10_6_26
