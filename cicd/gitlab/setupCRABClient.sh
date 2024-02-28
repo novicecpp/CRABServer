@@ -72,7 +72,10 @@ case $CRABClient_version in
 	source ${MY_CRAB}/etc/crab-bash-completion.sh
     ;;
   prod)
+    # avoid set -u
+    set +u
 	source /cvmfs/cms.cern.ch/common/crab-setup.sh prod
+    set -u
 esac
 
 #cd ${WORK_DIR}
