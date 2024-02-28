@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -x
+set -euo pipefail
 
 #Script submits tasks for testing. 3 types of testing can be started using this script:
 # 1. Client_Validation_Suite: tests different CRABClient commands;
