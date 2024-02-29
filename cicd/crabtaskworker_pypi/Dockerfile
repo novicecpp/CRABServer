@@ -22,7 +22,10 @@ COPY setup.py /build
 COPY src /build/src
 COPY scripts /build/scripts
 COPY --from=wmcore-src /WMCore /build/WMCore
-RUN export WMCOREDIR=./WMCore CRABSERVERDIR=. WORK_DIR=./data_files bash build_data_files.sh
+RUN WMCOREDIR=./WMCore \
+    CRABSERVERDIR=./ \
+    DATAFILES_WORKDIR=./data_files\
+    bash build_data_files.sh
 
 # gfal, wmcore only has gfal lib but not cli
 FROM registry.cern.ch/cmsweb/gfal:latest as wmcore-gfal
@@ -72,7 +75,7 @@ RUN pip install -r requirements.txt \
 # will replace with pip later
 COPY src/python/ ${WDIR}/srv/current/lib/python/site-packages/
 # copy TaskManagerRun.tar.gz
-COPY --from=build-data /build/install_dir/data ${WDIR}/srv/current/lib/python/site-packages/data
+COPY --from=build-data /build/data_files/data ${WDIR}/srv/current/lib/python/site-packages/data
 
 # copy cern openldap config
 COPY --from=cern-cc7 /etc/openldap /etc/openldap
