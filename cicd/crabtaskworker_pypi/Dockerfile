@@ -9,7 +9,7 @@ RUN wmcore_repo="$(grep -v '^\s*#' wmcore_requirements.txt | cut -d' ' -f1)" \
     && ( cd /WMCore; git status ) \
     && echo "${wmcore_version}" > /wmcore_version
 
-# create TaskManagerRun.tar.gz and other data files
+# create data files ./data
 FROM python:3.8 as build-data
 SHELL ["/bin/bash", "-c"]
 RUN mkdir /build \
@@ -22,7 +22,7 @@ COPY setup.py /build
 COPY src /build/src
 COPY scripts /build/scripts
 COPY --from=wmcore-src /WMCore /build/WMCore
-RUN WMCOREDIR=./WMCore CRABSERVERDIR=. bash build_data_files.sh
+RUN export WMCOREDIR=./WMCore CRABSERVERDIR=. WORK_DIR=./data_files bash build_data_files.sh
 
 # gfal, wmcore only has gfal lib but not cli
 FROM registry.cern.ch/cmsweb/gfal:latest as wmcore-gfal
