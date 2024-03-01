@@ -64,6 +64,7 @@ source cicd/gitlab/setupCRABClient.sh
   function checkThisCommand() {
     local cmd="$1"
     local parms="$2"
+    set +e
 
     if [[ ! " ${!TEST_TO_EXECUTE} " =~ " ${cmd} " ]]; then
          :
@@ -86,6 +87,8 @@ source cicd/gitlab/setupCRABClient.sh
     	cat $TMP_BUFFER
     	echo -e "____________\n"
      fi
+
+     set -e
   }
 
   # check for a valid proxy
@@ -256,7 +259,6 @@ source cicd/gitlab/setupCRABClient.sh
   for param in "${USETHISPARMS[@]}"; do
     checkThisCommand kill "$param"
   done
-
 
 } 2>&1 | tee ${WORK_DIR}/client-validation.log
 
