@@ -39,6 +39,7 @@ stages:
     # parallel version
     - export CMSSW_release=$CMSSW_release
     - export CRABClient_version=prod
+    - export REST_Instance=test12
     - bash -x cicd/gitlab/check_clientValidation.sh
   cache:
     - key: $CI_PIPELINE_ID_$CMSSW_release
