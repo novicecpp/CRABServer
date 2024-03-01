@@ -26,9 +26,10 @@ set +euo pipefail
   TASK_DIR="${WORK_DIR}/CRABServer/test/clientValidationTasks"
 
   #list of commands to execute for full testing (sl7/8)
-  # skip getlog/getoutput. Need to wait until jobs finished running
+  # skip getlog/getoutput. Need to wait until jobs finished running.
+  # Also report, need to wait until job submitted
   #FULL_TEST=(createmyproxy checkusername checkwrite tasks preparelocal status report getlog getoutput)
-  FULL_TEST=(createmyproxy checkusername checkwrite tasks preparelocal status report)
+  FULL_TEST=(createmyproxy checkusername checkwrite tasks preparelocal status)
   #list of commands to execute on sl6
   SL6_TESTS=(status checkusername)
 

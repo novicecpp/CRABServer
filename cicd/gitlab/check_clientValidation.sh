@@ -4,7 +4,7 @@ set -euo pipefail
 
 #00. check parameters
 echo "(DEBUG) variables from upstream jenkin job:"
-#echo "(DEBUG)   \- SCRAM_ARCH: ${SCRAM_ARCH}"
+echo "(DEBUG)   \- SCRAM_ARCH: ${SCRAM_ARCH}"
 echo "(DEBUG)   \- singularity: ${singularity}"
 echo "(DEBUG)   \- CMSSW_release: ${CMSSW_release}"
 #echo "(DEBUG)   \- issueTitle: ${issueTitle}"
