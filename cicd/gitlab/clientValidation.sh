@@ -257,3 +257,5 @@ source cicd/gitlab/setupCRABClient.sh
 
 
 } 2>&1 | tee ${WORK_DIR}/client-validation.log
+
+realpath ${WORK_DIR}/client-validation.log

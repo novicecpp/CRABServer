@@ -37,8 +37,8 @@ stages:
     GIT_STRATEGY: clone
   script:
     # parallel version
-    - tree .
     - export CMSSW_release=$CMSSW_release
+    - export CRABClient_version=prod
     - bash -x cicd/gitlab/check_clientValidation.sh
   cache:
     - key: $CI_PIPELINE_ID_$CMSSW_release
