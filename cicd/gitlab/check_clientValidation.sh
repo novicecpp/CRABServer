@@ -46,7 +46,7 @@ if [ "X${singularity}" == X6 ] || [ "X${singularity}" == X7 ] || [ "X${singulari
     if [ "X${singularity}" == X6 ] ; then export TEST_LIST=SL6_TESTS; fi
     if [ "X${singularity}" == X7 ] ; then export TEST_LIST=FULL_TEST; fi
     if [ "X${singularity}" == X8 ] ; then export TEST_LIST=FULL_TEST; fi
-    cp $SUBMITTED_TASK_PATH $WORK_DIR
+    cp $SUBMITTED_TASKS_PATH $WORK_DIR
     scramprefix=cc${singularity}
     if [ "X${singularity}" == X6 ]; then scramprefix=cc${singularity}; fi
     if [ "X${singularity}" == X7 ]; then scramprefix=cc${singularity}; fi
