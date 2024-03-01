@@ -1,6 +1,7 @@
 #!/bin/bash
 
-set -euo pipefail
+#set -euo pipefail
+set +euo pipefail
 
 echo "(DEBUG) variables from parents:"
 echo "(DEBUG)   \- WORK_DIR: ${WORK_DIR}"
@@ -67,7 +68,6 @@ export WORK_DIR=$tmp_work_dir
   function checkThisCommand() {
     local cmd="$1"
     local parms="$2"
-    set +e
 
     if [[ ! " ${!TEST_TO_EXECUTE} " =~ " ${cmd} " ]]; then
          :
@@ -90,8 +90,6 @@ export WORK_DIR=$tmp_work_dir
     	cat $TMP_BUFFER
     	echo -e "____________\n"
      fi
-
-     set -e
   }
 
   # check for a valid proxy
