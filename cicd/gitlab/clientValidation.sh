@@ -7,8 +7,11 @@ echo "(DEBUG)   \- WORK_DIR: ${WORK_DIR}"
 echo "(DEBUG)   \- SUBMITTED_TASKS_PATH: ${SUBMITTED_TASKS_PATH}"
 echo "(DEBUG) end"
 
+tmp_work_dir=$WORK_DIR
 #
 source cicd/gitlab/setupCRABClient.sh
+# restore vars
+export WORK_DIR=$tmp_work_dir
 
 {
 
