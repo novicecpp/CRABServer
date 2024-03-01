@@ -129,7 +129,7 @@ source cicd/gitlab/setupCRABClient.sh
     USETHISPARMS+=("$parmsToUse")
   }
 
-  checkProxy
+  #checkProxy
 
   ##################################################
   # START CRABCLIENT VALIDATION
