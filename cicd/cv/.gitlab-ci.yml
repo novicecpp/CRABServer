@@ -63,6 +63,7 @@ check_cv_CMSSW_13_0_2:
   extends: .check_cv_template
   variables:
     CMSSW_release: CMSSW_13_0_2
+    SCRAM_ARCH: el8_amd64_gcc11
     singularity: '8'
 
 check_cv_CMSSW_10_6_26:
