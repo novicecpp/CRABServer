@@ -18,6 +18,9 @@ SUBMITTED_TASKS_PATH=artifacts/submitted_tasks_CV_${CMSSW_release}
 cat $SUBMITTED_TASKS_PATH
 export SUBMITTED_TASKS_PATH
 
+export X509_USER_CERT=$X509_USER_PROXY
+export X509_USER_KEY=$X509_USER_PROXY
+
 #0. Prepare environment
 #docker system prune -af
 #mkdir artifacts
