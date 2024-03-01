@@ -73,6 +73,7 @@ else
     exit 1
 fi
 
+ERR=${ERR:-}
 #1.1 Interim steps
 #cd ${WORKSPACE}
 
@@ -110,6 +111,6 @@ echo -e "**Test:** Client validation\n\
 
 cat message_CVResult
 
-if $ERR ; then
+if [[ -n $ERR ]] ; then
 	exit 1
 fi
