@@ -7,7 +7,7 @@ echo "(DEBUG)   \- WORK_DIR: ${WORK_DIR}"
 echo "(DEBUG)   \- SUBMITTED_TASKS_PATH: ${SUBMITTED_TASKS_PATH}"
 echo "(DEBUG) end"
 
-source setupCRABClient.sh
+source cicd/gitlab/setupCRABClient.sh
 
 {
 
