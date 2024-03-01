@@ -78,7 +78,7 @@ if [ "${Client_Validation_Suite}" = true ]; then
     cd test/clientValidationTasks/
     filesToSubmit=`find . -type f -name '*.py' ! -name '*pset*'`
     submitTasks "${filesToSubmit}" "CV"
-    cd ${WORK_DIR}
+    cp ${WORK_DIR}/artifacts/submitted_tasks_CV ${WORK_DIR}/artifacts/submitted_tasks_CV_$CMSSW_release
 fi
 
 if [ "${Client_Configuration_Validation}" = true ]; then
