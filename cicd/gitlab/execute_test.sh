@@ -95,7 +95,7 @@ issueTitle="#${BUILD_NUMBER}: Test ${CRABClient_version} CRABClient using ${REST
 echo "issueTitle=${issueTitle}" >> $WORKSPACE/parameters
 
 #3. Submit tasks
-if [ "X${singularity}" == X6 ] || [ "X${singularity}" == X8 ]; then
+if [ "X${singularity}" == X6 ] || [ "X${singularity}" == X7 ] || [ "X${singularity}" == X8 ]; then
     echo "Starting singularity ${singularity} container."
     #git clone https://github.com/$Repo_Testing_Scripts
     #cd CRABServer
@@ -105,17 +105,9 @@ if [ "X${singularity}" == X6 ] || [ "X${singularity}" == X8 ]; then
     #cd test/container/testingScripts
     scramprefix=cc${singularity}
     if [ "X${singularity}" == X6 ]; then scramprefix=cc${singularity}; fi
+    if [ "X${singularity}" == X7 ]; then scramprefix=el${singularity}; fi
     if [ "X${singularity}" == X8 ]; then scramprefix=el${singularity}; fi
     /cvmfs/cms.cern.ch/common/cmssw-${scramprefix} -- ./cicd/gitlab/taskSubmission.sh || export ERR=true
-elif [ "X${singularity}" == X7 ] || [ "X${singularity}" == X8 ] ; then
-    echo "Starting CRAB testing container for slc${singularity}."
-    echo 'slc7 does not support'
-    #export DOCKER_OPT="-u $(id -u):$(id -g) -v /home:/home -v /etc/passwd:/etc/passwd -v /etc/group:/etc/group"
-    #export DOCKER_ENV="-e inputDataset -e ghprbPullId -e SCRAM_ARCH -e CRABServer_tag -e Client_Validation_Suite -e Task_Submission_Status_Tracking -e Client_Configuration_Validation -e X509_USER_CERT -e X509_USER_KEY -e CMSSW_release -e REST_Instance -e CRABClient_version"
-    #export DOCKER_VOL="-v $WORKSPACE/artifacts/:/data/CRABTesting/artifacts:Z -v /cvmfs/grid.cern.ch/etc/grid-security:/etc/grid-security  -v /cvmfs/grid.cern.ch/etc/grid-security/vomses:/etc/vomses  -v /cvmfs:/cvmfs"
-    #docker run --rm $DOCKER_OPT $DOCKER_VOL $DOCKER_ENV --net=host \
-    #$Test_Docker_Image -c     \
-    #'source taskSubmission.sh' || export ERR=true
 else
     echo "!!! I am not prepared to run for slc${singularity}."
     exit 1
