@@ -69,9 +69,9 @@ immediateCheck(){
   done
 }
 
-Client_Configuration_Validation=''
-Task_Submission_Status_Tracking=''
-Client_Validation_Suite=''
+Client_Validation_Suite=${Client_Validation_Suite:-}
+Client_Configuration_Validation=${Client_Configuration_Validation:-}
+Task_Submission_Status_Tracking=${Task_Submission_Status_Tracking:-}
 
 if [ "${Client_Validation_Suite}" = true ]; then
     echo -e "\nStarting task submission for Client Validation testing.\n"
