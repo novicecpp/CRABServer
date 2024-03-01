@@ -21,7 +21,9 @@ source cicd/gitlab/setupCRABClient.sh
   TASK_DIR="${WORK_DIR}/CRABServer/test/clientValidationTasks"
 
   #list of commands to execute for full testing (sl7/8)
-  FULL_TEST=(createmyproxy checkusername checkwrite tasks preparelocal status report getlog getoutput)
+  # currently use proxyfile instead of cert, cannot test createmyproxy.
+  #FULL_TEST=(createmyproxy checkusername checkwrite tasks preparelocal status report getlog getoutput)
+  FULL_TEST=(checkusername checkwrite tasks preparelocal status report getlog getoutput)
   #list of commands to execute on sl6
   SL6_TESTS=(status checkusername)
 
