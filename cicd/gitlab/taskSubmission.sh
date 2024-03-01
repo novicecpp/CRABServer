@@ -69,6 +69,10 @@ immediateCheck(){
   done
 }
 
+Client_Configuration_Validation=''
+Task_Submission_Status_Tracking=''
+Client_Validation_Suite=''
+
 if [ "${Client_Validation_Suite}" = true ]; then
     echo -e "\nStarting task submission for Client Validation testing.\n"
     cd test/clientValidationTasks/
