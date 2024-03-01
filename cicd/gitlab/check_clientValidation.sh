@@ -90,6 +90,7 @@ else
     ERR=true
 fi
 
+BUILD_URL=https://gitlab.cern.ch
 
 echo -e "**Test:** Client validation\n\
 **Result:** ${TEST_RESULT}\n\
