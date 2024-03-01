@@ -1,7 +1,6 @@
 #!/bin/bash
 
-#set -euo pipefail
-set +euo pipefail
+set -euo pipefail
 
 echo "(DEBUG) variables from parents:"
 echo "(DEBUG)   \- WORK_DIR: ${WORK_DIR}"
@@ -13,6 +12,8 @@ tmp_work_dir=$WORK_DIR
 source cicd/gitlab/setupCRABClient.sh
 # restore vars
 export WORK_DIR=$tmp_work_dir
+set +euo pipefail
+
 
 {
 
