@@ -37,6 +37,7 @@ stages:
     GIT_STRATEGY: clone
   script:
     # parallel version
+    - tree .
     - export CMSSW_release=$CMSSW_release
     - bash -x cicd/gitlab/check_clientValidation.sh
   cache:
