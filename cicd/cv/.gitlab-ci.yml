@@ -29,7 +29,7 @@ stages:
         - artifacts/submitted_tasks_CV_$CMSSW_release
       policy: push
 
-.execute_cv_template:
+.check_cv_template:
   stage: check_cv
   tags:
     - tseethon-apptainer
@@ -58,7 +58,7 @@ execute_cv_CMSSW_10_6_26:
 
 
 check_cv_CMSSW_13_0_2:
-  extends: ".check_cv_template"
+  extends: .check_cv_template
   variables:
     CMSSW_release: CMSSW_13_0_2
     singularity: '8'
