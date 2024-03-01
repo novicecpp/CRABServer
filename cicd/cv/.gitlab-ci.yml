@@ -64,3 +64,9 @@ check_cv_CMSSW_13_0_2:
   variables:
     CMSSW_release: CMSSW_13_0_2
     singularity: '8'
+
+check_cv_CMSSW_10_6_26:
+  extends: .check_cv_template
+  variables:
+    CMSSW_release: CMSSW_10_6_26
+    singularity: '7'
