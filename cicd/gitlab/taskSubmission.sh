@@ -101,5 +101,5 @@ if [ "${Task_Submission_Status_Tracking}" = true ]; then
     cd ${WORK_DIR}
 fi
 
-
-realpath ${WORK_DIR}/artifacts/
+# realpath does not exist in slc6
+readlink -f ${WORK_DIR}/artifacts/
