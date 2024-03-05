@@ -28,8 +28,6 @@ stages:
   - check_testsuite
 
 generate_child_pipeline:
-  tags:
-    - tseethon
   rules:
     - if: $Client_Validation_Suite
   stage: generate_pipeline
@@ -43,8 +41,6 @@ generate_child_pipeline:
       - cicd/cv/generated-gitlab-ci.yml
 
 trigger_child_pipeline:
-  tags:
-    - tseethon
   rules:
     - if: $Client_Validation_Suite
   stage: trigger_pipeline
