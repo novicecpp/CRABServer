@@ -35,8 +35,9 @@ generate_child_pipeline:
     name: docker.io/library/python:3.11
   script:
     - pip install pyyaml
-    - cd cicd/cv/ && python gen.py
-    - cp cicd/cv/generated-gitlab-ci.yml .
+    - cd cicd/cv/
+    - python gen.py
+    - cp generated-gitlab-ci.yml ../../
   artifacts:
     paths:
       - generated-gitlab-ci.yml

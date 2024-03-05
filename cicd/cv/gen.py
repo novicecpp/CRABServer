@@ -3,19 +3,6 @@ import yaml
 import copy
 import os
 
-cmsswversionsDefault = [
-    'CMSSW_13_0_2',
-    'CMSSW_12_6_4',
-    'CMSSW_12_5_0',
-    'CMSSW_11_3_4',
-    'CMSSW_10_6_2',
-    'CMSSW_10_1_0',
-    'CMSSW_9_4_21',
-    'CMSSW_8_0_36',
-    'CMSSW_7_6_7',
-    'CMSSW_7_1_29',
-]
-
 cmsswinfo = {
     'CMSSW_13_0_2': {'CMSSW_release': 'CMSSW_13_0_2', 'SCRAM_ARCH': 'el8_amd64_gcc11', 'singularity': '8'},
     'CMSSW_12_6_4': {'CMSSW_release': 'CMSSW_12_6_4', 'SCRAM_ARCH': 'el8_amd64_gcc10', 'singularity': '8'},
@@ -33,7 +20,7 @@ versiontmp = os.getenv('CMSSW_VERSIONS', None)
 if versiontmp:
     cmsswversions = versiontmp.split(',')
 else:
-    cmsswversions = cmsswversionsDefault
+    cmsswversions = [ k for k,_ in cmsswinfo.items() ]
 
 filepath = '.gitlab-ci.yml.tmp'
 with open(filepath, 'r') as file:
