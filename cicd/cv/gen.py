@@ -21,7 +21,7 @@ cmsswinfo = {
     'CMSSW_12_6_4': {'CMSSW_release': 'CMSSW_12_6_4', 'SCRAM_ARCH': 'el8_amd64_gcc10', 'singularity': '8'},
     'CMSSW_12_5_0': {'CMSSW_release': 'CMSSW_12_5_0', 'SCRAM_ARCH': 'el8_amd64_gcc10', 'singularity': '8'},
     'CMSSW_11_3_4': {'CMSSW_release': 'CMSSW_11_3_4', 'SCRAM_ARCH': 'slc7_amd64_gcc900', 'singularity': '7'},
-    'CMSSW_10_6_2': {'CMSSW_release': 'CMSSW_10_6_2', 'SCRAM_ARCH': 'slc7_amd64_gcc700', 'singularity': '7'},
+    'CMSSW_10_6_26': {'CMSSW_release': 'CMSSW_10_6_26', 'SCRAM_ARCH': 'slc7_amd64_gcc700', 'singularity': '7'},
     'CMSSW_10_1_0': {'CMSSW_release': 'CMSSW_10_1_0', 'SCRAM_ARCH': 'slc7_amd64_gcc630', 'singularity': '7'},
     'CMSSW_9_4_21': {'CMSSW_release': 'CMSSW_9_4_21', 'SCRAM_ARCH': 'slc7_amd64_gcc630', 'singularity': '7'},
     'CMSSW_8_0_36': {'CMSSW_release': 'CMSSW_8_0_36', 'SCRAM_ARCH': 'slc7_amd64_gcc530', 'singularity': '7'},
