@@ -27,9 +27,9 @@ set +euo pipefail
 
   #list of commands to execute for full testing (sl7/8)
   # skip getlog/getoutput. Need to wait until jobs finished running.
-  # Also report, need to wait until job submitted
+  # Also report/preparelocal need to wait until job submitted
   #FULL_TEST=(createmyproxy checkusername checkwrite tasks preparelocal status report getlog getoutput)
-  FULL_TEST=(createmyproxy checkusername checkwrite tasks preparelocal status)
+  FULL_TEST=(createmyproxy checkusername checkwrite tasks status)
   #list of commands to execute on sl6
   SL6_TESTS=(status checkusername)
 
