@@ -35,17 +35,19 @@ generate_child_pipeline:
     name: docker.io/library/python:3.11
   script:
     - pip install pyyaml
-    - cd cicd/cv && python gen.py
+    - python gen.py
   artifacts:
     paths:
-      - cicd/cv/generated-gitlab-ci.yml
+      - generated-gitlab-ci.yml
 
 trigger_child_pipeline:
   rules:
     - if: $Client_Validation_Suite
   stage: trigger_pipeline
   trigger:
-    include: cicd/cv/generated-gitlab-ci.yml
+    include:
+      - artifact: generated-gitlab-ci.yml
+        job: generate_child_pipeline
     strategy: depend
 
 build_rest_image:
