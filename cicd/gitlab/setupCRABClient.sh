@@ -26,11 +26,15 @@ then
   # when using CMSSW_7, need to force latest curl
   if echo $SCRAM_ARCH | grep -q slc6; then
     echo "using CMSSW_7 on SL6. Setup/cvmfs/cms.cern.ch/slc6_amd64_gcc900/external/curl/7.59.0"
+    set +u
     source /cvmfs/cms.cern.ch/slc6_amd64_gcc700/external/curl/7.59.0/etc/profile.d/init.sh
+    set -u
   fi
   if echo $SCRAM_ARCH | grep -q slc7; then
     echo "using CMSSW_7 on SL7. Setup /cvmfs/cms.cern.ch/slc7_amd64_gcc630/external/curl/7.59.0"
+    set +u
     source /cvmfs/cms.cern.ch/slc7_amd64_gcc630/external/curl/7.59.0/etc/profile.d/init.sh
+    set -u
   fi
 fi
 
