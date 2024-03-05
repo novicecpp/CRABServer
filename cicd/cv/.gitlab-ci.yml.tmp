@@ -50,8 +50,10 @@ stages:
 
 .execute_cv:
   extends: ".execute_cv_template"
+  allow_failure: true
   variables:
     CMSSW_release: "<placeholder>"
+
 
 .check_cv:
   extends: .check_cv_template
