@@ -265,4 +265,4 @@ set +euo pipefail
 
 } 2>&1 | tee ${WORK_DIR}/client-validation.log
 
-realpath ${WORK_DIR}/client-validation.log
+readlink -f ${WORK_DIR}/client-validation.log
