@@ -20,16 +20,42 @@ variables:
 #        - scripts/*
 
 stages:
-  - child_pipeline
+  - generate_pipeline
+  - trigger_pipeline
   - build_docker
   - deploy
   - run_testsuite
   - check_testsuite
 
+generate_child_pipeline:
+  tags:
+    - tseethon
+  rules:
+    - if: $Client_Validation_Suite
+  stage: generate_pipeline
+  image:
+    name: docker.io/library/python:3.11
+  script:
+    - pip install pyyaml
+    - cd cicd/cv && python gen.py
+  artifacts:
+    paths:
+      - cicd/cv/generated-gitlab-ci.yml
+
+trigger_child_pipeline:
+  tags:
+    - tseethon
+  rules:
+    - if: $Client_Validation_Suite
+  stage: trigger_pipeline
+  trigger:
+    include: cicd/cv/generated-gitlab-ci.yml
+    strategy: depend
+
 trigger_child_pipeline:
   rules:
     - if: $Client_Validation_Suite
-  stage: child_pipeline
+  stage: trigger_pipeline
   trigger:
     include: cicd/cv/.gitlab-ci.yml
     strategy: depend
