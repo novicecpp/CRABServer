@@ -70,7 +70,7 @@ nameSuffix = f'{cmsswversion}_{nowStr}_{hashStr}'
 #=============================
 
 # transferOutputs
-name = f'transferOutputs_{nameSuffix}'
+name = 'transferOutputs'; testName=f'{name}_{nameSuffix}'
 changeDict = {'param': name, 'value': 'False', 'section': 'General'}  # default is True
 confChangesList = [changeDict]
 testSubmitScript = dummyTestScript
@@ -80,12 +80,12 @@ crabCommand getlog "--short --jobids=1 --proxy=$PROXY"
 lookFor "Retrieved job_out.1.*.txt" commandLog.txt
 lookFor "JOB AD: CRAB_TransferOutputs = 0" "${workDir}/results/job_out.1.*.txt"
 """
-writeConfigFile(testName=name, listOfDicts=confChangesList)
-writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
-writeValidationScript(testName=name, validationScript=validationScript)
+writeConfigFile(testName=testName, listOfDicts=confChangesList)
+writeTestSubmitScript(testName=testName, testSubmitScript=testSubmitScript)
+writeValidationScript(testName=testName, validationScript=validationScript)
 
 # transferLogs
-name = f'transferLogs_{nameSuffix}'
+name = 'transferLogs'; testName=f'{name}_{nameSuffix}'
 changeDict = {'param': name, 'value': 'True', 'section': 'General'}  # default is False
 confChangesList = [changeDict]
 testSubmitScript = dummyTestScript
@@ -95,12 +95,12 @@ crabCommand getlog "--short --jobids=1 --proxy=$PROXY"
 lookFor "Retrieved job_out.1.*.txt" commandLog.txt
 lookFor "JOB AD: CRAB_SaveLogsFlag = 1" "${workDir}/results/job_out.1.*.txt"
 """
-writeConfigFile(testName=name, listOfDicts=confChangesList)
-writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
-writeValidationScript(testName=name, validationScript=validationScript)
+writeConfigFile(testName=testName, listOfDicts=confChangesList)
+writeTestSubmitScript(testName=testName, testSubmitScript=testSubmitScript)
+writeValidationScript(testName=testName, validationScript=validationScript)
 
 # activity
-name = f'activity_{nameSuffix}'
+name = 'activity'; testName=f'{name}_{nameSuffix}'
 changeDict = {'param': name, 'value': '"hctestnew"', 'section': 'General'}
 confChangesList = [changeDict]
 testSubmitScript = dummyTestScript
@@ -110,16 +110,16 @@ crabCommand getlog "--short --jobids=1 --proxy=$PROXY"
 lookFor "JOB AD: CMS_Type = \\"Test\\"" "${workDir}/results/job_out.1.*.txt"
 lookFor "JOB AD: CMS_TaskType = \\"hctestnew\\"" "${workDir}/results/job_out.1.*.txt"
 """
-writeConfigFile(testName=name, listOfDicts=confChangesList)
-writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
-writeValidationScript(testName=name, validationScript=validationScript)
+writeConfigFile(testName=testName, listOfDicts=confChangesList)
+writeTestSubmitScript(testName=testName, testSubmitScript=testSubmitScript)
+writeValidationScript(testName=testName, validationScript=validationScript)
 
 #=============================
 # SECTION JOB TYPE
 #=============================
 
 # inputFiles
-name = f'inputFiles_{nameSuffix}'
+name = 'inputFiles'; testName=f'{name}_{nameSuffix}'
 inFile1 = '/etc/hosts'
 inFile2 = '/etc/centos-release'
 changeDict = {'param': name, 'section': 'JobType', 'value': [inFile1, inFile2]}
@@ -131,12 +131,12 @@ lookInTarFor "^centos-release" ${workDir}/inputs/*default.tgz
 validationScript = """
 checkStatus ${taskName} SUBMITTED
 """
-writeConfigFile(testName=name, listOfDicts=confChangesList)
-writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
-writeValidationScript(testName=name, validationScript=validationScript)
+writeConfigFile(testName=testName, listOfDicts=confChangesList)
+writeTestSubmitScript(testName=testName, testSubmitScript=testSubmitScript)
+writeValidationScript(testName=testName, validationScript=validationScript)
 
 # disableAutomaticOutputCollection
-name = f'disableAutomaticOutputCollection_{nameSuffix}'
+name = 'disableAutomaticOutputCollection'; testName=f'{name}_{nameSuffix}'
 changeDict = {'param': name, 'value': 'True', 'section': 'JobType'}
 confChangesList = [changeDict]
 testSubmitScript = dummyTestScript
@@ -146,12 +146,12 @@ crabCommand getlog "--short --jobids=1 --proxy=$PROXY"
 lookFor "Retrieved job_out.1.*.txt" commandLog.txt
 lookFor "^Output files.*: \$" "${workDir}/results/job_out.1.*.txt"
 """
-writeConfigFile(testName=name, listOfDicts=confChangesList)
-writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
-writeValidationScript(testName=name, validationScript=validationScript)
+writeConfigFile(testName=testName, listOfDicts=confChangesList)
+writeTestSubmitScript(testName=testName, testSubmitScript=testSubmitScript)
+writeValidationScript(testName=testName, validationScript=validationScript)
 
 # outputFiles
-name = f'outputFiles_{nameSuffix}'
+name = 'outputFiles'; testName=f'{name}_{nameSuffix}'
 # use scriptExe to add a custom output file which is not .root
 confChangesList = []
 changeDict = {'param': 'scriptExe', 'value': '"SIMPLE-SCRIPT.sh"', 'section': 'JobType'}
@@ -170,12 +170,12 @@ lookFor "Success in retrieving output_1.root " commandLog.txt
 """
 if SL6:  # skip: singularity, no gfal_copy, crab getoutput can't work
     validationScript = dummyTestScript
-writeConfigFile(testName=name, listOfDicts=confChangesList)
-writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
-writeValidationScript(testName=name, validationScript=validationScript)
+writeConfigFile(testName=testName, listOfDicts=confChangesList)
+writeTestSubmitScript(testName=testName, testSubmitScript=testSubmitScript)
+writeValidationScript(testName=testName, validationScript=validationScript)
 
 # allowUndistributedCMSSW
-name = f'allowUndistributedCMSSW_{nameSuffix}'
+name = 'allowUndistributedCMSSW'; testName=f'{name}_{nameSuffix}'
 #TODO need a real test here, e.g. using a non-prod version of CMSSW
 changeDict = {'param': name, 'value': 'True', 'section': 'JobType'}
 confChangesList = [changeDict]
@@ -183,12 +183,12 @@ testSubmitScript = dummyTestScript
 validationScript = """
 checkStatus ${taskName} SUBMITTED
 """
-writeConfigFile(testName=name, listOfDicts=confChangesList)
-writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
-writeValidationScript(testName=name, validationScript=validationScript)
+writeConfigFile(testName=testName, listOfDicts=confChangesList)
+writeTestSubmitScript(testName=testName, testSubmitScript=testSubmitScript)
+writeValidationScript(testName=testName, validationScript=validationScript)
 
 # maxMemoryMB
-name = f'maxMemoryMB_{nameSuffix}'
+name = 'maxMemoryMB'; testName=f'{name}_{nameSuffix}'
 changeDict = {'param': name, 'value': '2500', 'section': 'JobType'} # default is 2000
 confChangesList = [changeDict]
 testSubmitScript = dummyTestScript
@@ -198,12 +198,12 @@ crabCommand getlog "--short --jobids=1 --proxy=$PROXY"
 lookFor "Retrieved job_out.1.*.txt" commandLog.txt
 lookFor "JOB AD: RequestMemory = 2500" "${workDir}/results/job_out.1.*.txt"
 """
-writeConfigFile(testName=name, listOfDicts=confChangesList)
-writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
-writeValidationScript(testName=name, validationScript=validationScript)
+writeConfigFile(testName=testName, listOfDicts=confChangesList)
+writeTestSubmitScript(testName=testName, testSubmitScript=testSubmitScript)
+writeValidationScript(testName=testName, validationScript=validationScript)
 
 # maxJobRuntimeMin
-name = f'maxJobRuntimeMin_{nameSuffix}'
+name = 'maxJobRuntimeMin'; testName=f'{name}_{nameSuffix}'
 changeDict = {'param': name, 'value': '100', 'section': 'JobType'}
 confChangesList = [changeDict]
 testSubmitScript = dummyTestScript
@@ -213,12 +213,12 @@ crabCommand getlog "--short --jobids=1 --proxy=$PROXY"
 lookFor "Retrieved job_out.1.*.txt" commandLog.txt
 lookFor "JOB AD: MaxWallTimeMins_RAW = 100" "${workDir}/results/job_out.1.*.txt"
 """
-writeConfigFile(testName=name, listOfDicts=confChangesList)
-writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
-writeValidationScript(testName=name, validationScript=validationScript)
+writeConfigFile(testName=testName, listOfDicts=confChangesList)
+writeTestSubmitScript(testName=testName, testSubmitScript=testSubmitScript)
+writeValidationScript(testName=testName, validationScript=validationScript)
 
 # numCores
-name = f'numCores_{nameSuffix}'
+name = 'numCores'; testName=f'{name}_{nameSuffix}'
 confChangesList = []
 changeDict = {'param': name, 'value': '8', 'section': 'JobType'}
 confChangesList.append(changeDict)
@@ -233,12 +233,12 @@ crabCommand getlog "--short --jobids=1 --proxy=$PROXY"
 lookFor "Retrieved job_out.1.*.txt" commandLog.txt
 lookFor "JOB AD: RequestCpus = 8" "${workDir}/results/job_out.1.*.txt"
 """
-writeConfigFile(testName=name, listOfDicts=confChangesList)
-writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
-writeValidationScript(testName=name, validationScript=validationScript)
+writeConfigFile(testName=testName, listOfDicts=confChangesList)
+writeTestSubmitScript(testName=testName, testSubmitScript=testSubmitScript)
+writeValidationScript(testName=testName, validationScript=validationScript)
 
 # scriptExe
-name = f'scriptExe_{nameSuffix}'
+name = 'scriptExe'; testName=f'{name}_{nameSuffix}'
 changeDict = {'param': name, 'value': '"SIMPLE-SCRIPT.sh"', 'section': 'JobType'}
 confChangesList = [changeDict]
 testSubmitScript = """
@@ -251,12 +251,12 @@ lookFor "Retrieved job_out.1.*.txt" commandLog.txt
 lookFor "SB CMSRUN starting" "${workDir}/results/job_out.1.*.txt"
 lookFor "====== arg checking: \$1 = 1" "${workDir}/results/job_out.1.*.txt"
 """
-writeConfigFile(testName=name, listOfDicts=confChangesList)
-writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
-writeValidationScript(testName=name, validationScript=validationScript)
+writeConfigFile(testName=testName, listOfDicts=confChangesList)
+writeTestSubmitScript(testName=testName, testSubmitScript=testSubmitScript)
+writeValidationScript(testName=testName, validationScript=validationScript)
 
 # scriptArgs
-name = f'scriptArgs_{nameSuffix}'
+name = 'scriptArgs'; testName=f'{name}_{nameSuffix}'
 confChangesList = []
 changeDict = {'param': 'scriptExe', 'value': '"SIMPLE-SCRIPT.sh"', 'section': 'JobType'}
 confChangesList.append(changeDict)
@@ -274,12 +274,12 @@ lookFor "====== arg checking: \$1 = 1" "${workDir}/results/job_out.1.*.txt"
 lookFor "====== arg checking: \$2 = exitCode=666" "${workDir}/results/job_out.1.*.txt"
 lookFor "====== arg checking: \$3 = gotArgs=Yes" "${workDir}/results/job_out.1.*.txt"
 """
-writeConfigFile(testName=name, listOfDicts=confChangesList)
-writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
-writeValidationScript(testName=name, validationScript=validationScript)
+writeConfigFile(testName=testName, listOfDicts=confChangesList)
+writeTestSubmitScript(testName=testName, testSubmitScript=testSubmitScript)
+writeValidationScript(testName=testName, validationScript=validationScript)
 
 # sendVenvFolder
-name = f'sendVenvFolder_{nameSuffix}'
+name = 'sendVenvFolder'; testName=f'{name}_{nameSuffix}'
 changeDict = {'param': name, 'value': 'True', 'section': 'JobType'}
 confChangesList = [changeDict]
 testSubmitScript = """
@@ -288,13 +288,13 @@ lookInTarFor "^venv/" ${workDir}/inputs/*default.tgz
 validationScript = """
 checkStatus ${taskName} SUBMITTED
 """
-writeConfigFile(testName=name, listOfDicts=confChangesList)
-writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
-writeValidationScript(testName=name, validationScript=validationScript)
+writeConfigFile(testName=testName, listOfDicts=confChangesList)
+writeTestSubmitScript(testName=testName, testSubmitScript=testSubmitScript)
+writeValidationScript(testName=testName, validationScript=validationScript)
 
 
 # sendExternalFolder
-name = f'sendExternalFolder_{nameSuffix}'
+name = 'sendExternalFolder'; testName=f'{name}_{nameSuffix}'
 changeDict = {'param': name, 'value': 'True', 'section': 'JobType'}
 confChangesList = [changeDict]
 testSubmitScript = """
@@ -303,16 +303,16 @@ lookInTarFor "^external/" ${workDir}/inputs/*default.tgz
 validationScript = """
 checkStatus ${taskName} SUBMITTED
 """
-writeConfigFile(testName=name, listOfDicts=confChangesList)
-writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
-writeValidationScript(testName=name, validationScript=validationScript)
+writeConfigFile(testName=testName, listOfDicts=confChangesList)
+writeTestSubmitScript(testName=testName, testSubmitScript=testSubmitScript)
+writeValidationScript(testName=testName, validationScript=validationScript)
 
 #=============================
 # SECTION DATA
 #=============================
 
 # inputDBS
-name = f'inputDBS_{nameSuffix}'
+name = 'inputDBS'; testName=f'{name}_{nameSuffix}'
 confChangesList = []
 changeDict = {'param': name, 'value': '"phys03"', 'section': 'Data'}
 confChangesList.append(changeDict)
@@ -325,12 +325,12 @@ testSubmitScript = dummyTestScript
 validationScript = """
 checkStatus ${taskName} SUBMITTED
 """
-writeConfigFile(testName=name, listOfDicts=confChangesList)
-writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
-writeValidationScript(testName=name, validationScript=validationScript)
+writeConfigFile(testName=testName, listOfDicts=confChangesList)
+writeTestSubmitScript(testName=testName, testSubmitScript=testSubmitScript)
+writeValidationScript(testName=testName, validationScript=validationScript)
 
 # useParent
-name = f'useParent_{nameSuffix}'
+name = 'useParent'; testName=f'{name}_{nameSuffix}'
 changeDict = {'param': name, 'value': 'True', 'section': 'Data'}
 confChangesList = [changeDict]
 testSubmitScript = dummyTestScript
@@ -343,12 +343,12 @@ lookFor "request to open.*GenericTTbar/GEN-SIM-RAW" "${workDir}/results/job_out.
 """
 if CMSSW8:  # skip: needed parent dataset for the sample that we can read witn CMSSW_8 is not on disk
     validationScript = dummyTestScript
-writeConfigFile(testName=name, listOfDicts=confChangesList)
-writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
-writeValidationScript(testName=name, validationScript=validationScript)
+writeConfigFile(testName=testName, listOfDicts=confChangesList)
+writeTestSubmitScript(testName=testName, testSubmitScript=testSubmitScript)
+writeValidationScript(testName=testName, validationScript=validationScript)
 
 # secondaryInputDataset
-name = f'secondaryInputDataset_{nameSuffix}'
+name = 'secondaryInputDataset'; testName=f'{name}_{nameSuffix}'
 changeDict = {'param': name, 'section': 'Data',
               'value': "'/GenericTTbar/HC-CMSSW_9_2_6_91X_mcRun1_realistic_v2-v2/GEN-SIM-RAW'"}
 confChangesList = [changeDict]
@@ -364,13 +364,13 @@ if SL6:  # skip: primary input used for CMSSW_7 has different lumisection number
     validationScript = dummyTestScript
 if CMSSW8:  # skip: needed parent dataset for the sample that we can read witn CMSSW_8 is not on disk
     validationScript = dummyTestScript
-writeConfigFile(testName=name, listOfDicts=confChangesList)
-writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
-writeValidationScript(testName=name, validationScript=validationScript)
+writeConfigFile(testName=testName, listOfDicts=confChangesList)
+writeTestSubmitScript(testName=testName, testSubmitScript=testSubmitScript)
+writeValidationScript(testName=testName, validationScript=validationScript)
 
 
 # lumiMask-File
-name = f'lumiMaskFile_{nameSuffix}'
+name = 'lumiMaskFile'; testName=f'{name}_{nameSuffix}'
 changeDict = {'param': 'lumiMask', 'value': '"lumiMask.json"', 'section': 'Data'}
 confChangesList = [changeDict]
 testSubmitScript = dummyTestScript
@@ -383,13 +383,13 @@ lookFor "== JOB AD: CRAB_AlgoArgs.*\\"lumis\\": \\[\\"1,10" "${workDir}/results/
 """
 if SL6:  # skip: our lumiMask does not work on the primary input used for CMSSW_7 tests
     validationScript = dummyTestScript
-writeConfigFile(testName=name, listOfDicts=confChangesList)
-writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
-writeValidationScript(testName=name, validationScript=validationScript)
+writeConfigFile(testName=testName, listOfDicts=confChangesList)
+writeTestSubmitScript(testName=testName, testSubmitScript=testSubmitScript)
+writeValidationScript(testName=testName, validationScript=validationScript)
 
 # lumiMask-URL
 if not SL6:  # skip on SL6, can't fetch lumMask from URL inside singularity
-    name = f'lumiMaskUrl_{nameSuffix}'
+    name = 'lumiMaskUrl'; testName=f'{name}_{nameSuffix}'
     confChangesList = []
     changeDict = {'param': 'lumiMask', 'section': 'Data',
               'value': '"https://cms-service-dqmdc.web.cern.ch/CAF/certification/Collisions16/13TeV/ReReco/Final/Cert_271036-284044_13TeV_ReReco_07Aug2017_Collisions16_JSON.txt"'}
@@ -405,12 +405,12 @@ if not SL6:  # skip on SL6, can't fetch lumMask from URL inside singularity
     lookFor "Retrieved job_out.1.*.txt" commandLog.txt
     lookFor "== JOB AD: CRAB_AlgoArgs.*\\"273158\\"" "${workDir}/results/job_out.1.*.txt"
     """
-    writeConfigFile(testName=name, listOfDicts=confChangesList)
-    writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
-    writeValidationScript(testName=name, validationScript=validationScript)
+    writeConfigFile(testName=testName, listOfDicts=confChangesList)
+    writeTestSubmitScript(testName=testName, testSubmitScript=testSubmitScript)
+    writeValidationScript(testName=testName, validationScript=validationScript)
 
 # outLFNDirBase
-name = f'outLFNDirBase_{nameSuffix}'
+name = 'outLFNDirBase'; testName=f'{name}_{nameSuffix}'
 changeDict = {'param': name, 'value': "'/store/user/%s/OLFNtest/Adir'%getUsername()", 'section': 'Data'}
 confChangesList = [changeDict]
 testSubmitScript = dummyTestScript
@@ -421,12 +421,12 @@ lookFor "OLFNtest/Adir" commandLog.txt
 """
 if SL6:  # skip: singularity, no gfal_copy, crab getoutput can't work
     validationScript = dummyTestScript
-writeConfigFile(testName=name, listOfDicts=confChangesList)
-writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
-writeValidationScript(testName=name, validationScript=validationScript)
+writeConfigFile(testName=testName, listOfDicts=confChangesList)
+writeTestSubmitScript(testName=testName, testSubmitScript=testSubmitScript)
+writeValidationScript(testName=testName, validationScript=validationScript)
 
 # runRange
-name = f'runRange_{nameSuffix}'
+name = 'runRange'; testName=f'{name}_{nameSuffix}'
 confChangesList = []
 changeDict = {'param': name, 'section': 'Data',
               'value': "'273150-273300,273410-273420'"}
@@ -444,12 +444,12 @@ lookFor "== JOB AD: CRAB_AlgoArgs.*\\"273150\\"" "${workDir}/results/job_out.1.*
 """
 if SL6:  # skip: our runRange does not work on the primary input used for CMSSW_7 tests
     validationScript = dummyTestScript
-writeConfigFile(testName=name, listOfDicts=confChangesList)
-writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
-writeValidationScript(testName=name, validationScript=validationScript)
+writeConfigFile(testName=testName, listOfDicts=confChangesList)
+writeTestSubmitScript(testName=testName, testSubmitScript=testSubmitScript)
+writeValidationScript(testName=testName, validationScript=validationScript)
 
 # ignoreLocality
-name = f'ignoreLocality_{nameSuffix}'
+name = 'ignoreLocality'; testName=f'{name}_{nameSuffix}'
 confChangesList = []
 changeDict = {'param': name, 'section': 'Data', 'value': "True"}
 confChangesList.append(changeDict)
@@ -465,12 +465,12 @@ checkStatus ${taskName} COMPLETED
 crabCommand status "--long --proxy=$PROXY"
 lookFor "T2_CH_CERN" commandLog.txt
 """
-writeConfigFile(testName=name, listOfDicts=confChangesList)
-writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
-writeValidationScript(testName=name, validationScript=validationScript)
+writeConfigFile(testName=testName, listOfDicts=confChangesList)
+writeTestSubmitScript(testName=testName, testSubmitScript=testSubmitScript)
+writeValidationScript(testName=testName, validationScript=validationScript)
 
 # userInputFiles
-name = f'userInputFiles_{nameSuffix}'
+name = 'userInputFiles'; testName=f'{name}_{nameSuffix}'
 confChangesList = []
 changeDict = {'param': name, 'section': 'Data', 'value':
     "['/store/mc/HC/GenericTTbar/AODSIM/CMSSW_9_2_6_91X_mcRun1_realistic_v2-v2/00000/00B29645-2B76-E711-8802-FA163EB9B8B4.root',"
@@ -488,9 +488,9 @@ if SL6:  # skip: those input files can't be read with CMSSW_7
     validationScript = dummyTestScript
 if CMSSW8:  # skip: those input files can't be read with CMSSW_8
     validationScript = dummyTestScript
-writeConfigFile(testName=name, listOfDicts=confChangesList)
-writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
-writeValidationScript(testName=name, validationScript=validationScript)
+writeConfigFile(testName=testName, listOfDicts=confChangesList)
+writeTestSubmitScript(testName=testName, testSubmitScript=testSubmitScript)
+writeValidationScript(testName=testName, validationScript=validationScript)
 
 
 #=============================
@@ -498,7 +498,7 @@ writeValidationScript(testName=name, validationScript=validationScript)
 #=============================
 
 # whitelist
-name = f'whitelist_{nameSuffix}'
+name = 'whitelist'; testName=f'{name}_{nameSuffix}'
 changeDict = {'param': name, 'section': 'Site', 'value': "['T2_DE_DESY']"}
 confChangesList = [changeDict]
 testSubmitScript = dummyTestScript
@@ -510,13 +510,13 @@ lookFor "JOB AD: DESIRED_SITES = \\"T2_DE_DESY\\"" "${workDir}/results/job_out.1
 """
 if SL6:  # skip: old dataset for CMSSW_7 has not enough locations to test this
     validationScript = dummyTestScript
-writeConfigFile(testName=name, listOfDicts=confChangesList)
-writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
-writeValidationScript(testName=name, validationScript=validationScript)
+writeConfigFile(testName=testName, listOfDicts=confChangesList)
+writeTestSubmitScript(testName=testName, testSubmitScript=testSubmitScript)
+writeValidationScript(testName=testName, validationScript=validationScript)
 
 
 # blacklist
-name = f'blacklist_{nameSuffix}'
+name = 'blacklist'; testName=f'{name}_{nameSuffix}'
 # blacklist all sites but T1_US_ and disable overflow !
 confChangesList = []
 changeDict = {'param': name, 'section': 'Site',
@@ -531,12 +531,12 @@ crabCommand getlog "--short --jobids=1 --proxy=$PROXY"
 lookFor "Retrieved job_out.1.*.txt" commandLog.txt
 lookFor "JOB AD: JOB_CMSSite = \\"T1_US_FNAL\\"" "${workDir}/results/job_out.1.*.txt"
 """
-writeConfigFile(testName=name, listOfDicts=confChangesList)
-writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
-writeValidationScript(testName=name, validationScript=validationScript)
+writeConfigFile(testName=testName, listOfDicts=confChangesList)
+writeTestSubmitScript(testName=testName, testSubmitScript=testSubmitScript)
+writeValidationScript(testName=testName, validationScript=validationScript)
 
 # ignoreGlobalBlacklist
-name = f'ignoreGlobalBlacklist_{nameSuffix}'
+name = 'ignoreGlobalBlacklist'; testName=f'{name}_{nameSuffix}'
 changeDict = {'param': name, 'value': 'True', 'section': 'Site'}
 confChangesList = [changeDict]
 testSubmitScript = dummyTestScript
@@ -547,16 +547,16 @@ testSubmitScript = dummyTestScript
 validationScript = """
 checkStatus ${taskName} COMPLETED
 """
-writeConfigFile(testName=name, listOfDicts=confChangesList)
-writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
-writeValidationScript(testName=name, validationScript=validationScript)
+writeConfigFile(testName=testName, listOfDicts=confChangesList)
+writeTestSubmitScript(testName=testName, testSubmitScript=testSubmitScript)
+writeValidationScript(testName=testName, validationScript=validationScript)
 
 #=============================
 # SECTION USER
 #=============================
 
 # voRole
-name = f'voRole_{nameSuffix}'
+name = 'voRole'; testName=f'{name}_{nameSuffix}'
 changeDict = {'param': name, 'value': '"production"', 'section': 'User'}
 confChangesList = [changeDict]
 testSubmitScript = dummyTestScript
@@ -567,12 +567,12 @@ lookFor "Retrieved job_out.1.*.txt" commandLog.txt
 lookFor "JOB AD: CRAB_UserRole = \\"production\\"" "${workDir}/results/job_out.1.*.txt"
 lookFor "attribute : /cms/Role=production/Capability=NULL" "${workDir}/results/job_out.1.*.txt"
 """
-writeConfigFile(testName=name, listOfDicts=confChangesList)
-writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
-writeValidationScript(testName=name, validationScript=validationScript)
+writeConfigFile(testName=testName, listOfDicts=confChangesList)
+writeTestSubmitScript(testName=testName, testSubmitScript=testSubmitScript)
+writeValidationScript(testName=testName, validationScript=validationScript)
 
 # voGroup
-name = f'voGroup_{nameSuffix}'
+name = 'voGroup'; testName=f'{name}_{nameSuffix}'
 changeDict = {'param': name, 'value': '"itcms"', 'section': 'User'}
 confChangesList = [changeDict]
 testSubmitScript = dummyTestScript
@@ -585,15 +585,15 @@ lookFor "attribute : /cms/itcms/Role=NULL/Capability=NULL" "${workDir}/results/j
 # now that condor does not fill x509UserProxyFirstFQAN anymore we lack a good way to check the FirstFQAN
 #lookFor "JOB AD: x509UserProxyFirstFQAN = \\"/cms/itcms/Role=NULL/Capability=NULL\\"" "${workDir}/results/job_out.1.*.txt"
 """
-writeConfigFile(testName=name, listOfDicts=confChangesList)
-writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
-writeValidationScript(testName=name, validationScript=validationScript)
+writeConfigFile(testName=testName, listOfDicts=confChangesList)
+writeTestSubmitScript(testName=testName, testSubmitScript=testSubmitScript)
+writeValidationScript(testName=testName, validationScript=validationScript)
 #=============================
 # SECTION DEBUG
 #=============================
 
 # scheddName
-name = f'scheddName_{nameSuffix}'
+name = 'scheddName'; testName=f'{name}_{nameSuffix}'
 changeDict = {'param': name, 'value': '"crab3@vocms059.cern.ch"', 'section': 'Debug'}
 confChangesList = [changeDict]
 testSubmitScript = dummyTestScript
@@ -601,12 +601,12 @@ validationScript = """
 checkStatus ${taskName} SUBMITTED
 lookFor "crab3@vocms059.cern.ch" statusLog.txt
 """
-writeConfigFile(testName=name, listOfDicts=confChangesList)
-writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
-writeValidationScript(testName=name, validationScript=validationScript)
+writeConfigFile(testName=testName, listOfDicts=confChangesList)
+writeTestSubmitScript(testName=testName, testSubmitScript=testSubmitScript)
+writeValidationScript(testName=testName, validationScript=validationScript)
 
 # collector
-name = f'collector_{nameSuffix}'
+name = 'collector'; testName=f'{name}_{nameSuffix}'
 confChangesList = []
 changeDict = {'param': name, 'value': '"cmsgwms-collector-itb.cern.ch"', 'section': 'Debug'}
 confChangesList.append(changeDict)
@@ -616,12 +616,12 @@ testSubmitScript = dummyTestScript
 validationScript = """
 checkStatus ${taskName} SUBMITTED
 """
-writeConfigFile(testName=name, listOfDicts=confChangesList)
-writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
-writeValidationScript(testName=name, validationScript=validationScript)
+writeConfigFile(testName=testName, listOfDicts=confChangesList)
+writeTestSubmitScript(testName=testName, testSubmitScript=testSubmitScript)
+writeValidationScript(testName=testName, validationScript=validationScript)
 
 # extraJDL
-name = f'extraJDL_{nameSuffix}'
+name = 'extraJDL'; testName=f'{name}_{nameSuffix}'
 changeDict = {'param': name, 'value': "['+CMS_ALLOW_OVERFLOW=False', '+CRAB_StageoutPolicy=\"remote\"']", 'section': 'Debug'}
 confChangesList = [changeDict]
 testSubmitScript = dummyTestScript
@@ -632,6 +632,6 @@ lookFor "Retrieved job_out.1.*.txt" commandLog.txt
 lookFor "JOB AD: CMS_ALLOW_OVERFLOW = false" "${workDir}/results/job_out.1.*.txt"
 lookFor "JOB AD: CRAB_StageoutPolicy = \\"remote\\"" "${workDir}/results/job_out.1.*.txt"
 """
-writeConfigFile(testName=name, listOfDicts=confChangesList)
-writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
-writeValidationScript(testName=name, validationScript=validationScript)
+writeConfigFile(testName=testName, listOfDicts=confChangesList)
+writeTestSubmitScript(testName=testName, testSubmitScript=testSubmitScript)
+writeValidationScript(testName=testName, validationScript=validationScript)
