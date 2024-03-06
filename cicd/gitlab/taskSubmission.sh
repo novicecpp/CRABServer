@@ -86,7 +86,7 @@ fi
 # TODO: need to run makeTests.py outside apptainer because python3 is not available in slc6
 if [ "${Client_Configuration_Validation}" = true ]; then
     echo -e "\nStarting task submission for Client Configuration Validation testing.\n"
-    rm -rf tmpWorkDir
+    rm -rf tmpWorkDir "${WORK_DIR}"/artifacts/submitted_tasks_CCV
     mkdir -p tmpWorkDir
     cd tmpWorkDir
     python3 ${WORK_DIR}/test/makeTests.py
