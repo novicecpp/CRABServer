@@ -69,6 +69,8 @@ immediateCheck(){
   done
 }
 
+# note $WORK_DIR is git rootdir
+
 Client_Validation_Suite=${Client_Validation_Suite:-}
 Client_Configuration_Validation=${Client_Configuration_Validation:-}
 Task_Submission_Status_Tracking=${Task_Submission_Status_Tracking:-}
@@ -85,7 +87,7 @@ if [ "${Client_Configuration_Validation}" = true ]; then
     echo -e "\nStarting task submission for Client Configuration Validation testing.\n"
     mkdir -p tmpWorkDir
     cd tmpWorkDir
-    python ${WORK_DIR}/CRABServer/test/makeTests.py
+    python ${WORK_DIR}/test/makeTests.py
     filesToSubmit=`find . -maxdepth 1 -type f -name '*.py' ! -name '*PSET*'`
     submitTasks "${filesToSubmit}" "CCV"
     tasksToCheck=`cat ${WORK_DIR}/artifacts/submitted_tasks_CCV`
