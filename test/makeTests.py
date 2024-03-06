@@ -34,6 +34,8 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import datetime
+import random
 
 from testUtils import writePset, writePset8cores, writeScriptExe, writeLumiMask, \
     writeConfigFile, writeTestSubmitScript, writeValidationScript
@@ -53,6 +55,12 @@ writeLumiMask()
 
 
 dummyTestScript = "\nexit 0\n"  #  a test which always returns success
+
+cmsswversion = os.environ.get('CMSSW_VERSION')
+nowStr = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+hashbin = random.getrandbits(32)
+hashStr = "hash value: %08x" % hashbin
+nameSuffix = f'{cmsswversion}_{nowStr}_{hashStr}'
 #
 # test CRAB Configuration file parameters
 #
@@ -62,7 +70,7 @@ dummyTestScript = "\nexit 0\n"  #  a test which always returns success
 #=============================
 
 # transferOutputs
-name = 'transferOutputs'
+name = f'transferOutputs_{nameSuffix}'
 changeDict = {'param': name, 'value': 'False', 'section': 'General'}  # default is True
 confChangesList = [changeDict]
 testSubmitScript = dummyTestScript
@@ -77,7 +85,7 @@ writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
 writeValidationScript(testName=name, validationScript=validationScript)
 
 # transferLogs
-name = 'transferLogs'
+name = f'transferLogs_{nameSuffix}'
 changeDict = {'param': name, 'value': 'True', 'section': 'General'}  # default is False
 confChangesList = [changeDict]
 testSubmitScript = dummyTestScript
@@ -92,7 +100,7 @@ writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
 writeValidationScript(testName=name, validationScript=validationScript)
 
 # activity
-name = 'activity'
+name = f'activity_{nameSuffix}'
 changeDict = {'param': name, 'value': '"hctestnew"', 'section': 'General'}
 confChangesList = [changeDict]
 testSubmitScript = dummyTestScript
@@ -111,7 +119,7 @@ writeValidationScript(testName=name, validationScript=validationScript)
 #=============================
 
 # inputFiles
-name = 'inputFiles'
+name = f'inputFiles_{nameSuffix}'
 inFile1 = '/etc/hosts'
 inFile2 = '/etc/centos-release'
 changeDict = {'param': name, 'section': 'JobType', 'value': [inFile1, inFile2]}
@@ -128,7 +136,7 @@ writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
 writeValidationScript(testName=name, validationScript=validationScript)
 
 # disableAutomaticOutputCollection
-name = 'disableAutomaticOutputCollection'
+name = f'disableAutomaticOutputCollection_{nameSuffix}'
 changeDict = {'param': name, 'value': 'True', 'section': 'JobType'}
 confChangesList = [changeDict]
 testSubmitScript = dummyTestScript
@@ -143,7 +151,7 @@ writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
 writeValidationScript(testName=name, validationScript=validationScript)
 
 # outputFiles
-name = 'outputFiles'
+name = f'outputFiles_{nameSuffix}'
 # use scriptExe to add a custom output file which is not .root
 confChangesList = []
 changeDict = {'param': 'scriptExe', 'value': '"SIMPLE-SCRIPT.sh"', 'section': 'JobType'}
@@ -167,7 +175,7 @@ writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
 writeValidationScript(testName=name, validationScript=validationScript)
 
 # allowUndistributedCMSSW
-name = 'allowUndistributedCMSSW'
+name = f'allowUndistributedCMSSW_{nameSuffix}'
 #TODO need a real test here, e.g. using a non-prod version of CMSSW
 changeDict = {'param': name, 'value': 'True', 'section': 'JobType'}
 confChangesList = [changeDict]
@@ -180,7 +188,7 @@ writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
 writeValidationScript(testName=name, validationScript=validationScript)
 
 # maxMemoryMB
-name = 'maxMemoryMB'
+name = f'maxMemoryMB_{nameSuffix}'
 changeDict = {'param': name, 'value': '2500', 'section': 'JobType'} # default is 2000
 confChangesList = [changeDict]
 testSubmitScript = dummyTestScript
@@ -195,7 +203,7 @@ writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
 writeValidationScript(testName=name, validationScript=validationScript)
 
 # maxJobRuntimeMin
-name = 'maxJobRuntimeMin'
+name = f'maxJobRuntimeMin_{nameSuffix}'
 changeDict = {'param': name, 'value': '100', 'section': 'JobType'}
 confChangesList = [changeDict]
 testSubmitScript = dummyTestScript
@@ -210,7 +218,7 @@ writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
 writeValidationScript(testName=name, validationScript=validationScript)
 
 # numCores
-name = 'numCores'
+name = f'numCores_{nameSuffix}'
 confChangesList = []
 changeDict = {'param': name, 'value': '8', 'section': 'JobType'}
 confChangesList.append(changeDict)
@@ -230,7 +238,7 @@ writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
 writeValidationScript(testName=name, validationScript=validationScript)
 
 # scriptExe
-name = 'scriptExe'
+name = f'scriptExe_{nameSuffix}'
 changeDict = {'param': name, 'value': '"SIMPLE-SCRIPT.sh"', 'section': 'JobType'}
 confChangesList = [changeDict]
 testSubmitScript = """
@@ -248,7 +256,7 @@ writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
 writeValidationScript(testName=name, validationScript=validationScript)
 
 # scriptArgs
-name = 'scriptArgs'
+name = f'scriptArgs_{nameSuffix}'
 confChangesList = []
 changeDict = {'param': 'scriptExe', 'value': '"SIMPLE-SCRIPT.sh"', 'section': 'JobType'}
 confChangesList.append(changeDict)
@@ -271,7 +279,7 @@ writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
 writeValidationScript(testName=name, validationScript=validationScript)
 
 # sendVenvFolder
-name = 'sendVenvFolder'
+name = f'sendVenvFolder_{nameSuffix}'
 changeDict = {'param': name, 'value': 'True', 'section': 'JobType'}
 confChangesList = [changeDict]
 testSubmitScript = """
@@ -286,7 +294,7 @@ writeValidationScript(testName=name, validationScript=validationScript)
 
 
 # sendExternalFolder
-name = 'sendExternalFolder'
+name = f'sendExternalFolder_{nameSuffix}'
 changeDict = {'param': name, 'value': 'True', 'section': 'JobType'}
 confChangesList = [changeDict]
 testSubmitScript = """
@@ -304,7 +312,7 @@ writeValidationScript(testName=name, validationScript=validationScript)
 #=============================
 
 # inputDBS
-name = 'inputDBS'
+name = f'inputDBS_{nameSuffix}'
 confChangesList = []
 changeDict = {'param': name, 'value': '"phys03"', 'section': 'Data'}
 confChangesList.append(changeDict)
@@ -322,7 +330,7 @@ writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
 writeValidationScript(testName=name, validationScript=validationScript)
 
 # useParent
-name = 'useParent'
+name = f'useParent_{nameSuffix}'
 changeDict = {'param': name, 'value': 'True', 'section': 'Data'}
 confChangesList = [changeDict]
 testSubmitScript = dummyTestScript
@@ -340,7 +348,7 @@ writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
 writeValidationScript(testName=name, validationScript=validationScript)
 
 # secondaryInputDataset
-name = 'secondaryInputDataset'
+name = f'secondaryInputDataset_{nameSuffix}'
 changeDict = {'param': name, 'section': 'Data',
               'value': "'/GenericTTbar/HC-CMSSW_9_2_6_91X_mcRun1_realistic_v2-v2/GEN-SIM-RAW'"}
 confChangesList = [changeDict]
@@ -362,7 +370,7 @@ writeValidationScript(testName=name, validationScript=validationScript)
 
 
 # lumiMask-File
-name = 'lumiMaskFile'
+name = f'lumiMaskFile_{nameSuffix}'
 changeDict = {'param': 'lumiMask', 'value': '"lumiMask.json"', 'section': 'Data'}
 confChangesList = [changeDict]
 testSubmitScript = dummyTestScript
@@ -381,7 +389,7 @@ writeValidationScript(testName=name, validationScript=validationScript)
 
 # lumiMask-URL
 if not SL6:  # skip on SL6, can't fetch lumMask from URL inside singularity
-    name = 'lumiMaskUrl'
+    name = f'lumiMaskUrl_{nameSuffix}'
     confChangesList = []
     changeDict = {'param': 'lumiMask', 'section': 'Data',
               'value': '"https://cms-service-dqmdc.web.cern.ch/CAF/certification/Collisions16/13TeV/ReReco/Final/Cert_271036-284044_13TeV_ReReco_07Aug2017_Collisions16_JSON.txt"'}
@@ -402,7 +410,7 @@ if not SL6:  # skip on SL6, can't fetch lumMask from URL inside singularity
     writeValidationScript(testName=name, validationScript=validationScript)
 
 # outLFNDirBase
-name = 'outLFNDirBase'
+name = f'outLFNDirBase_{nameSuffix}'
 changeDict = {'param': name, 'value': "'/store/user/%s/OLFNtest/Adir'%getUsername()", 'section': 'Data'}
 confChangesList = [changeDict]
 testSubmitScript = dummyTestScript
@@ -418,7 +426,7 @@ writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
 writeValidationScript(testName=name, validationScript=validationScript)
 
 # runRange
-name = 'runRange'
+name = f'runRange_{nameSuffix}'
 confChangesList = []
 changeDict = {'param': name, 'section': 'Data',
               'value': "'273150-273300,273410-273420'"}
@@ -441,7 +449,7 @@ writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
 writeValidationScript(testName=name, validationScript=validationScript)
 
 # ignoreLocality
-name = 'ignoreLocality'
+name = f'ignoreLocality_{nameSuffix}'
 confChangesList = []
 changeDict = {'param': name, 'section': 'Data', 'value': "True"}
 confChangesList.append(changeDict)
@@ -462,7 +470,7 @@ writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
 writeValidationScript(testName=name, validationScript=validationScript)
 
 # userInputFiles
-name = 'userInputFiles'
+name = f'userInputFiles_{nameSuffix}'
 confChangesList = []
 changeDict = {'param': name, 'section': 'Data', 'value':
     "['/store/mc/HC/GenericTTbar/AODSIM/CMSSW_9_2_6_91X_mcRun1_realistic_v2-v2/00000/00B29645-2B76-E711-8802-FA163EB9B8B4.root',"
@@ -490,7 +498,7 @@ writeValidationScript(testName=name, validationScript=validationScript)
 #=============================
 
 # whitelist
-name = 'whitelist'
+name = f'whitelist_{nameSuffix}'
 changeDict = {'param': name, 'section': 'Site', 'value': "['T2_DE_DESY']"}
 confChangesList = [changeDict]
 testSubmitScript = dummyTestScript
@@ -508,7 +516,7 @@ writeValidationScript(testName=name, validationScript=validationScript)
 
 
 # blacklist
-name = 'blacklist'
+name = f'blacklist_{nameSuffix}'
 # blacklist all sites but T1_US_ and disable overflow !
 confChangesList = []
 changeDict = {'param': name, 'section': 'Site',
@@ -528,7 +536,7 @@ writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
 writeValidationScript(testName=name, validationScript=validationScript)
 
 # ignoreGlobalBlacklist
-name = 'ignoreGlobalBlacklist'
+name = f'ignoreGlobalBlacklist_{nameSuffix}'
 changeDict = {'param': name, 'value': 'True', 'section': 'Site'}
 confChangesList = [changeDict]
 testSubmitScript = dummyTestScript
@@ -548,7 +556,7 @@ writeValidationScript(testName=name, validationScript=validationScript)
 #=============================
 
 # voRole
-name = 'voRole'
+name = f'voRole_{nameSuffix}'
 changeDict = {'param': name, 'value': '"production"', 'section': 'User'}
 confChangesList = [changeDict]
 testSubmitScript = dummyTestScript
@@ -564,7 +572,7 @@ writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
 writeValidationScript(testName=name, validationScript=validationScript)
 
 # voGroup
-name = 'voGroup'
+name = f'voGroup_{nameSuffix}'
 changeDict = {'param': name, 'value': '"itcms"', 'section': 'User'}
 confChangesList = [changeDict]
 testSubmitScript = dummyTestScript
@@ -574,7 +582,7 @@ crabCommand getlog "--short --jobids=1 --proxy=$PROXY"
 lookFor "Retrieved job_out.1.*.txt" commandLog.txt
 lookFor "JOB AD: CRAB_UserGroup = \\"itcms\\"" "${workDir}/results/job_out.1.*.txt"
 lookFor "attribute : /cms/itcms/Role=NULL/Capability=NULL" "${workDir}/results/job_out.1.*.txt"
-# now that condor does not fill x509UserProxyFirstFQAN anymore we lack a good way to check the FirstFQAN 
+# now that condor does not fill x509UserProxyFirstFQAN anymore we lack a good way to check the FirstFQAN
 #lookFor "JOB AD: x509UserProxyFirstFQAN = \\"/cms/itcms/Role=NULL/Capability=NULL\\"" "${workDir}/results/job_out.1.*.txt"
 """
 writeConfigFile(testName=name, listOfDicts=confChangesList)
@@ -585,7 +593,7 @@ writeValidationScript(testName=name, validationScript=validationScript)
 #=============================
 
 # scheddName
-name = 'scheddName'
+name = f'scheddName_{nameSuffix}'
 changeDict = {'param': name, 'value': '"crab3@vocms059.cern.ch"', 'section': 'Debug'}
 confChangesList = [changeDict]
 testSubmitScript = dummyTestScript
@@ -598,7 +606,7 @@ writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
 writeValidationScript(testName=name, validationScript=validationScript)
 
 # collector
-name = 'collector'
+name = f'collector_{nameSuffix}'
 confChangesList = []
 changeDict = {'param': name, 'value': '"cmsgwms-collector-itb.cern.ch"', 'section': 'Debug'}
 confChangesList.append(changeDict)
@@ -613,7 +621,7 @@ writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
 writeValidationScript(testName=name, validationScript=validationScript)
 
 # extraJDL
-name = 'extraJDL'
+name = f'extraJDL_{nameSuffix}'
 changeDict = {'param': name, 'value': "['+CMS_ALLOW_OVERFLOW=False', '+CRAB_StageoutPolicy=\"remote\"']", 'section': 'Debug'}
 confChangesList = [changeDict]
 testSubmitScript = dummyTestScript
