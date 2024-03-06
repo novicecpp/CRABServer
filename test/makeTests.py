@@ -59,7 +59,7 @@ dummyTestScript = "\nexit 0\n"  #  a test which always returns success
 cmsswversion = os.environ.get('CMSSW_VERSION')
 nowStr = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 hashbin = random.getrandbits(32)
-hashStr = "hash value: %08x" % hashbin
+hashStr = "%08x" % hashbin
 nameSuffix = f'{cmsswversion}_{nowStr}_{hashStr}'
 #
 # test CRAB Configuration file parameters
