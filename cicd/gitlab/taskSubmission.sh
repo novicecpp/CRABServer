@@ -69,7 +69,7 @@ immediateCheck(){
   done
 }
 
-# note $WORK_DIR is git rootdir
+# NOTE: $WORK_DIR is git rootdir
 
 Client_Validation_Suite=${Client_Validation_Suite:-}
 Client_Configuration_Validation=${Client_Configuration_Validation:-}
@@ -83,11 +83,12 @@ if [ "${Client_Validation_Suite}" = true ]; then
     cp ${WORK_DIR}/artifacts/submitted_tasks_CV ${WORK_DIR}/artifacts/submitted_tasks_CV_$CMSSW_release
 fi
 
+# TODO: need to run makeTests.py outside apptainer because python3 is not available in slc6
 if [ "${Client_Configuration_Validation}" = true ]; then
     echo -e "\nStarting task submission for Client Configuration Validation testing.\n"
     mkdir -p tmpWorkDir
     cd tmpWorkDir
-    python ${WORK_DIR}/test/makeTests.py
+    python3 ${WORK_DIR}/test/makeTests.py
     filesToSubmit=`find . -maxdepth 1 -type f -name '*.py' ! -name '*PSET*'`
     submitTasks "${filesToSubmit}" "CCV"
     tasksToCheck=`cat ${WORK_DIR}/artifacts/submitted_tasks_CCV`
