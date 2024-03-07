@@ -73,7 +73,7 @@ case $CRABClient_version in
 	touch ${GitDir}/WMCore/src/python/WMCore/__init__.py
 	cp ${GitDir}/CRABClient/src/python/CRABClient/WMCoreConfiguration.py ${GitDir}/WMCore/src/python/WMCore/Configuration.py
 
-	export PYTHONPATH=${MY_CRAB}/src/python:$PYTHONPATH
+	export PYTHONPATH=${MY_CRAB}/src/python:${PYTHONPATH:-}
 	export PYTHONPATH=${GitDir}/WMCore/src/python:$PYTHONPATH
 
 	export PATH=${MY_CRAB}/bin:$PATH
