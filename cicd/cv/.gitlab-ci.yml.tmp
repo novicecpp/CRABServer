@@ -12,9 +12,10 @@ stages:
   script:
     # parallel version
     - export CMSSW_release=$CMSSW_release
+    - export CRABServer_tag=${CRABServer_tag:-HEAD} # branch for client GH mode
+    - export CRABCLIENT_FORK=${CRABCLIENT_FORK:-dmwm}
     # fixed vars
     - export CRABClient_version=prod
-    - export CRABServer_tag=HEAD
     - export REST_Instance=test12
     - export Client_Validation_Suite=true
     # it should not need in future

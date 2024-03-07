@@ -48,7 +48,7 @@ case $CRABClient_version in
     ;;
   GH)
 	cd CRABServer; git checkout ${CRABServer_tag}; cd ..
-	git clone https://github.com/dmwm/CRABClient
+	git clone https://github.com/${CRABCLIENT_FORK}/CRABClient
 	cp CRABServer/src/python/ServerUtilities.py CRABClient/src/python/
 	cp CRABServer/src/python/RESTInteractions.py CRABClient/src/python/
 	#$ghprbPullId is used for PR testing. If this variable is set, that means

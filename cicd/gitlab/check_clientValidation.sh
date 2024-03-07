@@ -17,6 +17,8 @@ echo "(DEBUG) end"
 SUBMITTED_TASKS_PATH=artifacts/submitted_tasks_CV_${CMSSW_release}
 cat $SUBMITTED_TASKS_PATH
 export SUBMITTED_TASKS_PATH
+
+# need these steps to make client read proxyfile properly
 cp $X509_USER_PROXY proxyfile
 chmod 0600 proxyfile
 chown $(id -u):$(id -g) proxyfile
