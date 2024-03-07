@@ -47,19 +47,20 @@ case $CRABClient_version in
 	alias crab='crab-dev'
     ;;
   GH)
-	cd CRABServer; git checkout ${CRABServer_tag}; cd ..
-	git clone https://github.com/${CRABCLIENT_FORK}/CRABClient
-	cp CRABServer/src/python/ServerUtilities.py CRABClient/src/python/
-	cp CRABServer/src/python/RESTInteractions.py CRABClient/src/python/
+    set -euo pipefail
+	#cd CRABServer; git checkout ${CRABServer_tag}; cd ..
+	git clone https://github.com/${CRABCLIENT_FORK}/CRABClient CRABClient
+	cp src/python/ServerUtilities.py CRABClient/src/python/
+	cp src/python/RESTInteractions.py CRABClient/src/python/
 	#$ghprbPullId is used for PR testing. If this variable is set, that means
 	#we need to run test against specific commit
-	if [ ! -z "$ghprbPullId" ]; then
-		cd CRABClient
-		git fetch origin pull/${ghprbPullId}/merge:PR_MERGE
-		export COMMIT=`git rev-parse "PR_MERGE^{commit}"`
-		git checkout -f ${COMMIT}
-		cd ..
-	fi
+	#if [ ! -z "$ghprbPullId" ]; then
+	#	cd CRABClient
+	#	git fetch origin pull/${ghprbPullId}/merge:PR_MERGE
+	#	export COMMIT=`git rev-parse "PR_MERGE^{commit}"`
+	#	git checkout -f ${COMMIT}
+	#	cd ..
+	#fi
 	cd ${WORK_DIR}
 	GitDir=${WORK_DIR}
 
@@ -76,6 +77,7 @@ case $CRABClient_version in
 	export PYTHONPATH=${GitDir}/WMCore/src/python:$PYTHONPATH
 
 	export PATH=${MY_CRAB}/bin:$PATH
+    set +euo pipefail
 	source ${MY_CRAB}/etc/crab-bash-completion.sh
     ;;
   prod)
