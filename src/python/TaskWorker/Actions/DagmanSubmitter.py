@@ -31,12 +31,17 @@ from TaskWorker.WorkerExceptions import TaskWorkerException
 
 # Bootstrap either the native module or the BossAir variant.
 try:
-    import classad
-    import htcondor
+    import htcondor2 as htcondor
+    import classad2 as classad
 except ImportError:
+#pylint: disable=C0103
+    try:
+        import classad
+        import htcondor
+    except ImportError:
     #pylint: disable=C0103
-    classad = None
-    htcondor = None
+        classad = None
+        htcondor = None
 
 
 ## These are the CRAB attributes that we want to add to the job class ad when

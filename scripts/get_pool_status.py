@@ -5,8 +5,8 @@ import re
 import pprint
 import optparse
 
-import classad
-import htcondor
+import classad2 as classad
+import htcondor2 as htcondor
 
 class PoolStatus(object):
 
@@ -134,4 +134,3 @@ if __name__ == '__main__':
     p.execute()
 
     pprint.pprint(p.pool_status)
-

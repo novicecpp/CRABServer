@@ -8,7 +8,7 @@ if sys.version_info < (3, 0):
 
 from http.client import HTTPException
 
-import htcondor
+import htcondor2 as htcondor
 
 from ServerUtilities import FEEDBACKMAIL, insertJobIdSid
 

@@ -6,8 +6,8 @@ import signal
 import logging
 import traceback
 
-import classad
-import htcondor
+import htcondor2 as htcondor
+import classad2 as classad
 
 # This is part of the classad module as of HTCondor 8.1.2
 def quote(value):
@@ -107,4 +107,3 @@ class AuthenticatedSubprocess(object):
                 self.logger.warning("Subprocess with PID %s (executed in AuthenticatedSubprocess) timed out. Killing it." % self.pid)
                 os.kill(self.pid, signal.SIGTERM)
                 #we should probably wait again and send SIGKILL is the kill does not work
-
