@@ -19,8 +19,8 @@ import traceback
 from datetime import datetime
 from http.client import HTTPException
 
-import classad
-import htcondor
+import htcondor2 as htcondor
+import classad2 as classad
 
 from RESTInteractions import CRABRest
 from ServerUtilities import getProxiedWebDir, getColumn
@@ -502,4 +502,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

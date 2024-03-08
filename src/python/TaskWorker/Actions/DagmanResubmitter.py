@@ -7,8 +7,8 @@ if sys.version_info >= (3, 0):
 if sys.version_info < (3, 0):
     from urllib import urlencode
 
-import classad
-import htcondor
+import htcondor2 as htcondor
+import classad2 as classad
 
 import HTCondorLocator
 import HTCondorUtils

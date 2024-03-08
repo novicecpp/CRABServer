@@ -8,7 +8,7 @@ import types
 import pickle
 import pprint
 
-import classad
+import classad2 as classad
 
 import TaskWorker.Actions.PostJob as PostJob
 import TaskWorker.Actions.PreJob as PreJob
@@ -42,7 +42,7 @@ def bootstrap():
     config = Configuration.Configuration()
     config.section_("Services")
     config.Services.DBSUrl = 'https://cmsweb.cern.ch/dbs/prod/phys03/DBSWriter/'
-    
+
     ad['tm_taskname'] = ad.eval("CRAB_Workflow")
     ad['tm_split_algo'] = ad.eval("CRAB_SplitAlgo")
     ad['tm_dbs_url'] = ad.eval("CRAB_DBSURL")
@@ -89,4 +89,3 @@ if __name__ == '__main__':
         # TODO: make this propagate somewhere machine readable
         print("Got a fatal exception: %s" % e)
         raise
-        

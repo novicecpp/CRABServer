@@ -4,8 +4,8 @@ import time
 import bisect
 import random
 
-import classad
-import htcondor
+import htcondor2 as htcondor
+import classad2 as classad
 import HTCondorUtils
 
 CollectorCache = {}

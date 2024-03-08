@@ -4,7 +4,7 @@ import os
 import sys
 import time
 import logging
-import htcondor
+import htcondor2 as htcondor
 import traceback
 import subprocess
 import errno
