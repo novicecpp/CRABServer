@@ -184,7 +184,7 @@ class HTCondorLocator(object):
         import pdb; pdb.set_trace()
         htcondor.param['COLLECTOR_HOST'] = self.getCollector()
         coll = htcondor.Collector()
-        schedds = coll.query(htcondor.AdTypes.Schedd, 'Name=?=%s' % HTCondorUtils.quote(schedd.encode('ascii', 'ignore')),
+        schedds = coll.query(htcondor.AdTypes.Schedd, 'Name=?=%s' % HTCondorUtils.quote(schedd),
                              ["AddressV1", "CondorPlatform", "CondorVersion", "Machine", "MyAddress", "Name", "MyType",
                               "ScheddIpAddr", "RemoteCondorSetup"])
         if not schedds:
