@@ -42,7 +42,7 @@ FROM gitlab-registry.cern.ch/linuxsupport/cc7-base:20231001-1.x86_64 as cern-cc7
 
 # htcondor2
 #FROM registry.cern.ch/cmscrab/htcondor-bin:manual as htcondor2
-FROM registry.cern.ch/cmscrab/htcondor2-bin as htcondor2
+FROM registry.cern.ch/cmscrab/htcondor2-bin:manual as htcondor2
 # start image
 FROM registry.cern.ch/cmsweb/wmagent-base:pypi-20230705
 SHELL ["/bin/bash", "-c"]
