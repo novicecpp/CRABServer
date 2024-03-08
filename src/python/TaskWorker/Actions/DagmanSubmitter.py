@@ -329,7 +329,7 @@ class DagmanSubmitter(TaskAction.TaskAction):
             self.logger.debug("Got schedd obj for %s ", task['tm_schedd'])
 
             rootConst = 'TaskType =?= "ROOT" && CRAB_ReqName =?= %s && (isUndefined(CRAB_Attempt) || '\
-                        'CRAB_Attempt == 0)' % HTCondorUtils.quote(workflow)
+                        'CRAB_Attempt == 0)' % HTCondorUtils.quote(workflow.encode('ascii', 'ignore'))
 
             self.logger.debug("Duplicate check is querying the schedd: %s", rootConst)
             results = list(schedd.query(rootConst, []))
