@@ -40,6 +40,8 @@ RUN pushd /data/miniconda \
 # cern ldap config
 FROM gitlab-registry.cern.ch/linuxsupport/cc7-base:20231001-1.x86_64 as cern-cc7
 
+#
+FROM registry.cern.ch/cmscrab/htcondor-bin:manual as htcondor2
 # start image
 FROM registry.cern.ch/cmsweb/wmagent-base:pypi-20230705
 SHELL ["/bin/bash", "-c"]
@@ -67,9 +69,13 @@ WORKDIR /build
 # install dependencies
 COPY --from=wmcore-src /wmcore_version .
 COPY cicd/crabtaskworker_pypi/requirements.txt .
-RUN pip install -r requirements.txt \
+RUN  grep -v htcondor requirements.txt > reqs.txt\
+    && pip install -r reqs.txt \
     && pip install --no-deps wmcore==$(cat wmcore_version) \
     && pip cache purge
+
+COPY --from=htcondor2 /release_dir /data/srv/htcondor2
+ENV PYTHONPATH /data/srv/htcondor2/lib/python3/:$PYTHONPATH
 
 # install crabserver
 # will replace with pip later
