@@ -1,5 +1,23 @@
 FROM htcondor/nmi-build:x86_64_Debian11-23000100 as builder
 
+RUN apt install build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libsqlite3-dev libreadline-dev libffi-dev curl libbz2-dev -y \
+    && wget https://www.python.org/ftp/python/3.8.18/Python-3.8.18.tar.xz \
+    && tar -xf Python-3.8.18.tar.xz \
+    && mv Python-3.8.18 /usr/local/share/python3.8 \
+    && cd /usr/local/share/python3.8 \
+    && ./configure --enable-optimizations --enable-shared \
+    && make -j8 && make altinstall && ldconfig /usr/local/share/python3.8
+
+RUN mkdir /tmp/boost \
+    && cd /tmp/boost \
+    && curl -LO https://boostorg.jfrog.io/artifactory/main/release/1.74.0/source/boost_1_74_0.tar.gz \
+    && tar zxf boost_1_74_0.tar.gz \
+    && cd boost_1_74_0 \
+    && ./bootstrap.sh --with-python=/usr/local/bin/python3.8 \
+    && ./b2 --with-python
+
+RUN cp /tmp/boost/boost_1_74_0/stage/lib/libboost* /usr/local/lib
+
 COPY checkout.txt /checkout.txt
 
 RUN cd /tmp \
@@ -10,12 +28,12 @@ RUN cd /tmp \
     && cmake .. \
     && make -j 8 install
 
-RUN cd /tmp \
-    && mkdir build-deb \
-    && cd build-deb \
-    && OMP_NUM_THREADS=8 ../htcondor/build-on-linux.sh ../htcondor
+#RUN cd /tmp \
+#    && mkdir build-deb \
+#    && cd build-deb \
+#    && OMP_NUM_THREADS=8 ../htcondor/build-on-linux.sh ../htcondor
 
-FROM scratch
+FROM debian:12
 COPY --from=builder /tmp/htcondor/__build/release_dir /release_dir
-COPY --from=builder /tmp/build-deb /build-deb
+#COPY --from=builder /tmp/build-deb /build-deb
 COPY --from=builder /checkout.txt checkout.txt
