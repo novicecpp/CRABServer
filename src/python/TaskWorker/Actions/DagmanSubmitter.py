@@ -328,11 +328,13 @@ class DagmanSubmitter(TaskAction.TaskAction):
             schedd, dummyAddress = loc.getScheddObjNew(task['tm_schedd'])
             self.logger.debug("Got schedd obj for %s ", task['tm_schedd'])
 
-            import pdb; pdb.set_trace()
+
             rootConst = 'TaskType =?= "ROOT" && CRAB_ReqName =?= %s && (isUndefined(CRAB_Attempt) || '\
-                        'CRAB_Attempt == 0)' % HTCondorUtils.quote(workflow.encode('ascii', 'ignore'))
+                        'CRAB_Attempt == 0)' % HTCondorUtils.quote(workflow)
+
 
             self.logger.debug("Duplicate check is querying the schedd: %s", rootConst)
+            import pdb; pdb.set_trace()
             results = list(schedd.query(rootConst, []))
             self.logger.debug("Schedd queried %s", results)
         except Exception as exp:

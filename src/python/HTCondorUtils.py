@@ -11,7 +11,6 @@ import classad2 as classad
 
 # This is part of the classad module as of HTCondor 8.1.2
 def quote(value):
-    import pdb; pdb.set_trace()
     ad = classad.ClassAd()
     ad["foo"] = str(value)
     return ad.lookup("foo").__str__()
