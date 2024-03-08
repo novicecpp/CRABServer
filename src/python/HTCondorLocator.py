@@ -182,7 +182,7 @@ class HTCondorLocator(object):
         remote schedd and its corresponding address.
         """
         import pdb; pdb.set_trace()
-        htcondor.param['COLLECTOR_HOST'] = self.getCollector().encode('ascii', 'ignore')
+        htcondor.param['COLLECTOR_HOST'] = self.getCollector()
         coll = htcondor.Collector()
         schedds = coll.query(htcondor.AdTypes.Schedd, 'Name=?=%s' % HTCondorUtils.quote(schedd.encode('ascii', 'ignore')),
                              ["AddressV1", "CondorPlatform", "CondorVersion", "Machine", "MyAddress", "Name", "MyType",
