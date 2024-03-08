@@ -332,8 +332,7 @@ class DagmanSubmitter(TaskAction.TaskAction):
                         'CRAB_Attempt == 0)' % HTCondorUtils.quote(workflow)
 
             self.logger.debug("Duplicate check is querying the schedd: %s", rootConst)
-            import pdb; pdb.set_trace()
-            results = list(schedd.xquery(rootConst, []))
+            results = list(schedd.query(rootConst, []))
             self.logger.debug("Schedd queried %s", results)
         except Exception as exp:
             msg = "The CRAB server backend was not able to contact the Grid scheduler."
