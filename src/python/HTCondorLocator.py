@@ -181,7 +181,6 @@ class HTCondorLocator(object):
         Return a tuple (schedd, address) containing an object representing the
         remote schedd and its corresponding address.
         """
-        import pdb; pdb.set_trace()
         htcondor.param['COLLECTOR_HOST'] = self.getCollector()
         coll = htcondor.Collector()
         schedds = coll.query(htcondor.AdTypes.Schedd, 'Name=?=%s' % HTCondorUtils.quote(schedd),
