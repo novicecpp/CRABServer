@@ -12,7 +12,7 @@
 
 set -euo pipefail
 
-##H Usage: manage ACTION [ATTRIBUTE] [SECURITY-STRING]
+##H Usage: manage.sh ACTION [ATTRIBUTE] [SECURITY-STRING]
 ##H
 ##H Available actions:
 ##H   help        show this help
@@ -40,8 +40,6 @@ CFGFILE=$CFGDIR/config.py
 
 # necessary env settings for all WM services
 ## config
-# default PYTHONPATH to emptystring to prevent script exit from `set -u`
-PYTHONPATH=${PYTHONPATH:-}
 PYTHONPATH=/data/srv/current/config/$srv:${PYTHONPATH}
 ## secrets
 PYTHONPATH=/etc/secrets:${PYTHONPATH} # (it should be $AUTHDIR, will fix later).
