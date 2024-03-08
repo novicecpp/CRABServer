@@ -59,6 +59,7 @@ class AuthenticatedSubprocess(object):
             self.wpipe = os.fdopen(self.w, 'w')
         self.pid = os.fork()
         if self.pid == 0:
+            import pdb; pdb.set_trace()
             htcondor.SecMan().invalidateAllSessions()
             if self.tokenDir:
                 htcondor.param['SEC_TOKEN_DIRECTORY'] = self.tokenDir
