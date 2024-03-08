@@ -25,7 +25,7 @@ try:
 except:
     pass
 
-readEvents = getattr(htcondor, 'readEvents', htcondor.read_events)
+#readEvents = getattr(htcondor, 'readEvents', htcondor.read_events)
 
 class OutputObj:
     """ Class used when AuthenticatedSubprocess is created with pickleOut
