@@ -1,0 +1,21 @@
+FROM htcondor/nmi-build:x86_64_Debian11-23000100 as builder
+
+COPY checkout.txt /checkout.txt
+
+RUN cd /tmp \
+    && git clone https://github.com/htcondor/htcondor \
+    && cd htcondor && git checkout $(cat /checkout.txt) \
+    && mkdir __build \
+    && cd __build \
+    && cmake .. \
+    && make -j 8 install
+
+RUN cd /tmp \
+    && mkdir build-deb \
+    && cd build-deb \
+    && OMP_NUM_THREADS=8 ../htcondor/build-on-linux.sh ../htcondor
+
+FROM scratch
+COPY --from=builder /tmp/htcondor/__build/release_dir /release_dir
+COPY --from=builder /tmp/build-deb /build-deb
+COPY --from=builder /checkout.txt checkout.txt
