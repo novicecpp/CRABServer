@@ -114,7 +114,9 @@ RUN cd ${WDIR}/srv/TaskManager \
 COPY --chown=${USER}:${USER} cicd/crabtaskworker_pypi/start.sh cicd/crabtaskworker_pypi/stop.sh cicd/crabtaskworker_pypi/run.sh cicd/crabtaskworker_pypi/manage.sh cicd/crabtaskworker_pypi/updateDatafiles.sh  ${WDIR}/srv/TaskManager/
 
 # for debuggin purpose
+USER root
 RUN echo "${USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/01-crab3
+USER ${USER}
 
 # make sure all /data own by running user
 #RUN chown -R 1000:1000 ${WDIR}
