@@ -97,23 +97,22 @@ RUN bash addGH.sh \
 WORKDIR ${WDIR}
 RUN rm -rf /build
 
-USER ${USER}
-
 # create working directory
 RUN mkdir -p ${WDIR}/srv/tmp \
     && mkdir -p ${WDIR}/srv/Publisher \
-    && mkdir -p ${WDIR}/srv/TaskManager
+    && mkdir -p ${WDIR}/srv/TaskManager \
+    && chown ${USER}:${USER} ${WDIR}/srv/tmp ${WDIR}/srv/Publisher ${WDIR}/srv/TaskManager
 
 RUN cd ${WDIR}/srv/TaskManager \
     && ln -sf ${WDIR}/hostdisk/TaskWorker/cfg cfg \
     && ln -sf ${WDIR}/hostdisk/TaskWorker/logs logs \
     && rm /data/manage /data/run.sh
 
-COPY cicd/crabtaskworker_pypi/start.sh cicd/crabtaskworker_pypi/stop.sh cicd/crabtaskworker_pypi/run.sh cicd/crabtaskworker_pypi/manage.sh cicd/crabtaskworker_pypi/updateDatafiles.sh  ${WDIR}/srv/TaskManager/
+COPY --chown=${USER}:${USER} cicd/crabtaskworker_pypi/start.sh cicd/crabtaskworker_pypi/stop.sh cicd/crabtaskworker_pypi/run.sh cicd/crabtaskworker_pypi/manage.sh cicd/crabtaskworker_pypi/updateDatafiles.sh  ${WDIR}/srv/TaskManager/
 
 # for debuggin purpose
-USER root
 RUN echo "${USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/01-crab3
+
 USER ${USER}
 
 # make sure all /data own by running user
