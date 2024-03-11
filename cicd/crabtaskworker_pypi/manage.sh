@@ -2,8 +2,9 @@
 
 # Same style as crabserver_pypi/manage.sh script, but for crabtaskworker.
 # This script needs following environment variables:
-#   - DEBUG:   if `true`, setup debug mode environment .
-#   - APP_DIR: PYTHONPATH of the app.
+#   - DEBUG:   if `true`, setup debug mode environment.
+#   - APP_PATH: the path we running the app from.
+#   - PYTHONPATH: inherit from ./start.sh
 
 ##H Usage: manage.sh ACTION [ATTRIBUTE] [SECURITY-STRING]
 ##H
@@ -23,8 +24,9 @@ CONFIG=$TASKWORKER_HOME/cfg/TaskWorkerConfig.py
 # CRABTASKWORKER_ROOT is a mandatory variable for getting data directory in `DagmanCreator.getLocation()`
 # Hardcoded the path and use new_updateTMRuntime.sh to build it from source and copy to this path.
 export CRABTASKWORKER_ROOT=/data/srv/current/lib/python/site-packages/
-## app
-export PYTHONPATH=$APP_PATH:$PYTHONPATH
+
+# inherit PYTHONPATH from parent process.
+export PYTHONPATH
 
 usage()
 {

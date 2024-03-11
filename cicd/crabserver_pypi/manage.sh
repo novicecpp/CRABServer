@@ -7,7 +7,7 @@
 #   - `wmc-httpd` line.
 # This script needs following environment variables:
 #   - DEBUG:   if `true`, setup debug mode environment .
-#   - APP_DIR: PYTHONPATH of the app.
+#   - PYTHONPATH: inherit from ./start.sh
 
 
 set -euo pipefail
@@ -42,13 +42,11 @@ CFGFILE=$CFGDIR/config.py
 ## config
 PYTHONPATH=/data/srv/current/config/$srv:${PYTHONPATH}
 ## secrets
-PYTHONPATH=/etc/secrets:${PYTHONPATH} # (it should be $AUTHDIR, will fix later).
-## app, using APP_PATH
-PYTHONPATH=${APP_PATH}:${PYTHONPATH}
+PYTHONPATH=/data/srv/current/auth/$srv:${PYTHONPATH}
+## app path. inherit PYTHONPATH from parent process.
 export PYTHONPATH
-
 ## wmc-httpd path
-# export PATH manually to bin directory in case you have custom wmc-httpd
+# export PATH manually to WMCore/bin directory in case you have custom wmc-httpd
 export PATH=/data/srv/current/bin:$PATH
 
 ## service creds

@@ -28,16 +28,16 @@ fi
 case $MODE in
     current)
         # current mode: run current instance
-        APP_PATH=/data/srv/current/lib/python/site-packages
+        PYTHONPATH=/data/srv/current/lib/python/site-packages:${PYTHONPATH:-}
         ;;
     fromGH)
         # private mode: run private instance from GH
-        APP_PATH=/data/repos/WMCore/src/python:/data/repos/CRABServer/src/python
+        PYTHONPATH=/data/repos/WMCore/src/python:/data/repos/CRABServer/src/python:${PYTHONPATH:-}
         ;;
     *) echo "Unimplemented mode: $MODE\n"; helpFunction ;;
 esac
 
 # passing DEBUG/APP_PATH to ./manage.sh scripts
 export DEBUG
-export APP_PATH
+export PYTHONPATH
 "${SCRIPT_DIR}/manage.sh" start
