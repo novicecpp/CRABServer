@@ -7,6 +7,7 @@
 #   - PYTHONPATH: inherit from ./start.sh
 
 set -euo pipefail
+set -x
 
 ##H Usage: manage.sh ACTION [ATTRIBUTE] [SECURITY-STRING]
 ##H
@@ -50,8 +51,9 @@ stop_srv() {
     checkTimes=12
     timeout=15 #that will give 12*15=180 seconds (3min) for the TW to finish work
 
-    TaskMasterPid=$(ps exfww | grep MasterWorker | grep -v grep | head -1 | awk '{print $1}')
-    kill $TaskMasterPid || return
+    TaskMasterPid=$(ps exfww | grep MasterWorker | grep -v grep | head -1 | awk '{print $1}') || true
+    if [[ -z $TaskMasterPid ]]; then return; fi
+    kill $TaskMasterPid
     echo "SIGTERM sent to MasterWorker pid $TaskMasterPid"
 
     for (( i=0; i<$checkTimes; ++i)); do
