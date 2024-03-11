@@ -43,7 +43,7 @@ case $MODE in
         PYTHONPATH=/data/repos/CRABServer/src/python:/data/repos/WMCore/src/python:${PYTHONPATH:-}
         # update runtime (create TaskManagerRun.tar.gz from source)
         touch ${markmodify_path}
-        ./new_updateTMRuntime.sh
+        ./updateDatafiles.sh
         ;;
     *) echo "Unimplemented mode: $MODE\n"; helpFunction ;;
 esac
