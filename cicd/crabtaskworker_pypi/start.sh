@@ -38,12 +38,10 @@ case $MODE in
             echo "Refuse to start with -c option."
             exit 1
         fi
-        APP_PATH=/data/srv/current/lib/python/site-packages
         PYTHONPATH=/data/srv/current/lib/python/site-packages:${PYTHONPATH:-}
         ;;
     fromGH)
         # private mode: run private instance from GH
-        APP_PATH=/data/repos/CRABServer/src/python
         PYTHONPATH=/data/repos/CRABServer/src/python:/data/repos/WMCore/src/python:${PYTHONPATH:-}
         # update runtime (create TaskManagerRun.tar.gz from source)
         touch ${markmodify_path}
@@ -53,7 +51,6 @@ case $MODE in
 esac
 
 # export APP_PATH and DEBUG to ./manage.sh
-export APP_PATH
 export PYTHONPATH
 export DEBUG
 "${SCRIPT_DIR}/manage.sh" start
