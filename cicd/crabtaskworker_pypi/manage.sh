@@ -6,6 +6,8 @@
 #   - APP_PATH: the path we running the app from.
 #   - PYTHONPATH: inherit from ./start.sh
 
+set -euo pipefail
+
 ##H Usage: manage.sh ACTION [ATTRIBUTE] [SECURITY-STRING]
 ##H
 ##H Available actions:
