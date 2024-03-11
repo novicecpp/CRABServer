@@ -77,6 +77,8 @@ RUN pip install -r requirements.txt \
 
 # install crabserver
 # will replace with pip later
+RUN mkdir -p ${WDIR}/srv/current/lib/python/site-packages/ \
+    && chown ${USER}:${USER} ${WDIR}/srv/
 COPY --chown=${USER}:${USER} src/python/ ${WDIR}/srv/current/lib/python/site-packages/
 # copy TaskManagerRun.tar.gz
 COPY --from=build-data --chown=${USER}:${USER} /build/data_files/data ${WDIR}/srv/current/lib/python/site-packages/data
@@ -91,17 +93,18 @@ COPY cicd/crabtaskworker_pypi/rucio.cfg /opt/rucio/etc/
 # add github repos, reuse script in crabserver_pypi
 COPY --chown=${USER}:${USER} cicd/crabserver_pypi/addGH.sh .
 RUN bash addGH.sh \
-    && chown ${USER}:${USER} /data/repos
+    && chown -R ${USER}:${USER} /data/repos
 
 # clean up
 WORKDIR ${WDIR}
 RUN rm -rf /build
 
+USER ${USER}
+
 # create working directory
 RUN mkdir -p ${WDIR}/srv/tmp \
     && mkdir -p ${WDIR}/srv/Publisher \
-    && mkdir -p ${WDIR}/srv/TaskManager \
-    && chown ${USER}:${USER} ${WDIR}/srv/tmp ${WDIR}/srv/Publisher ${WDIR}/srv/TaskManager
+    && mkdir -p ${WDIR}/srv/TaskManager
 
 RUN cd ${WDIR}/srv/TaskManager \
     && ln -sf ${WDIR}/hostdisk/TaskWorker/cfg cfg \
@@ -112,8 +115,6 @@ COPY --chown=${USER}:${USER} cicd/crabtaskworker_pypi/start.sh cicd/crabtaskwork
 
 # for debuggin purpose
 RUN echo "${USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/01-crab3
-
-USER ${USER}
 
 # make sure all /data own by running user
 #RUN chown -R 1000:1000 ${WDIR}
