@@ -46,13 +46,9 @@ SHELL ["/bin/bash", "-c"]
 ENV USER=crab3
 ENV WDIR=/data
 
-# add new user and switch to user
-RUN useradd -m ${USER} \
-    && install -o ${USER} -g ${USER} -d ${WDIR}
-
 # install gfal
 # symlink to workaround calling gfal from absolute path
-COPY --from=wmcore-gfal --chown=${USER}:${USER} ${WDIR}/miniconda ${WDIR}/miniconda
+COPY --from=wmcore-gfal ${WDIR}/miniconda ${WDIR}/miniconda
 RUN ln -sf ${WDIR}/miniconda/bin/gfal-ls /usr/bin/gfal-ls \
     && ln -sf ${WDIR}/miniconda/bin/gfal-rm /usr/bin/gfal-rm \
     && ln -sf ${WDIR}/miniconda/bin/gfal-copy /usr/bin/gfal-copy \
@@ -77,11 +73,9 @@ RUN pip install -r requirements.txt \
 
 # install crabserver
 # will replace with pip later
-RUN mkdir -p ${WDIR}/srv/current/lib/python/site-packages/ \
-    && chown -R ${USER}:${USER} ${WDIR}/srv/
-COPY --chown=${USER}:${USER} src/python/ ${WDIR}/srv/current/lib/python/site-packages/
+COPY src/python/ ${WDIR}/srv/current/lib/python/site-packages/
 # copy TaskManagerRun.tar.gz
-COPY --from=build-data --chown=${USER}:${USER} /build/data_files/data ${WDIR}/srv/current/lib/python/site-packages/data
+COPY --from=build-data /build/data_files/data ${WDIR}/srv/current/lib/python/site-packages/data
 
 # copy cern openldap config
 COPY --from=cern-cc7 /etc/openldap /etc/openldap
@@ -91,15 +85,16 @@ RUN mkdir -p /opt/rucio/etc/
 COPY cicd/crabtaskworker_pypi/rucio.cfg /opt/rucio/etc/
 
 # add github repos, reuse script in crabserver_pypi
-COPY --chown=${USER}:${USER} cicd/crabserver_pypi/addGH.sh .
-RUN bash addGH.sh \
-    && chown -R ${USER}:${USER} /data/repos
+COPY cicd/crabserver_pypi/addGH.sh .
+RUN bash addGH.sh
 
 # clean up
 WORKDIR ${WDIR}
 RUN rm -rf /build
 
-USER ${USER}
+# add new user and switch to user
+RUN useradd -m ${USER} \
+    && install -o ${USER} -d ${WDIR}
 
 # create working directory
 RUN mkdir -p ${WDIR}/srv/tmp \
@@ -111,14 +106,14 @@ RUN cd ${WDIR}/srv/TaskManager \
     && ln -sf ${WDIR}/hostdisk/TaskWorker/logs logs \
     && rm /data/manage /data/run.sh
 
-COPY --chown=${USER}:${USER} cicd/crabtaskworker_pypi/start.sh cicd/crabtaskworker_pypi/stop.sh cicd/crabtaskworker_pypi/run.sh cicd/crabtaskworker_pypi/manage.sh cicd/crabtaskworker_pypi/updateDatafiles.sh  ${WDIR}/srv/TaskManager/
+COPY cicd/crabtaskworker_pypi/start.sh cicd/crabtaskworker_pypi/stop.sh cicd/crabtaskworker_pypi/run.sh cicd/crabtaskworker_pypi/manage.sh cicd/crabtaskworker_pypi/updateDatafiles.sh  ${WDIR}/srv/TaskManager/
 
 # for debuggin purpose
-USER root
 RUN echo "${USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/01-crab3
-USER ${USER}
 
 # make sure all /data own by running user
-#RUN chown -R 1000:1000 ${WDIR}
+RUN chown -R 1000:1000 ${WDIR}
+
+USER ${USER}
 
 ENTRYPOINT ["tini", "--"]
