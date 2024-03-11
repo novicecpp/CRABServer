@@ -78,7 +78,7 @@ RUN pip install -r requirements.txt \
 # install crabserver
 # will replace with pip later
 RUN mkdir -p ${WDIR}/srv/current/lib/python/site-packages/ \
-    && chown ${USER}:${USER} ${WDIR}/srv/
+    && chown -R ${USER}:${USER} ${WDIR}/srv/
 COPY --chown=${USER}:${USER} src/python/ ${WDIR}/srv/current/lib/python/site-packages/
 # copy TaskManagerRun.tar.gz
 COPY --from=build-data --chown=${USER}:${USER} /build/data_files/data ${WDIR}/srv/current/lib/python/site-packages/data
