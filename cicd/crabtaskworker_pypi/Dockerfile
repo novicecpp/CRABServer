@@ -48,7 +48,7 @@ ENV WDIR=/data
 
 # add new user and switch to user
 RUN useradd -m ${USER} \
-    && install -o ${USER} -d ${WDIR}
+    && install -o ${USER} -g ${USER} -d ${WDIR}
 
 # install gfal
 # symlink to workaround calling gfal from absolute path
