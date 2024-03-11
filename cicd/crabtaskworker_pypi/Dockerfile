@@ -48,7 +48,7 @@ ENV WDIR=/data
 
 # add new user and switch to user
 RUN useradd -m ${USER} \
-    && install -o ${USER} -d ${WDIR}
+    && install -o ${USER} -g ${USER} -d ${WDIR}
 
 # install gfal
 # symlink to workaround calling gfal from absolute path
@@ -77,6 +77,8 @@ RUN pip install -r requirements.txt \
 
 # install crabserver
 # will replace with pip later
+RUN mkdir -p ${WDIR}/srv/current/lib/python/site-packages/ \
+    && chown -R ${USER}:${USER} ${WDIR}/srv/
 COPY --chown=${USER}:${USER} src/python/ ${WDIR}/srv/current/lib/python/site-packages/
 # copy TaskManagerRun.tar.gz
 COPY --from=build-data --chown=${USER}:${USER} /build/data_files/data ${WDIR}/srv/current/lib/python/site-packages/data
@@ -91,7 +93,7 @@ COPY cicd/crabtaskworker_pypi/rucio.cfg /opt/rucio/etc/
 # add github repos, reuse script in crabserver_pypi
 COPY --chown=${USER}:${USER} cicd/crabserver_pypi/addGH.sh .
 RUN bash addGH.sh \
-    && chown ${USER}:${USER} /data/repos
+    && chown -R ${USER}:${USER} /data/repos
 
 # clean up
 WORKDIR ${WDIR}
@@ -109,7 +111,7 @@ RUN cd ${WDIR}/srv/TaskManager \
     && ln -sf ${WDIR}/hostdisk/TaskWorker/logs logs \
     && rm /data/manage /data/run.sh
 
-COPY cicd/crabtaskworker_pypi/start.sh cicd/crabtaskworker_pypi/stop.sh cicd/crabtaskworker_pypi/run.sh cicd/crabtaskworker_pypi/manage.sh cicd/crabtaskworker_pypi/updateDatafiles.sh  ${WDIR}/srv/TaskManager/
+COPY --chown=${USER}:${USER} cicd/crabtaskworker_pypi/start.sh cicd/crabtaskworker_pypi/stop.sh cicd/crabtaskworker_pypi/run.sh cicd/crabtaskworker_pypi/manage.sh cicd/crabtaskworker_pypi/updateDatafiles.sh  ${WDIR}/srv/TaskManager/
 
 # for debuggin purpose
 USER root
