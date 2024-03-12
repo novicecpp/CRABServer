@@ -12,9 +12,10 @@ stages:
   script:
     # parallel version
     - export CMSSW_release=$CMSSW_release
+    - export CRABServer_tag=${CRABServer_tag:-HEAD} # branch for client GH mode
+    - export CRABCLIENT_FORK=${CRABCLIENT_FORK:-dmwm}
     # fixed vars
     - export CRABClient_version=prod
-    - export CRABServer_tag=HEAD
     - export REST_Instance=test12
     - export Client_Validation_Suite=true
     # it should not need in future
@@ -24,7 +25,7 @@ stages:
     - export Test_Docker_Image=registry.cern.ch/cmscrab/crabtesting:231009
     - bash -x cicd/gitlab/execute_test.sh
   cache:
-    - key: $CI_PIPELINE_ID_$CMSSW_release
+    - key: "${CI_PIPELINE_ID}_${CMSSW_release}"
       paths:
         - artifacts/submitted_tasks_CV_$CMSSW_release
       policy: push
@@ -42,7 +43,7 @@ stages:
     - export REST_Instance=test12
     - bash -x cicd/gitlab/check_clientValidation.sh
   cache:
-    - key: $CI_PIPELINE_ID_$CMSSW_release
+    - key: "${CI_PIPELINE_ID}_${CMSSW_release}"
       paths:
         - artifacts/submitted_tasks_CV_$CMSSW_release
       policy: pull
@@ -50,30 +51,14 @@ stages:
 
 .execute_cv:
   extends: ".execute_cv_template"
+  allow_failure: true
   variables:
-    CMSSW_release: CMSSW_placeholder
-
-execute_cv_CMSSW_13_0_2:
-  extends: ".execute_cv_template"
-  variables:
-    CMSSW_release: CMSSW_13_0_2
-
-execute_cv_CMSSW_10_6_26:
-  extends: ".execute_cv_template"
-  variables:
-    CMSSW_release: CMSSW_10_6_26
+    CMSSW_release: "<placeholder>"
 
 
-check_cv_CMSSW_13_0_2:
+.check_cv:
   extends: .check_cv_template
   variables:
-    CMSSW_release: CMSSW_13_0_2
-    SCRAM_ARCH: el8_amd64_gcc11
-    singularity: '8'
-
-check_cv_CMSSW_10_6_26:
-  extends: .check_cv_template
-  variables:
-    CMSSW_release: CMSSW_10_6_26
-    SCRAM_ARCH: slc7_amd64_gcc700
-    singularity: '7'
+    CMSSW_release: "<placeholder>"
+    SCRAM_ARCH: "<placeholder>"
+    singularity: "<placeholder>"

@@ -27,7 +27,7 @@ stages:
   - run_testsuite
   - check_testsuite
 
-generate_child_pipeline:
+generate_client_validation_suite:
   rules:
     - if: $Client_Validation_Suite
   stage: generate_pipeline
@@ -37,12 +37,11 @@ generate_child_pipeline:
     - pip install pyyaml
     - cd cicd/cv/
     - python gen.py
-    - cp generated-gitlab-ci.yml ../../
   artifacts:
     paths:
       - generated-gitlab-ci.yml
 
-trigger_child_pipeline:
+trigger_client_validation_suite:
   rules:
     - if: $Client_Validation_Suite
   stage: trigger_pipeline

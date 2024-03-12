@@ -2,6 +2,21 @@ import sys
 import yaml
 import copy
 import os
+import argparse
+
+
+# https://stackoverflow.com/questions/10551117/setting-options-from-environment-variables-when-using-argparse
+class EnvDefault(argparse.Action):
+    def __init__(self, envvar, required=True, default=None, **kwargs):
+        if envvar and envvar in os.environ:
+            default = os.environ[envvar]
+        if required and default:
+            required = False
+        super(EnvDefault, self).__init__(default=default, required=required,
+                                         **kwargs)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        setattr(namespace, self.dest, values)
 
 cmsswinfo = {
     'CMSSW_13_0_2': {'CMSSW_release': 'CMSSW_13_0_2', 'SCRAM_ARCH': 'el8_amd64_gcc11', 'singularity': '8'},
@@ -16,25 +31,28 @@ cmsswinfo = {
     'CMSSW_7_1_29': {'CMSSW_release': 'CMSSW_7_1_29', 'SCRAM_ARCH': 'slc6_amd64_gcc481', 'singularity': '6'},
 }
 
-versiontmp = os.getenv('CMSSW_VERSIONS', None)
-if versiontmp:
-    cmsswversions = versiontmp.split(',')
-else:
-    cmsswversions = [ k for k,_ in cmsswinfo.items() ]
+parser = argparse.ArgumentParser(
+                    prog='gen.py',
+                    description='What the program does',
+                    epilog='Text at the bottom of help')
+parser.add_argument('filepath')
+parser.add_argument('--cmsswversions', action=EnvDefault, envvar='CMSSW_VERSIONS', default=",".join(cmsswinfo.keys()))
+args = parser.parse_args()
 
-filepath = '.gitlab-ci.yml.tmp'
-with open(filepath, 'r') as file:
+cmsswversions = args.cmsswversions.split(',')
+
+with open(args.filepath, 'r', encoding='utf-8') as file:
     gitlabCI = yaml.safe_load(file)
 
+copyOfGitlabCI = copy.deepcopy(gitlabCI)
 for version in cmsswversions:
     versiondict = cmsswinfo[version]
-    executeCV = copy.deepcopy(gitlabCI['.execute_cv'])
-    executeCV['variables'].update(versiondict)
-    gitlabCI[f'execute_cv_{versiondict["CMSSW_release"]}'] = executeCV
-    checkCV = copy.deepcopy(gitlabCI['.check_cv'])
+    checkCV = copy.deepcopy(copyOfGitlabCI['.check_cv'])
     checkCV['variables'].update(versiondict)
-    gitlabCI[f'check_cv_{versiondict["CMSSW_release"]}'] = checkCV
-
-filepath = 'generated-gitlab-ci.yml'
-with open(filepath, 'w') as file:
-    yaml.dump(gitlabCI, file, sort_keys=False)
+    copyOfGitlabCI[f'check_cv_{version}'] = checkCV
+    executeCV = copy.deepcopy(copyOfGitlabCI['.execute_cv'])
+    executeCV['variables'].update(versiondict)
+    copyOfGitlabCI[f'execute_cv_{version}'] = executeCV
+outputpath = f'generated-gitlab-ci.yml'
+with open(outputpath, 'w', encoding='utf-8') as file:
+    yaml.dump(copyOfGitlabCI, file, sort_keys=False)
