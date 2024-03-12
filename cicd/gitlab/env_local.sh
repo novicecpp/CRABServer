@@ -1,6 +1,6 @@
 #! /bin/bash
 # ci global variable
-export PROXY=/tmp/x509up_u1000
+export X509_USER_PROXY=/tmp/x509up_u1000
 
 export CMSSW_release=CMSSW_13_0_2
 #fixed vars

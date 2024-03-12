@@ -15,6 +15,7 @@ cp $X509_USER_PROXY proxyfile
 chmod 0600 proxyfile
 chown $(id -u):$(id -g) proxyfile
 export X509_USER_PROXY="$(realpath proxyfile)"
+export PROXY=${X509_USER_PROXY}
 export X509_USER_CERT=$X509_USER_PROXY
 export X509_USER_KEY=$X509_USER_PROXY
 
