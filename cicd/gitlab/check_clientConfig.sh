@@ -60,6 +60,7 @@ fi
 # make it not error from report below
 MAX_RETRY=1
 RETRY=1
+BUILD_URL=https://cern.ch
 
 
 TEST_RESULT='FAILED'
