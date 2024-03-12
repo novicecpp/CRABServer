@@ -11,6 +11,13 @@ commonBashFunctions = """#!/bin/bash
 # exit status meaning:
 # 0: OK   1: FAIL   2: TRY AGAIN LATER
 
+function join_by {
+  local d=${1-} f=${2-}
+  if shift 2; then
+    printf %s "$f" "${@/#/$d}"
+  fi
+}
+
 function checkStatus {
   # check that taskName has reached targetStatus and writes statusLog.txt
   # if target = SUBMITTED, accepts status COMPLETED or FAILED as well
@@ -19,8 +26,12 @@ function checkStatus {
   # Fail test if command fails or status is not good
   local taskName="$1"
   local targetStatus="$2"
-
+  x=(${taskName//_/ })
+  y=(${y[@]:3})
+  z=$(join_by _ "${z[@]}")
+  rm -rf $z
   crab remake --task ${taskName} --instance=REST_Instance --proxy=$PROXY 2>&1 | tee remakeLog.txt
+  # cleanup 240312_135146:tseethon_crab_transferOutputs_CMSSW_13_0_2_20240312_145144_7ee2a233
   [ $? -ne 0 ] && exit 1  # if remake fails, abort
   grep -q Success remakeLog.txt || exit 1  # if log does not contain "Success" string, abort
   workDir=`grep Success remakeLog.txt | awk '{print $NF}'`
