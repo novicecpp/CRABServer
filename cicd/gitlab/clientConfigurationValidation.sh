@@ -13,7 +13,7 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 #setup CRABClient
 source ${GIT_ROOT_DIR}/cicd/gitlab/setupCRABClient.sh
-python3 ${SCRIPT_DIR}/CRABServer/test/makeTests.py
+python3 ${SCRIPT_DIR}/makeTests.py
 while read task ; do
   echo "$task"
   test_to_execute=`echo "${task}" | grep -oP '(?<=_crab_).*(?=)'`
