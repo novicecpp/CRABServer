@@ -6,7 +6,7 @@ nosetests.xml
 tmp/runtime/*
 *.gz
 *.zip
-
+**/.venv
 test/Playbook/ASORucio/*
 !test/Playbook/ASORucio/inventory
 !test/Playbook/ASORucio/playbook.yml

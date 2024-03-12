@@ -56,11 +56,11 @@ writeLumiMask()
 
 dummyTestScript = "\nexit 0\n"  #  a test which always returns success
 
-cmsswversion = os.environ.get('CMSSW_VERSION')
-nowStr = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-hashbin = random.getrandbits(32)
-hashStr = "%08x" % hashbin
-nameSuffix = f'{cmsswversion}_{nowStr}_{hashStr}'
+#cmsswversion = os.environ.get('CMSSW_VERSION')
+#nowStr = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+#hashbin = random.getrandbits(32)
+#hashStr = "%08x" % hashbin
+#nameSuffix = f'{cmsswversion}_{nowStr}_{hashStr}'
 #
 # test CRAB Configuration file parameters
 #
@@ -70,7 +70,7 @@ nameSuffix = f'{cmsswversion}_{nowStr}_{hashStr}'
 #=============================
 
 # transferOutputs
-name = 'transferOutputs'; testName=f'{name}_{nameSuffix}'
+name = 'transferOutputs'; #testName=f'{name}_{nameSuffix}'
 changeDict = {'param': name, 'value': 'False', 'section': 'General'}  # default is True
 confChangesList = [changeDict]
 testSubmitScript = dummyTestScript
@@ -80,9 +80,13 @@ crabCommand getlog "--short --jobids=1 --proxy=$PROXY"
 lookFor "Retrieved job_out.1.*.txt" commandLog.txt
 lookFor "JOB AD: CRAB_TransferOutputs = 0" "${workDir}/results/job_out.1.*.txt"
 """
-writeConfigFile(testName=testName, listOfDicts=confChangesList)
-writeTestSubmitScript(testName=testName, testSubmitScript=testSubmitScript)
-writeValidationScript(testName=testName, validationScript=validationScript)
+#writeConfigFile(testName=testName, listOfDicts=confChangesList)
+#writeTestSubmitScript(testName=testName, testSubmitScript=testSubmitScript)
+#writeValidationScript(testName=testName, validationScript=validationScript)
+writeConfigFile(testName=name, listOfDicts=confChangesList)
+writeTestSubmitScript(testName=name, testSubmitScript=testSubmitScript)
+writeValidationScript(testName=name, validationScript=validationScript)
+
 
 ## transferLogs
 #name = 'transferLogs'; testName=f'{name}_{nameSuffix}'

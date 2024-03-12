@@ -152,6 +152,13 @@ restInstance = os.getenv('REST_Instance', 'test2')
 commonBashFunctions = commonBashFunctions.replace('REST_Instance', restInstance)
 standardConfig = standardConfig.replace('REST_Instance', restInstance)
 
+cmsswversion = os.environ.get('CMSSW_VERSION')
+nowStr = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+hashbin = random.getrandbits(32)
+hashStr = "%08x" % hashbin
+nameSuffix = f'{cmsswversion}_{nowStr}_{hashStr}'
+
+
 def writePset():
     with open('PSET.py', 'w') as fp:
         fp.write(psetFileContent)
@@ -219,7 +226,17 @@ def writeConfigFile(testName=None, listOfDicts=None):
         section = d['section']
         conf = changeInConf(configuration=conf, paramName=param, paramValue=value, configSection=section)
     # also set the requestName (do it now to avoid confusing changeInConf)
-    conf = conf.replace('REQUESTNAME', '"'+testName+'"')
+    import os
+    import datetime
+    import random
+    cmsswversion = os.environ.get('CMSSW_VERSION')
+    nowStr = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    hashbin = random.getrandbits(32)
+    hashStr = "%08x" % hashbin
+    theName = f'{testName}_{cmsswversion}_{nowStr}_{hashStr}'
+
+
+    conf = conf.replace('REQUESTNAME', '"'+theName+'"')
     with open(testName + '.py', 'w') as fp:
         fp.write(conf)
     return
