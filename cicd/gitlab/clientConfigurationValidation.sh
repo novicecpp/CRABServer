@@ -2,6 +2,8 @@
 
 set -euo pipefail
 
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
 #Script takes task names from submitted_tasks file and executes tests on each task name.
 #3 files are produced:
 # 1. successful_tests: tests that returned exit code 0;
@@ -11,8 +13,7 @@ set -euo pipefail
 
 #setup CRABClient
 source ${GIT_ROOT_DIR}/cicd/gitlab/setupCRABClient.sh
-python ${WORK_DIR}/CRABServer/test/makeTests.py
-
+python3 ${SCRIPT_DIR}/CRABServer/test/makeTests.py
 while read task ; do
   echo "$task"
   test_to_execute=`echo "${task}" | grep -oP '(?<=_crab_).*(?=)'`
