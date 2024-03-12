@@ -3,6 +3,7 @@
 export X509_USER_PROXY=/tmp/x509up_u1000
 
 export CMSSW_release=CMSSW_13_0_2
+export singularity=8
 #fixed vars
 export CRABClient_version=prod
 export CRABServer_tag=HEAD
