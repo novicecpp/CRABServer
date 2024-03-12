@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euo pipefail
+
 #Script takes task names from submitted_tasks file and executes tests on each task name.
 #3 files are produced:
 # 1. successful_tests: tests that returned exit code 0;
