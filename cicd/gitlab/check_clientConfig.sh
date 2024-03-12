@@ -3,6 +3,8 @@
 set -euo pipefail
 set -x
 
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
 ls -l /cvmfs/cms-ib.cern.ch/latest/ 2>&1
 
 #voms-proxy-init -rfc -voms cms -valid 192:00
@@ -41,7 +43,7 @@ if [ "X${singularity}" == X6 ] || [ "X${singularity}" == X7 ] || [ "X${singulari
     if [ "X${singularity}" == X6 ]; then scramprefix=cc${singularity}; fi
     if [ "X${singularity}" == X7 ]; then scramprefix=el${singularity}; fi
     if [ "X${singularity}" == X8 ]; then scramprefix=el${singularity}; fi
-	/cvmfs/cms.cern.ch/common/cmssw-${scramprefix} --  ./clientConfigurationValidation.sh || export ERR=true
+	/cvmfs/cms.cern.ch/common/cmssw-${scramprefix} --  ${SCRIPT_DIR}/clientConfigurationValidation.sh || export ERR=true
 else
 	echo "!!! I am not prepared to run for slc${singularity}."
     exit 1
