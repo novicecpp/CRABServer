@@ -36,7 +36,7 @@ if [ "X${singularity}" == X6 ] || [ "X${singularity}" == X7 ] || [ "X${singulari
 	echo "Starting singularity ${singularity} container."
     #git clone https://github.com/$Repo_Testing_Scripts
     #cd CRABServer/test/container/testingScripts
-    git checkout $Branch_Testing_Scripts
+    #git checkout $Branch_Testing_Scripts
     scramprefix=cc${singularity}
     if [ "X${singularity}" == X6 ]; then scramprefix=cc${singularity}; fi
     if [ "X${singularity}" == X7 ]; then scramprefix=el${singularity}; fi
