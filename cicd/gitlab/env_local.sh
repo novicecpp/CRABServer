@@ -1,4 +1,7 @@
 #! /bin/bash
+# ci global variable
+export PROXY=/tmp/x509up_u1000
+
 export CMSSW_release=CMSSW_13_0_2
 #fixed vars
 export CRABClient_version=prod

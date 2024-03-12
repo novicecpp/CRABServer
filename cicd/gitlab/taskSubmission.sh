@@ -89,7 +89,7 @@ if [ "${Client_Configuration_Validation}" = true ]; then
     rm -rf tmpWorkDir "${WORK_DIR}"/artifacts/submitted_tasks_CCV
     mkdir -p tmpWorkDir
     cd tmpWorkDir
-    python3 ${WORK_DIR}/test/makeTests.py
+    python3 ${SCRIPT_DIR}/makeTests.py
     filesToSubmit=`find . -maxdepth 1 -type f -name '*.py' ! -name '*PSET*'`
     submitTasks "${filesToSubmit}" "CCV"
     tasksToCheck=`cat ${WORK_DIR}/artifacts/submitted_tasks_CCV`
