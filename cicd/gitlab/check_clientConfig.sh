@@ -1,5 +1,8 @@
 #!/bin/bash
 
+set -euo pipefail
+set -x
+
 ls -l /cvmfs/cms-ib.cern.ch/latest/ 2>&1
 
 #voms-proxy-init -rfc -voms cms -valid 192:00
