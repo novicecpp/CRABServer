@@ -8,7 +8,7 @@
 #Script is used in Jenkins job CRABServer_ClientConfigurationValidation.
 
 #setup CRABClient
-source setupCRABClient.sh
+source ${GIT_ROOT_DIR}/cicd/gitlab/setupCRABClient.sh
 python ${WORK_DIR}/CRABServer/test/makeTests.py
 
 while read task ; do

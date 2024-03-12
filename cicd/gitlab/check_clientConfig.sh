@@ -31,6 +31,7 @@ export ERR=false
 
 export WORK_DIR=workdir
 mkdir -p $WORK_DIR
+export GIT_ROOT_DIR=$PWD
 
 
 #1. Start tests
