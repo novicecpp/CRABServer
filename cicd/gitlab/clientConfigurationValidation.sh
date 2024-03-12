@@ -17,7 +17,9 @@ python3 ${SCRIPT_DIR}/makeTests.py
 pwd
 while read task ; do
   echo "$task"
-  test_to_execute=`echo "${task}" | grep -oP '(?<=_crab_).*(?=)'`
+  arrIN=(${task//_/ })
+  test_to_execute=${arrIN[3]}
+  #test_to_execute=`echo "${task}" | grep -oP '(?<=_crab_).*(?=)'`
   bash -x ${test_to_execute}-check.sh ${task}
 
   retVal=$?
