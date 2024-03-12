@@ -57,6 +57,11 @@ fi
 
 #2. Update issue with test results
 
+# make it not error from report below
+MAX_RETRY=1
+RETRY=1
+
+
 TEST_RESULT='FAILED'
 MESSAGE='Test failed. Investigate manually'
 if [ -s "successful_tests" ] && [ ! -s "failed_tests" ]; then
@@ -76,6 +81,7 @@ do
 		echo -e "\n${result} TESTS:\n none" >> message_CCVResult_interim
 	fi
 done
+
 
 echo -e "**Test:** Client configuration validation\n\
 **Result:** ${TEST_RESULT}\n\
