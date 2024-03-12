@@ -15,6 +15,4 @@ export Repo_Testing_Scripts=novicecpp/CRABServer
 export Branch_Testing_Scripts=wmcore_pypi
 export Test_Docker_Image=registry.cern.ch/cmscrab/crabtesting:231009
 
-set -x
-export SHELLOPTS
 #bash -x cicd/gitlab/execute_test.sh
