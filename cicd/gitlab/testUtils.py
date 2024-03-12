@@ -2,6 +2,9 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import datetime
+import random
+
 
 commonBashFunctions = """#!/bin/bash
 # a few utility functions for submission and check scripts
@@ -226,9 +229,6 @@ def writeConfigFile(testName=None, listOfDicts=None):
         section = d['section']
         conf = changeInConf(configuration=conf, paramName=param, paramValue=value, configSection=section)
     # also set the requestName (do it now to avoid confusing changeInConf)
-    import os
-    import datetime
-    import random
     cmsswversion = os.environ.get('CMSSW_VERSION')
     nowStr = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     hashbin = random.getrandbits(32)
