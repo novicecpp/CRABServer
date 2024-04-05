@@ -107,9 +107,12 @@ submitTasks() {
 if [ "${Task_Submission_Status_Tracking}" = true ]; then
     echo -e "\nStarting task submission for Status Tracking testing.\n"
     pushd "${ROOT_DIR}"/test/statusTrackingTasks/
-    #filesToSubmit=$(find . -type f -name '*.py' ! -name '*pset*')
     # for test
-    filesToSubmit=$(find . -type f -name '*.py' ! -name '*pset*' | grep HC-splitByLumi.py)
+    if [[ -n ${DEBUG_TEST:-} ]]; then
+        filesToSubmit=$(find . -type f -name '*.py' ! -name '*pset*' | grep HC-splitByLumi.py)
+    else
+        filesToSubmit=$(find . -type f -name '*.py' ! -name '*pset*')
+    fi
     submitTasks "${filesToSubmit}" "TS"
     popd
 fi
