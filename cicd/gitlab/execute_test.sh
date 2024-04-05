@@ -37,7 +37,7 @@ touch message_taskSubmitted
 export PROXY=$X509_USER_PROXY
 #voms-proxy-info -all
 
-export PYTHONPATH=/cvmfs/cms-ib.cern.ch/jenkins-env/python/shared
+#export PYTHONPATH=/cvmfs/cms-ib.cern.ch/jenkins-env/python/shared
 export ERR=false
 #be aware that when running in singularity, we use ${WORK_DIR} set below,
 #while if we run in CRAB Docker container, then ${WORK_DIR} set in Dockerfile.
