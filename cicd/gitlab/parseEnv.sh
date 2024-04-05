@@ -3,7 +3,6 @@ set -euo pipefail
 
 # assume $CI_COMMIT_TAG is `pypi-`
 TAG=$1
-IMAGE_TAG=$2
 VALIDATE_TAG='^pypi-(devthree|preprod).*'
 if [[ ! $TAG =~ $VALIDATE_TAG ]]; then
     >&2 echo "fail to parse env from string: $TAG"
@@ -18,6 +17,5 @@ if [[ ${DEV_ENV} == 'devthree' ]]; then
         echo "KUBECONTEXT=cmsweb-test12"
         echo "Environment=crab-dev-tw03"
         echo "REST_Instance=test12"
-        echo "IMAGE_TAG=${IMAGE_TAG}"
     } >> .env
 fi
