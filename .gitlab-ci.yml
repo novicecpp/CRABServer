@@ -115,16 +115,15 @@ task_submission_status_tracking:
     - export REST_Instance # from .env
     - export CMSSW_release=CMSSW_13_0_2
     - export Task_Submission_Status_Tracking=true
-    - export Check_Publication_Status=true
     - bash -x cicd/gitlab/execute_test.sh
   cache:
     - key: $CI_PIPELINE_ID
       paths:
-        - artifacts/submitted_tasks_TS
+        - workdir/submitted_tasks_TS
       policy: push
     - key: submitted_tasks_TS_latest
       paths:
-        - artifacts/submitted_tasks_TS
+        - workdir/submitted_tasks_TS
       policy: push
 
 check_test_result:
@@ -139,14 +138,24 @@ check_test_result:
     GIT_STRATEGY: clone
   script:
     - source .env
+    - export X509_USER_PROXY=$(cicd/gitlab/credFile.sh $X509_USER_PROXY)
     - export REST_Instance
-    - echo $MANUAL_CI_PIPELINE_ID
-    - bash -x cicd/gitlab/st.sh
+    - export CMSSW_release=CMSSW_13_0_2
+    - export SCRAM_ARCH=el8_amd64_gcc11
+    - export Check_Publication_Status=Yes
+    - export CRABClient_version=prod
+    - echo ${MANUAL_CI_PIPELINE_ID}
+    # manual task name
+    - |
+        if [[ -n "${MANUAL_TASKNAME}" ]]; then
+            echo "${Manual_Task_Names}" > workdir/submitted_tasks_TS
+        fi
+    - cicd/gitlab/retry.sh bash -x cicd/gitlab/check_test_result.sh
   cache:
     - key: $MANUAL_CI_PIPELINE_ID
       fallback_keys:
         - $CI_PIPELINE_ID
         - submitted_tasks_TS_latest
       paths:
-        - artifacts/submitted_tasks_TS
+        - workdir/submitted_tasks_TS
       policy: pull

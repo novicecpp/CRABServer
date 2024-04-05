@@ -120,7 +120,7 @@ def main():
     print("Check_Publication_Status is : ", Check_Publication_Status )
     checkPublication = True if Check_Publication_Status == 'Yes' else False
 
-    with open('%s/artifacts/submitted_tasks' %work_dir) as fp:
+    with open('%s/submitted_tasks_TS' %work_dir) as fp:
         tasks = fp.readlines()
 
     for task in tasks:
@@ -139,7 +139,7 @@ def main():
 
     summary = parse_result(listOfTasks,checkPublication)
 
-    with open('%s/artifacts/result' %work_dir, 'w') as fp:
+    with open('%s/result' %work_dir, 'w') as fp:
         for result in summary:
             fp.write("%s\n" % result)
 
