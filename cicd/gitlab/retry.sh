@@ -8,19 +8,19 @@ export RETRY_SLEEP_SECONDS=${RETRY_SLEEP_SECONDS:-900}
 
 RETRY=1
 while true; do
-    echo "$RETRY/$RETRY attempt."
+    echo "${RETRY}/${RETRY_MAX} attempt."
     export RETRY RETRY_MAX
     rc=0
     "$@" || rc=$?
     if [[ $rc != 0 ]]; then
-        echo "command fail with exit code ${rc}"
+        echo "Command fail with exit code ${rc}."
         if [[ $rc == 4 ]]; then
             if [[ $RETRY -eq $RETRY_MAX ]]; then
                 echo "Reach max retry count: $RETRY"
                 exit 1
             fi
-            echo "sleep for ${RETRY_SLEEP_SECONDS} seconds"
-            echo "retrying..."
+            echo "Sleep for ${RETRY_SLEEP_SECONDS} seconds"
+            echo "${RETRY}/${RETRY_MAX} attempt. Retrying..."
             sleep "${RETRY_SLEEP_SECONDS}"
             RETRY=$((RETRY + 1))
             continue
