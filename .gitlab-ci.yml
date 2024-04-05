@@ -68,6 +68,8 @@ build_tw_image:
 
 deploy_server:
   rules:
+    - if: $SKIP_DEPLOY
+      when: never
     - !reference [.default_rules, rules]
   stage: deploy
   image:
@@ -84,6 +86,8 @@ deploy_server:
 
 deploy_tw:
   rules:
+    - if: $SKIP_DEPLOY
+      when: never
     - !reference [.default_rules, rules]
   stage: deploy
   image:
@@ -99,10 +103,10 @@ deploy_tw:
 
 task_submission_status_tracking:
   rules:
-    - !reference [.default_rules, rules]
     - if: $MANUAL_CI_PIPELINE_ID
       when: never
     - if: $SUBMIT_STATUS_TRACKING
+    - !reference [.default_rules, rules]
   stage: run_testsuite
   tags:
     - tseethon-apptainer
@@ -129,9 +133,9 @@ task_submission_status_tracking:
 
 check_test_result:
   rules:
-    - !reference [.default_rules, rules]
     - if: $SUBMIT_STATUS_TRACKING
     - if: $MANUAL_CI_PIPELINE_ID
+    - !reference [.default_rules, rules]
   stage: check_testsuite
   tags:
     - tseethon-apptainer
