@@ -13,14 +13,13 @@ while true; do
     rc=0
     "$@" || rc=$?
     if [[ $rc != 0 ]]; then
-        echo "Command fail with exit code ${rc}."
+        echo "Command fail with exit code ${rc} (${RETRY}/${RETRY_MAX} attempted)"
         if [[ $rc == 4 ]]; then
             if [[ $RETRY -eq $RETRY_MAX ]]; then
                 echo "Reach max retry count: $RETRY"
                 exit 1
             fi
-            echo "Sleep for ${RETRY_SLEEP_SECONDS} seconds"
-            echo "${RETRY}/${RETRY_MAX} attempt. Retrying..."
+            echo "Sleep for ${RETRY_SLEEP_SECONDS} seconds."
             sleep "${RETRY_SLEEP_SECONDS}"
             RETRY=$((RETRY + 1))
             continue
