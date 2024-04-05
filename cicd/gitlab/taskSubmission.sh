@@ -11,10 +11,16 @@ set -euo pipefail
 #Variabiles ${REST_Instance}, ${Client_Validation_Suite}, ${Client_Configuration_Validation} and ${Task_Submission_Status_Tracking} comes from
 #Jenkins job CRABServer_ExecuteTests configuration.
 
-# check $ROOT_DIR and $WORK_DIR
+# validate env var
 # note: $PWD is (default to `./workdir`)
-echo "(debug) ${ROOT_DIR}"
-echo "(debug) ${WORK_DIR}"
+echo "(debug) ROOT_DIR=${ROOT_DIR}"
+echo "(debug) WORK_DIR=${WORK_DIR}"
+echo "(debug) X509_USER_PROXY=${X509_USER_PROXY}"
+echo "(debug) Client_Validation_Suite=${Client_Validation_Suite}"
+echo "(debug) Client_Configuration_Validation=${Client_Configuration_Validation}"
+echo "(debug) Task_Submission_Status_Tracking=${Task_Submission_Status_Tracking}"
+
+# init crabclient
 source "${ROOT_DIR}"/cicd/gitlab/setupCRABClient.sh
 
 submitTasks() {
@@ -74,7 +80,7 @@ submitTasks() {
 
 #Client_Validation_Suite=${Client_Validation_Suite:-}
 #Client_Configuration_Validation=${Client_Configuration_Validation:-}
-Task_Submission_Status_Tracking=${Task_Submission_Status_Tracking:-}
+#Task_Submission_Status_Tracking=${Task_Submission_Status_Tracking:-}
 
 #if [ "${Client_Validation_Suite}" = true ]; then
 #    echo -e "\nStarting task submission for Client Validation testing.\n"
@@ -101,7 +107,9 @@ Task_Submission_Status_Tracking=${Task_Submission_Status_Tracking:-}
 if [ "${Task_Submission_Status_Tracking}" = true ]; then
     echo -e "\nStarting task submission for Status Tracking testing.\n"
     pushd "${ROOT_DIR}"/test/statusTrackingTasks/
-    filesToSubmit=`find . -type f -name '*.py' ! -name '*pset*'`
+    filesToSubmit=$(find . -type f -name '*.py' ! -name '*pset*')
+    # for test
+    #filesToSubmit=$(find . -type f -name '*.py' ! -name '*pset*' | grep HC-splitByLumi.py)
     submitTasks "${filesToSubmit}" "TS"
     popd
 fi
