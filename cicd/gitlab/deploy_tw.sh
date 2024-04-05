@@ -26,6 +26,7 @@ if [ $(cat isServiceRunning.log |wc -l) -ne 1 ] ; then
 	ERR=true
 else
 	echo "${Service} image in ${Environment} was updated to registry.cern.ch/cmscrab/crabtaskworker:${Image} image tag."  > $WORKSPACE/logFile.txt
+    ERR=false
 fi
 
 
