@@ -25,7 +25,7 @@ get_env:
     name: registry.cern.ch/cmscrab/buildtools
     entrypoint: [""]
   script:
-    - cicd/gitlab/parseEnv.sh $CI_COMMIT_TAG
+    - cicd/gitlab/parseEnv.sh $CI_COMMIT_TAG $MANUAL_IMAGE_TAG # create .env
   artifacts:
     paths:
       - .env
@@ -33,6 +33,8 @@ get_env:
 
 build_rest_image:
   rules:
+    - if: $SKIP_BUILD
+      when: never
     - !reference [.default_rules, rules]
   stage: build_docker
   image:
@@ -48,6 +50,8 @@ build_rest_image:
 
 build_tw_image:
   rules:
+    - if: $SKIP_BUILD
+      when: never
     - !reference [.default_rules, rules]
   stage: build_docker
   image:
@@ -86,10 +90,10 @@ deploy_tw:
     entrypoint: [""]
   script:
     - source .env
-    #- export Environment=crab-dev-tw03 # load from .env
+    - export Environment # from .env
     - export Service=TaskWorker
     - export Image="${IMAGE_TAG}"
-    - export SSH_KEY=$(cicd/gitlab/credFile.shtw/creds.sh $CRAB_TW_SSH_KEY)
+    - export SSH_KEY=$(cicd/gitlab/credFile.sh $CRAB_TW_SSH_KEY)
     - bash -x cicd/gitlab/deploy_tw.sh
 
 task_submission_status_tracking:
@@ -104,16 +108,14 @@ task_submission_status_tracking:
   variables:
     GIT_STRATEGY: clone
   script:
+    - source .env
+    - export X509_USER_PROXY=$(cicd/gitlab/credFile.sh $X509_USER_PROXY)
     - export CRABClient_version=prod
     - export CRABServer_tag=HEAD
-    #- export REST_Instance=test12
+    - export REST_Instance # from .env
     - export CMSSW_release=CMSSW_13_0_2
     - export Task_Submission_Status_Tracking=true
     - export Check_Publication_Status=true
-    - export Repo_GH_Issue=novicecpp/CRABServer
-    - export Repo_Testing_Scripts=novicecpp/CRABServer
-    - export Branch_Testing_Scripts=wmcore_pypi
-    - export Test_Docker_Image=registry.cern.ch/cmscrab/crabtesting:231009
     - bash -x cicd/gitlab/execute_test.sh
   cache:
     - key: $CI_PIPELINE_ID
@@ -136,6 +138,8 @@ check_test_result:
   variables:
     GIT_STRATEGY: clone
   script:
+    - source .env
+    - export REST_Instance
     - echo $MANUAL_CI_PIPELINE_ID
     - bash -x cicd/gitlab/st.sh
   cache:
