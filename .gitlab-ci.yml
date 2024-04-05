@@ -94,6 +94,7 @@ deploy_tw:
     - export Service=TaskWorker
     - export Image="${IMAGE_TAG}"
     - export SSH_KEY=$(cicd/gitlab/credFile.sh $CRAB_TW_SSH_KEY)
+    - ls -lah $SSH_KEY
     - bash -x cicd/gitlab/deploy_tw.sh
 
 task_submission_status_tracking:
