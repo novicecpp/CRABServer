@@ -22,7 +22,7 @@ if [ "X${singularity}" == X6 ]; then scramprefix=cc${singularity}; fi
 if [ "X${singularity}" == X8 ]; then scramprefix=el${singularity}; fi
 
 ERR=false
-/cvmfs/cms.cern.ch/common/cmssw-${scramprefix} -- bash -x "${ROOT_DIR}"/cicd/gitlab/execute_status_tracking.sh || ERR=true
+/cvmfs/cms.cern.ch/common/cmssw-${scramprefix} -- bash -x "${ROOT_DIR}"/cicd/gitlab/st/statusTracking.sh || ERR=true
 
 #3. Update issue with submission results
 TEST_RESULT='FAILED'

@@ -15,6 +15,8 @@ export CMSSW_release=CMSSW_13_0_2
 export SCRAM_ARCH=el8_amd64_gcc11
 export Check_Publication_Status=Yes
 export CRABClient_version=prod
-# not run on retry.sh
-bash -x cicd/gitlab/check_test_result.sh
+if [[ -n "${MANUAL_TASKNAME:-}" ]]; then
+    echo "${MANUAL_TASKNAME}" > workdir/submitted_tasks_TS
+fi
+bash -x cicd/gitlab/retry.sh bash -x cicd/gitlab/executeStatusTracking.sh
 popd

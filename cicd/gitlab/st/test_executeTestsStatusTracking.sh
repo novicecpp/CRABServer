@@ -6,6 +6,8 @@ pushd "${ROOT_DIR}"
 # clean workdir
 rm -rf "${ROOT_DIR}/workdir"
 export X509_USER_PROXY=/tmp/x509up_u1000
+# flag submit only hc1kj tasks
+export DEBUG_TEST=true
 # from .env
 export KUBECONTEXT=cmsweb-test12
 export TW_MACHINE=crab-dev-tw03
@@ -17,6 +19,5 @@ export CRABServer_tag=HEAD
 export REST_Instance # from .env
 export CMSSW_release=CMSSW_13_0_2
 export Task_Submission_Status_Tracking=true
-export Check_Publication_Status=true
-bash -x cicd/gitlab/execute_test.sh
+bash -x cicd/gitlab/executeTests.sh
 popd

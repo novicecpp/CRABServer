@@ -99,7 +99,7 @@ deploy_tw:
     - export Service=TaskWorker
     - export Image="${IMAGE_TAG}"
     - export SSH_KEY=$(cicd/gitlab/credFile.sh $CRAB_TW_SSH_KEY)
-    - bash -x cicd/gitlab/deploy_tw.sh
+    - bash -x cicd/gitlab/deployTW.sh
 
 task_submission_status_tracking:
   rules:
@@ -120,7 +120,7 @@ task_submission_status_tracking:
     - export REST_Instance # from .env
     - export CMSSW_release=CMSSW_13_0_2
     - export Task_Submission_Status_Tracking=true
-    - bash -x cicd/gitlab/execute_test.sh
+    - bash -x cicd/gitlab/executeTests.sh
   cache:
     - key: $CI_PIPELINE_ID
       paths:
@@ -152,10 +152,10 @@ check_test_result:
     - echo ${MANUAL_CI_PIPELINE_ID}
     # manual task name
     - |
-        if [[ -n "${MANUAL_TASKNAME}" ]]; then
-            echo "${Manual_Task_Names}" > workdir/submitted_tasks_TS
+        if [[ -n "${MANUAL_TASKNAME:-}" ]]; then
+            echo "${MANUAL_TASKNAME}" > workdir/submitted_tasks_TS
         fi
-    - cicd/gitlab/retry.sh bash -x cicd/gitlab/check_test_result.sh
+    - cicd/gitlab/retry.sh bash -x cicd/gitlab/executeStatusTracking.sh
   cache:
     - key: $MANUAL_CI_PIPELINE_ID
       fallback_keys:
