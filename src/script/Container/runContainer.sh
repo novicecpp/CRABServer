@@ -75,18 +75,18 @@ if [[ "${SERVICE}" == TaskWorker_monit_*  ]]; then
 fi
 
 # get os version
-source /etc/os-version
 OS_Version=$(cat /etc/os-release |grep VERSION_ID|cut -d= -f2|tr -d \"|cut -d. -f1)
 
 DOCKER_VOL="-v /data/container/:/data/hostdisk/ -v /data/srv/tmp/:/data/srv/tmp/"
 DOCKER_VOL="${DOCKER_VOL} -v /cvmfs:/cvmfs:shared" # https://cvmfs.readthedocs.io/en/stable/cpt-configure.html#bind-mount-from-the-host
 DOCKER_VOL="${DOCKER_VOL} -v /etc/grid-security/:/etc/grid-security/"
 DOCKER_VOL="${DOCKER_VOL} -v /data/certs/:/data/certs/"
+DOCKER_VOL="${DOCKER_VOL} -v /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem:/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem"
+DOCKER_VOL="${DOCKER_VOL} -v /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem:/etc/pki/tls/certs/ca-bundle.crt"
 if [[ "$OS_Version" = "7" ]]; then
     DOCKER_VOL="${DOCKER_VOL} -v /var/run/nscd/socket:/var/run/nscd/socket"
 fi
-DOCKER_VOL="${DOCKER_VOL} -v /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem:/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem"
-DOCKER_VOL="${DOCKER_VOL} -v /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem:/etc/pki/tls/certs/ca-bundle.crt"
+
 DOCKER_OPT="-e SERVICE=${SERVICE} -w /data/srv/${DIRECTORY} "
 
 DOCKER_IMAGE=${TW_REPO:-registry.cern.ch/cmscrab}/crabtaskworker:${TW_VERSION}
