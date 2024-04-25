@@ -10,7 +10,7 @@ case "${CREDS_TYPE}" in
         >&2 openssl x509 -checkend 0 -noout -in "${CREDS_FILE}" || rc=$?
         if [[ "${rc}" -ne 0 ]]; then
             >&2 echo "Proxy file has expired. Generating new one from local cert..."
-            voms-proxy-init --rfc --voms cms -valid 196:00
+            >&2 voms-proxy-init --rfc --voms cms -valid 196:00
             CREDS_FILE="$(voms-proxy-info -path)"
         fi
         ;;
