@@ -40,9 +40,7 @@ start_srv() {
 }
 
 stop_srv() {
-    # This part is copy from https://github.com/dmwm/CRABServer/blob/3af9d658271a101db02194f48c5cecaf5fab7725/src/script/Deployment/TaskWorker/stop.sh
-    # TW is given checkTimes*timeout seconds to stop, if it is still running after
-    # this period, TW and all its slaves are killed by sending SIGKILL signal.
+    # This part is copy from https://github.com/dmwm/CRABServer/blob/3af9d658271a101db02194f48c5cecaf5fab7725/src/script/Deployment/Publisher/stop.sh
 
   # find my bearings
   thisScript=`realpath $0`
@@ -89,8 +87,8 @@ stop_srv() {
   done
   echo ""
   echo "Publisher is in waiting now. Killing RunPublisher"
-  pkill -f RunPublisher
-
+  # ignore retcode in case it got kill by other process or crash
+  pkill -f RunPublisher || true
 }
 
 # Main routine, perform action requested on command line.
