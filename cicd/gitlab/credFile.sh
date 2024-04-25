@@ -1,5 +1,27 @@
 #! /bin/bash
+
+##H Usage: credFile.sh FILEPATH TYPE
+##H
+##H Copy file from CI Variable and change the owner of file to current runner
+##H user and mode `0600`. Note that new file path is hardcode and must print to
+##H stdout, all other output must redirect to stdderr.
+##H
+##H FILEPATH: Path to file. Usually value of CI variable is path when expose
+##H             it as file.
+##H TYPE:     Credential type. If TYPE is `x509`, it will try to generate a
+##H             proxy from the cert installed in the runner machine (~/.globus/)
+##H              with `voms-proxy-init`
+##H
+##H Example:
+##H   export X509_USER_PROXY=$(cicd/gitlab/credFile.sh $X509_USER_PROXY x509)
+
 set -euo pipefail
+
+helpFunction() {
+    echo;
+    cat $0 | grep "^##H" | sed -r "s/##H(| )//g" >&2
+}
+
 
 CREDS_FILE=$1
 CREDS_TYPE=$2
@@ -19,6 +41,7 @@ case "${CREDS_TYPE}" in
         ;;
     *)
       >&2 echo "ERROR: Unknown CREDS_TYPE: ${CREDS_TYPE}"
+      helpFunction
       exit 1
       ;;
 esac
