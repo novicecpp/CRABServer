@@ -35,7 +35,7 @@ start_srv() {
         python3 ${APP_DIR}/Publisher/RunPublisher.py --config ${CONFIG} --service ${SERVICE} --debug --testMode
     else
         APP_DIR=/data/srv/current/lib/python/site-packages
-        nohup python3 ${APP_DIR}/Publisher/RunPublisher.py --config ${CONFIG} --service ${SERVICE} | tee nohup.out &
+        python3 ${APP_DIR}/Publisher/RunPublisher.py --config ${CONFIG} --service ${SERVICE} | tee stdout.txt &
     fi
 }
 
