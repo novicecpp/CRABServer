@@ -18,7 +18,7 @@ set -euo pipefail
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 ## some variable use in start_srv
-CONFIG="${SCRIPT_DIR}"/cfg/TaskWorkerConfig.py
+CONFIG="${SCRIPT_DIR}"/cfg/PublsherConfig.py
 
 # Inherit PYTHONPATH from ./start.sh
 PYTHONPATH=${PYTHONPATH:-/data/srv/current/lib/python/site-packages}
