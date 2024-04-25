@@ -5,8 +5,6 @@
 #   - DEBUG:   if `true`, setup debug mode environment.
 #   - PYTHONPATH: inherit from ./start.sh
 
-set -euo pipefail
-
 ##H Usage: manage.sh ACTION [ATTRIBUTE] [SECURITY-STRING]
 ##H
 ##H Available actions:
@@ -16,16 +14,13 @@ set -euo pipefail
 ##H   start       (re)start the service
 ##H   stop        stop the service
 
+set -euo pipefail
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 ## some variable use in start_srv
-PUBLISHER_HOME=/data/srv/Publisher
-CONFIG=$PUBLISHER_HOME/cfg/TaskWorkerConfig.py
+CONFIG="${SCRIPT_DIR}"/cfg/TaskWorkerConfig.py
 
-# CRABTASKWORKER_ROOT is a mandatory variable for getting data directory in `DagmanCreator.getLocation()`
-# Hardcoded the path and use new_updateTMRuntime.sh to build it from source and copy to this path.
-export CRABTASKWORKER_ROOT=/data/srv/current/lib/python/site-packages/
-
-# app path. Inherit PYTHONPATH from ./start.sh
+# Inherit PYTHONPATH from ./start.sh
 PYTHONPATH=${PYTHONPATH:-/data/srv/current/lib/python/site-packages}
 export PYTHONPATH
 
@@ -40,7 +35,7 @@ start_srv() {
         python3 ${APP_DIR}/Publisher/RunPublisher.py --config ${CONFIG} --service ${SERVICE} --debug --testMode
     else
         APP_DIR=/data/srv/current/lib/python/site-packages
-        nohup python3 ${APP_DIR}/Publisher/RunPublisher.py --config ${CONFIG} --service ${SERVICE} &
+        nohup python3 ${APP_DIR}/Publisher/RunPublisher.py --config ${CONFIG} --service ${SERVICE} | tee nohup.out &
     fi
 }
 
