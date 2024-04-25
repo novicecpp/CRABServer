@@ -47,7 +47,7 @@ check_link(){
 # [[...]] is a trick to do partial string match from https://unix.stackexchange.com/a/465906
 # -/data/hostdisk/${SERVICE}/logs
 # -/data/hostdisk/${SERVICE}/PublisherFiles
-declare -A links=( ["logs"]="/data/hostdisk/${SERVICE}/logs" ["logs"]="/data/hostdisk/${SERVICE}/logs" ["/data/srv/Publisher_files"]="/data/hostdisk/${SERVICE}/PublisherFiles" )
+declare -A links=( ["logs"]="/data/hostdisk/${SERVICE}/logs" ["cfg"]="/data/hostdisk/${SERVICE}/cfg" ["/data/srv/Publisher_files"]="/data/hostdisk/${SERVICE}/PublisherFiles" )
 
 for name in "${!links[@]}";
 do
