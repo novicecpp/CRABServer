@@ -108,6 +108,12 @@ RUN cd ${WDIR}/srv/TaskManager \
 
 COPY cicd/crabtaskworker_pypi/start.sh cicd/crabtaskworker_pypi/stop.sh cicd/crabtaskworker_pypi/run.sh cicd/crabtaskworker_pypi/manage.sh cicd/crabtaskworker_pypi/updateDatafiles.sh  ${WDIR}/srv/TaskManager/
 
+# for debuggin purpose
+RUN echo "${USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/01-crab3
+
+# make sure all /data own by running user
+RUN chown -R 1000:1000 ${WDIR}
+
 # publisher
 COPY cicd/crabtaskworker_pypi/Publisher/start.sh \
      cicd/crabtaskworker_pypi/Publisher/stop.sh \
@@ -115,11 +121,6 @@ COPY cicd/crabtaskworker_pypi/Publisher/start.sh \
      cicd/crabtaskworker_pypi/Publisher/run.sh \
      ${WDIR}/srv/Publisher/
 
-# for debuggin purpose
-RUN echo "${USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/01-crab3
-
-# make sure all /data own by running user
-RUN chown -R 1000:1000 ${WDIR}
 
 USER ${USER}
 
