@@ -112,7 +112,7 @@ COPY cicd/crabtaskworker_pypi/start.sh cicd/crabtaskworker_pypi/stop.sh cicd/cra
 COPY cicd/crabtaskworker_pypi/Publisher/start.sh \
      cicd/crabtaskworker_pypi/Publisher/stop.sh \
      cicd/crabtaskworker_pypi/Publisher/manage.sh \
-     cicd/crabtaskworker_pypi/run.sh \
+     cicd/crabtaskworker_pypi/Publisher/run.sh \
      ${WDIR}/srv/Publisher/
 
 # for debuggin purpose
