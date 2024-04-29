@@ -23,7 +23,7 @@ ssh -i $SSH_KEY -o StrictHostKeyChecking=no crab3@${Environment}.cern.ch """
 docker exec ${Service} bash -c './stop.sh'; \
 docker stop ${Service}; \
 docker rm ${Service}; \
-~/runContainer.sh -r registry.cern.ch/cmscrab -v ${Image} -s ${Service} -c /data/srv/${directory}/run.sh
+~/runContainer.sh -r registry.cern.ch/cmscrab -v ${Image} -s ${Service} -c /data/run.sh
 """
 
 #2. check if ${Service} is running

@@ -10,7 +10,6 @@ set -euo pipefail
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 helpFunction() {
-    echo;
     grep "^##H" "${0}" | sed -r "s/##H(| )//g"
 }
 
@@ -22,7 +21,7 @@ while getopts ":dDcCgGhH" o; do
         g|G) MODE="fromGH" ;;
         c|C) MODE="current" ;;
         d|D) DEBUG=true ;;
-        * ) echo "Unimplemented option: -$OPTARG"; helpFunction ;;
+        * ) echo "Unimplemented option: -$OPTARG"; helpFunction; exit 1 ;;
     esac
 done
 shift $((OPTIND-1))
