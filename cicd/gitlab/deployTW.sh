@@ -11,10 +11,8 @@ WORK_DIR=$PWD
 
 if [ "X${Service}" == "XTaskWorker" ] ; then
 	processName=MasterWorker
-    directory=TaskManager
 else
 	processName=RunPublisher
-    directory=Publisher
 fi
 
 
