@@ -104,8 +104,8 @@ case ${1:-help} in
     start_srv
     ;;
   restart )
-    start_srv
     stop_srv
+    start_srv
     ;;
 
   stop )
