@@ -49,8 +49,7 @@ stop_srv() {
     # This part is copy directly from https://github.com/dmwm/CRABServer/blob/3af9d658271a101db02194f48c5cecaf5fab7725/src/script/Deployment/Publisher/stop.sh
 
   # find my bearings
-  thisScript="${SCRIPT_PATH}"
-  myDir=$(dirname "${thisScript}")
+  myDir="${SCRIPT_DIR}"
   myLog="${myDir}"/logs/log.txt
 
   PublisherBusy(){
