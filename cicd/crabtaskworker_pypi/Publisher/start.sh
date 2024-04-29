@@ -38,7 +38,7 @@ case $MODE in
         # private mode: run private instance from GH
         PYTHONPATH=/data/repos/CRABServer/src/python:/data/repos/WMCore/src/python:${PYTHONPATH:-}
         ;;
-    *) echo "Unimplemented mode: $MODE\n"; helpFunction ;;
+    *) echo "Unimplemented mode: $MODE\n"; exit 1;;
 esac
 
 # export APP_PATH and DEBUG to ./manage.sh

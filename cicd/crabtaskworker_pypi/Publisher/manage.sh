@@ -65,9 +65,9 @@ stop_srv() {
     else
       # in waiting mode, checks when it is next start
       start=$(echo "${lastLine}" | awk '{print $NF}')
-      startTime=$(date -d "${start}" +%s)  # in seconds from Epoch
+      startTime=$(date -d ${start} +%s)  # in seconds from Epoch
       now=$(date +%s) # in seconds from Epoch
-      delta=$(("${startTime}"-"${now}"))
+      delta=$((${startTime}-${now}))
       if [[ $delta -gt 60 ]]; then
         # no race with starting of next cycle, safe to kill
         return 1
@@ -98,9 +98,14 @@ stop_srv() {
 
 # Main routine, perform action requested on command line.
 case ${1:-help} in
-  start | restart )
-    stop_srv
+  # Separate start/restart because stop_srv does not work when next cycle is
+  # less than now and its block the container to start.
+  start )
     start_srv
+    ;;
+  restart )
+    start_srv
+    stop_srv
     ;;
 
   stop )
