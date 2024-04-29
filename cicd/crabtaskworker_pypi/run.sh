@@ -28,7 +28,7 @@ if [[ $SERVICE == TaskWorker ]]; then
         ["logs"]="/data/hostdisk/${SERVICE}/logs"
         ["cfg"]="/data/hostdisk/${SERVICE}/cfg"
     )
-    WORKDIR=/data/srv/TaskWorker
+    WORKDIR=/data/srv/TaskManager
 elif [[ "${SERVICE}" == Publisher* ]]; then
     declare -A links=(
         ["logs"]="/data/hostdisk/${SERVICE}/logs"
