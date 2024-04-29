@@ -1,15 +1,17 @@
 #!/bin/bash
 
+##H "Usage example: ./start.sh -c | -g [-d]"
+##H "    -c start current crabserver instance"
+##H "    -g start crabserver instance from GitHub repo"
+##H "    -d start crabserver in debug mode. Option can be combined with -c or -g"
+
 set -euo pipefail
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 helpFunction() {
-    echo -e "Usage example: ./start.sh -c | -g [-d]"
-    echo -e "\t-c start current crabserver instance"
-    echo -e "\t-g start crabserver instance from GitHub repo"
-    echo -e "\t-d start crabserver in debug mode. Option can be combined with -c or -g"
-    exit 1
+    echo;
+    grep "^##H" "${0}" | sed -r "s/##H(| )//g"
 }
 
 DEBUG=''

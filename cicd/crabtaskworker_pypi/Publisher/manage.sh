@@ -1,11 +1,14 @@
 #! /bin/bash
 
-# Same style as crabserver_pypi/manage.sh script, but for crabtaskworker.
-# This script needs following environment variables:
-#   - DEBUG:   if `true`, setup debug mode environment.
-#   - PYTHONPATH: inherit from ./start.sh
+# Start the service.
 
-##H Usage: manage.sh ACTION [ATTRIBUTE] [SECURITY-STRING]
+##H Usage: manage.sh ACTION
+##H
+##H This script needs following environment variables before it can run:
+##H   - DEBUG:      if `true`, setup debug mode environment.
+##H   - PYTHONPATH: inherit from ./start.sh
+##H   - SERVICE:    inherit from container environment
+##H                 (e.g., `-e SERVICE=Publisher_schedd` when do `docker run`)
 ##H
 ##H Available actions:
 ##H   help        show this help
@@ -17,30 +20,32 @@
 set -euo pipefail
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
+# Check require env.
+export DEBUG="${DEBUG}"
+export PYTHONPATH="${PYTHONPATH}"
+export SERVICE="${SERVICE}"
+
 ## some variable use in start_srv
 CONFIG="${SCRIPT_DIR}"/cfg/PublisherConfig.py
 
-# Inherit PYTHONPATH from ./start.sh
-PYTHONPATH=${PYTHONPATH:-/data/srv/current/lib/python/site-packages}
-export PYTHONPATH
-
-usage()
-{
-    cat $0 | grep "^##H" | sed -e "s,##H,,g"
+helpFunction() {
+    echo;
+    grep "^##H" "${0}" | sed -r "s/##H(| )//g"
+    exit 1
 }
 
 start_srv() {
-    if [[ "$DEBUG" == true ]]; then
+    if [[ "${DEBUG}" == true ]]; then
         APP_DIR=${APP_DIR:-/data/repos/CRABServer/src/python}
         python3 ${APP_DIR}/Publisher/RunPublisher.py --config ${CONFIG} --service ${SERVICE} --debug --testMode
     else
         APP_DIR=/data/srv/current/lib/python/site-packages
-        python3 ${APP_DIR}/Publisher/RunPublisher.py --config ${CONFIG} --service ${SERVICE} | tee stdout.txt &
+        python3 ${APP_DIR}/Publisher/RunPublisher.py --config ${CONFIG} --service ${SERVICE} &
     fi
 }
 
 stop_srv() {
-    # This part is copy from https://github.com/dmwm/CRABServer/blob/3af9d658271a101db02194f48c5cecaf5fab7725/src/script/Deployment/Publisher/stop.sh
+    # This part is copy directly from https://github.com/dmwm/CRABServer/blob/3af9d658271a101db02194f48c5cecaf5fab7725/src/script/Deployment/Publisher/stop.sh
 
   # find my bearings
   thisScript=`realpath $0`
@@ -103,7 +108,7 @@ case ${1:-help} in
     ;;
 
   help )
-    usage
+    helpFunction
     ;;
 
   * )

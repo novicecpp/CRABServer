@@ -1,26 +1,17 @@
 #! /bin/bash
 
-# This script prepare the host environment for running one CRAB service based on CRAB
-# TaskWorker container image and runs it
-# Currently those services include TaskWorker and Publisher_*
-
-# This script is meant to be called in the Dockerfile CMD and must be run with the current
-# working directory set to the home directory of the service, i.e. where the start.sh command is
-
-# Whoever issues the docker run command MUST define the name of the service to be run
-#  AND the work directory where it must be run. E.g. via the two env. variables:
-#    $SERVICE   : the name of the service to be run: TaskWorker, Publisher_schedd, Publisher_rucio etc.
-#    $DIRECTORY : the name of the current work directory where the image will start and where
-#                  the proper scripts and configurations will be found, e.g. /data/srv/TaksManager
-# which can be used as:
-# 1. pass this enviromental variable via the '-e ' option of 'docker run'
-# 2. set the default current work directory via the '-w ' option of 'docker run'
+# This script prepare the host environment for running one CRAB service based
+# on CRAB TaskWorker container image and runs it. This file is specific for
+# Publisher.
 #
-# example (see also https://github.com/dmwm/CRABServer/blob/master/src/script/Container/runContainer.sh ) :
-#   SERVICE=Publisher_schedd; DIRECTORY=/data/srv/Publisher
-#   DOCKER_OPT="-e SERVICE=$SERVICE -w $DIRECTORY"
-#   docker run  --name ${SERVICE} ${DOCKER_OPT} ... other options
+# This script must place in the same directory as `start.sh` script (usually
+# `/data/srv/Publisher`) and meant to be called as CMD, by specify `-c /data/srv/Publisher/run.sh`
+#  to `runContainer.sh` script.
+# Please see https://github.com/dmwm/CRABServer/blob/master/src/script/Container/runContainer.sh
+# and https://github.com/dmwm/CRABServer/blob/master/cicd/gitlab/deployTW.sh for example.
 #
+# This script require the following environment variables:
+#   SERVICE   : the name of the service to be run: Publisher_schedd, Publisher_rucio etc.
 
 set -euo pipefail
 
@@ -28,26 +19,26 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 cd "${SCRIPT_DIR}"
 
 # ensure container has needed mounts
-check_link(){
-# function checks if symbolic links required to start service exists and if they are not broken
-
-  if [ -L $1 ] ; then
-    if [ -e $1 ] ; then
-       return 0
+check_link() {
+    # function checks if symbolic links required to start service exists and if they are not broken
+    if [[ -L "${1}" ]] ; then
+        if [[ -e "${1}" ]] ; then
+            return 0
+        else
+            unlink "${1}"
+            return 1
+        fi
     else
-       unlink $1
-       return 1
+        return 1
     fi
-  else
-    return 1
-  fi
 }
 
-# directories/files that should be created before starting the container :
-# [[...]] is a trick to do partial string match from https://unix.stackexchange.com/a/465906
-# -/data/hostdisk/${SERVICE}/logs
-# -/data/hostdisk/${SERVICE}/PublisherFiles
-declare -A links=( ["logs"]="/data/hostdisk/${SERVICE}/logs" ["cfg"]="/data/hostdisk/${SERVICE}/cfg" ["/data/srv/Publisher_files"]="/data/hostdisk/${SERVICE}/PublisherFiles" )
+# directories/files that should be created before starting the container
+declare -A links=(
+    ["logs"]="/data/hostdisk/${SERVICE}/logs"
+    ["cfg"]="/data/hostdisk/${SERVICE}/cfg"
+    ["/data/srv/Publisher_files"]="/data/hostdisk/${SERVICE}/PublisherFiles"
+)
 
 for name in "${!links[@]}";
 do
