@@ -1,12 +1,11 @@
 #!/bin/bash
 
-##H "Usage example: ./start.sh -c | -g [-d]"
-##H "    -c start current crabserver instance"
-##H "    -g start crabserver instance from GitHub repo"
-##H "    -d start crabserver in debug mode. Option can be combined with -c or -g"
+##H Usage example: ./start.sh -c | -g [-d]
+##H     -c start current crabserver instance
+##H     -g start crabserver instance from GitHub repo
+##H     -d start crabserver in debug mode. Option can be combined with -c or -g
 
 set -euo pipefail
-
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 helpFunction() {
@@ -38,7 +37,7 @@ case $MODE in
         # private mode: run private instance from GH
         PYTHONPATH=/data/repos/CRABServer/src/python:/data/repos/WMCore/src/python:${PYTHONPATH:-}
         ;;
-    *) echo "Unimplemented mode: $MODE\n"; exit 1;;
+    *) echo "Unimplemented mode: $MODE"; exit 1;;
 esac
 
 # export APP_PATH and DEBUG to ./manage.sh

@@ -48,7 +48,7 @@ case $MODE in
         touch ${markmodify_path}
         ./updateDatafiles.sh
         ;;
-    *) echo "Unimplemented mode: $MODE\n"; helpFunction ;;
+    *) echo "Unimplemented mode: $MODE"; exit 1 ;;
 esac
 
 # Export PYTHONPATH and DEBUG to ./manage.sh
