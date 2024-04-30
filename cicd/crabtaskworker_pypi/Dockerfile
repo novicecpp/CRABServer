@@ -98,8 +98,8 @@ RUN useradd -m ${USER} \
 
 # create working directory
 RUN mkdir -p ${WDIR}/srv/tmp \
-    && mkdir -p ${WDIR}/srv/Publisher \
-    && mkdir -p ${WDIR}/srv/TaskManager
+    && mkdir -p ${WDIR}/srv/Publisher/current \
+    && mkdir -p ${WDIR}/srv/TaskManager/current
 
 # TaskWorker
 COPY cicd/crabtaskworker_pypi/TaskWorker/start.sh \
