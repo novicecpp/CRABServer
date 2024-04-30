@@ -8,10 +8,10 @@ variables:
 
 .default_rules:
   rules:
-    - if: $CI_COMMIT_TAG =~ /pypi-.*/         # pypi-devthree-1714418922
-    - if: $CI_COMMIT_TAG =~ /v3\.[0-9]{6}.*/  # v3.240423, v3.240423.hotfix1
     - if: $RELEASE_IMAGE_TAG && $SOURCE_IMAGE_TAG
       when: never
+    - if: $CI_COMMIT_TAG =~ /pypi-.*/         # pypi-devthree-1714418922
+    - if: $CI_COMMIT_TAG =~ /v3\.[0-9]{6}.*/  # v3.240423, v3.240423.hotfix1
 
 stages:
   - prepare_env
