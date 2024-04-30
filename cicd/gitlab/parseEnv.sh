@@ -24,4 +24,5 @@ else
     exit 1
 fi
 
+echo "Use env: ${ENV_NAME}"
 cp "${SCRIPT_DIR}/env/${ENV_NAME}" .env
