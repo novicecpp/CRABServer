@@ -31,6 +31,10 @@ done
 if [ -z "${TW_VERSION}" ] || [ -z "${SERVICE}" ]; then
   echo "Make sure to set both -v and -s variables."; helpFunction; exit 1
 fi
+# define vars but set initial value to empty strgin to prevent unbound error
+TW_REPO=${TW_REPO:-}
+COMMAND=${COMMAND:-}
+LOGUUID=${LOGUUID:-}
 
 #list of directories that should exist on the host machine before container start
 dir=("/data/container/${SERVICE}/cfg" "/data/container/${SERVICE}/logs")
@@ -50,10 +54,10 @@ case $SERVICE in
     echo "$SERVICE is not a valid service to start. Specify whether you want to start one of the 'Publisher' variants or 'TaskWorker'." && helpFunction
 esac
 
-volumeMounts=''
+volumeMounts=()
 for d in "${dir[@]}"; do
   if [ -e "$d" ]; then
-      volumeMounts="-v ${d}:/data/srv/${DIRECTORY}/$(basename "${d}")"
+      volumeMounts+=("-v ${d}:/data/srv/${DIRECTORY}/$(basename "${d}")")
   else
     echo "Make sure to create needed directories before starting container. Missing directory: $d" && exit 1
   fi
@@ -83,7 +87,7 @@ fi
 # get os version
 OS_Version=$(cat /etc/os-release |grep VERSION_ID|cut -d= -f2|tr -d \"|cut -d. -f1)
 
-DOCKER_VOL="-v /data/container/:/data/hostdisk/ ${volumeMounts} -v /data/srv/tmp/:/data/srv/tmp/"
+DOCKER_VOL="-v /data/container/:/data/hostdisk/ ${volumeMounts[@]} -v /data/srv/tmp/:/data/srv/tmp/"
 DOCKER_VOL="${DOCKER_VOL} -v /cvmfs:/cvmfs:shared" # https://cvmfs.readthedocs.io/en/stable/cpt-configure.html#bind-mount-from-the-host
 DOCKER_VOL="${DOCKER_VOL} -v /etc/grid-security/:/etc/grid-security/"
 DOCKER_VOL="${DOCKER_VOL} -v /data/certs/:/data/certs/"
