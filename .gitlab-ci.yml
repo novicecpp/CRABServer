@@ -194,7 +194,7 @@ release_stable:
   variables:
     GIT_STRATEGY: none
   script:
-    - RELEASE_IMAGE_TAG=${RELEASE_DOCKER_TAG:-${CI_COMMIT_TAG}}-stable
+    - RELEASE_IMAGE_TAG=${RELEASE_DOCKER_TAG:-${CI_COMMIT_TAG}}.pypi-stable
     - SOURCE_IMAGE_TAG=${SOURCE_IMAGE_TAG:-${IMAGE_TAG}}
     - crane auth login -u ${CMSCRAB_REGISTRY_USER} -p ${CMSCRAB_REGISTRY_PASSWORD} ${CMSCRAB_REGISTRY_URL}
     - crane cp registry.cern.ch/cmscrab/crabserver:${SOURCE_IMAGE_TAG} registry.cern.ch/cmscrab/crabserver:${RELEASE_IMAGE_TAG}
