@@ -84,7 +84,7 @@ fi
 # get os version
 OS_Version=$(cat /etc/os-release |grep VERSION_ID|cut -d= -f2|tr -d \"|cut -d. -f1)
 
-DOCKER_VOL="-v /data/container/$SERVICE:/data/srv/$SERVICE/hostdisk"
+DOCKER_VOL="-v /data/container/${SERVICE}:/data/srv/${DIRECTORY}/hostdisk"
 DOCKER_VOL="${DOCKER_VOL} -v /data/certs/:/data/certs/"
 DOCKER_VOL="${DOCKER_VOL} -v /cvmfs:/cvmfs:shared" # https://cvmfs.readthedocs.io/en/stable/cpt-configure.html#bind-mount-from-the-host
 DOCKER_VOL="${DOCKER_VOL} -v /etc/grid-security/:/etc/grid-security/"
