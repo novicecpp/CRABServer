@@ -46,7 +46,7 @@ if [[ $SERVICE == TaskWorker ]]; then
   )
 elif [[ $SERVICE == Publisher* ]]; then
   declare -A links=(
-      ["current/PublisherConfig.py"]="./hostdisk/cfg/PublisherConfig.py"
+      ["PublisherConfig.py"]="./hostdisk/cfg/PublisherConfig.py"
       ["nohup.out"]="./hostdisk/nohup.out"
   )
 fi
