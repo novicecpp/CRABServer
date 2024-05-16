@@ -35,7 +35,7 @@ if [[ $SERVICE == TaskWorker ]]; then
 elif [[ "${SERVICE}" == Publisher* ]]; then
     WORKDIR=/data/srv/Publisher
     declare -A links=(
-        ["current/PublisherConfig.py"]="${WORKDIR}/hostdisk/hostdisk/cfg/PublisherConfig.py"
+        ["current/PublisherConfig.py"]="${WORKDIR}/hostdisk/cfg/PublisherConfig.py"
     )
 else
     echo "Service unknown: ${SERVICE}"; exit 1;
