@@ -24,5 +24,17 @@ else
     exit 1
 fi
 
+VALIDATE_SPLITTER="^.+__.+"
+if [[ $TAG =~ $VALIDATE_SPLITTER ]]; then
+    IFS='__' read -ra TMPARRAY <<< "${TAG}"
+    RELEASE_TAG="${TMPARRAY[0]}-stable"
+else
+    RELEASE_TAG="${TAG}-stable"
+fi
+
 echo "Use env: ${ENV_NAME}"
+echo "Release tag: ${RELEASE_TAG}"
 cp "${SCRIPT_DIR}/env/${ENV_NAME}" .env
+echo "RELEASE_TAG=${RELEASE_TAG}" >> .env
+echo ".env content:"
+cat .env
