@@ -60,8 +60,6 @@ set_version_name:
 
 build_rest_image:
   rules:
-    - if: $SKIP_DEPLOY
-      when: never
     - !reference [.default_rules, default]
   stage: build_docker
   image:
@@ -82,8 +80,6 @@ build_rest_image:
 
 build_tw_image:
   rules:
-    - if: $SKIP_DEPLOY
-      when: never
     - !reference [.default_rules, default]
   stage: build_docker
   image:
