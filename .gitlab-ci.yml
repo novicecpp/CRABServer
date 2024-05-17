@@ -4,14 +4,14 @@ default:
     - crab3
 
 variables:
-  IMAGE_TAG: "${CI_COMMIT_TAG}"
+  IMAGE_TAG: "${CI_COMMIT_REF_SLUG}"  # to distinct it from commit tag and final image tag
 
 .default_rules:
   default:
     - if: $CI_COMMIT_TAG =~ /pypi-.*/         # pypi-devthree-1714418922
     - if: $CI_COMMIT_TAG =~ /v3\.[0-9]{6}.*/  # v3.240423, v3.240423.hotfix1
   release:
-    - if: $CI_COMMIT_TAG =~ /v3\.[0-9]{6}.*/  # v3.240423, v3.240423.hotfix1
+    - if: $CI_COMMIT_TAG =~ /v3\.[0-9]{6}.*/  # same as above
 
 stages:
   - prepare_env
@@ -47,10 +47,11 @@ set_version_name:
     name: registry.cern.ch/cmscrab/buildtools
     entrypoint: [""]
   script:
+    - source .env
     - |
-        echo -e "\n__version__ = \"${CI_COMMIT_TAG}\" #Automatically added during build process" >> src/python/TaskWorker/__init__.py;
+        echo -e "\n__version__ = \"${RELEASE_NAME}\" #Automatically added during build process" >> src/python/TaskWorker/__init__.py;
     - |
-        echo -e "\n__version__ = \"${CI_COMMIT_TAG}\" #Automatically added during build process" >> src/python/CRABInterface/__init__.py;
+        echo -e "\n__version__ = \"${RELEASE_NAME}\" #Automatically added during build process" >> src/python/CRABInterface/__init__.py;
   cache:
     - key: $CI_PIPELINE_ID
       paths:
@@ -224,6 +225,7 @@ release_stable:
     GIT_STRATEGY: none
   script:
     - source .env
+    - export RELEASE_TAG=${RELEASE_NAME}-stable
     - crane auth login -u ${CMSCRAB_REGISTRY_USER} -p ${CMSCRAB_REGISTRY_PASSWORD} ${CMSCRAB_REGISTRY_URL}
     - crane cp registry.cern.ch/cmscrab/crabserver:${IMAGE_TAG} registry.cern.ch/cmscrab/crabserver:${RELEASE_TAG}
     - crane cp registry.cern.ch/cmscrab/crabtaskworker:${IMAGE_TAG} registry.cern.ch/cmscrab/crabtaskworker:${RELEASE_TAG}
