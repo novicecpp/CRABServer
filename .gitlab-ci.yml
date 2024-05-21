@@ -32,7 +32,7 @@ get_env:
   script:
     - printenv  # debug check ci env
     - cicd/gitlab/parseEnv.sh $CI_COMMIT_TAG  # create .env
-    - ENV_NAME=devthree cicd/gitlab/parseEnv.sh $CI_COMMIT_TAG  # override ENV_NAME to devthree
+    - cicd/gitlab/parseEnv.sh $CI_COMMIT_TAG  # override ENV_NAME to devthree
   artifacts:
     paths:
       - .env

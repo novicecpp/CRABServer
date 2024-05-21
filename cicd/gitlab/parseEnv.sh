@@ -20,7 +20,7 @@ if [[ $TAG =~ $VALIDATE_DEV_TAG ]]; then # Do not quote regexp variable here
     IFS='-' read -ra TMPSTR <<< "${TAG}"
     ENV_NAME=${ENV_NAME:-${TMPSTR[1]}}
 elif [[ $TAG =~ $VALIDATE_RELEASE_TAG ]]; then
-    ENV_NAME=${ENV_NAME:-preprod}
+    ENV_NAME=${ENV_NAME:-test12}
 else
     >&2 echo "fail to parse env from string: $TAG"
     exit 1
