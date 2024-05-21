@@ -26,9 +26,6 @@ else
     exit 1
 fi
 
-# release name
-
-
 echo "Use env: ${ENV_NAME}"
 echo "Release tag: ${RELEASE_NAME:-}"
 cp "${SCRIPT_DIR}/env/${ENV_NAME}" .env
