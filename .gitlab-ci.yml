@@ -15,12 +15,12 @@ variables:
 
 stages:
   - prepare_env
-  - pre_release
+  - prepare_release
   - build_docker
   - deploy
   - run_testsuite
   - check_testsuite
-  - release
+  - release_tag
 
 get_env:
   rules:
@@ -42,7 +42,7 @@ get_env:
 set_version_name:
   rules:
     - !reference [.default_rules, release]
-  stage: pre_release
+  stage: prepare_release
   image:
     name: registry.cern.ch/cmscrab/buildtools
     entrypoint: [""]
@@ -217,7 +217,7 @@ check_test_result:
 release_stable:
   rules:
     - !reference [.default_rules, release]
-  stage: release
+  stage: release_tag
   image:
     name: registry.cern.ch/cmscrab/buildtools
     entrypoint: [""]
