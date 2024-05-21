@@ -71,8 +71,9 @@ fi
 tmpfile=/tmp/monit-${uuid}.txt
 
 if [[ "${SERVICE}" == TaskWorker_monit_*  ]]; then
-  countrunning=$(docker ps | grep ${SERVICE} | wc -l)
-  if [[ ! $countrunning -eq "0" ]]; then
+  rc=0;
+  docker ps | grep "${SERVICE}" || rc=$?
+  if [[ $rc -eq "0" ]]; then
     msg="There already is a running container for $SERVICE. It is likely stuck. Stopping, removing and then starting again."
     echo $msg
     # writing now that the previous execution of the script is hanging.
@@ -81,7 +82,7 @@ if [[ "${SERVICE}" == TaskWorker_monit_*  ]]; then
     echo $msg > $tmpfile
     docker container stop $SERVICE
   fi
-  docker container rm $SERVICE
+  docker container rm $SERVICE || true
 fi
 
 # get os version
