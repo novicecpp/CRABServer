@@ -20,7 +20,7 @@ stages:
   - deploy
   - run_testsuite
   - check_testsuite
-  - release_tag
+  - tagging_release
 
 get_env:
   rules:
@@ -216,7 +216,7 @@ check_test_result:
 release_stable:
   rules:
     - !reference [.default_rules, release]
-  stage: release_tag
+  stage: tagging_release
   image:
     name: registry.cern.ch/cmscrab/buildtools
     entrypoint: [""]
