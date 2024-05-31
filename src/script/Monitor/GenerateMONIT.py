@@ -12,7 +12,7 @@ import signal
 import json
 from pprint import pprint
 
-import htcondor
+import htcondor2 as htcondor
 from socket import gethostname
 import requests
 from requests.auth import HTTPBasicAuth
@@ -22,7 +22,7 @@ from RESTInteractions import CRABRest
 ## no need to check the hostname, we control where this scripts run on
 ## via puppet
 # hostname = os.uname()[1]
-# hostsAllowRun = ['crab-prod-tw02.cern.ch', 
+# hostsAllowRun = ['crab-prod-tw02.cern.ch',
 #                  'crab-preprod-tw02.cern.ch',
 #                  ]
 # if not hostname in hostsAllowRun:

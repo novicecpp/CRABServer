@@ -3,8 +3,8 @@ import time
 import bisect
 import random
 
-import classad
-import htcondor
+import htcondor2 as htcondor
+import classad2 as classad
 
 
 # From http://stackoverflow.com/questions/3679694/a-weighted-version-of-random-choice
