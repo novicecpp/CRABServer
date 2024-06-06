@@ -13,7 +13,6 @@ variables:
     - if: $CI_COMMIT_TAG =~ /v3\.[0-9]{6}.*/  # same as above
 
 stages:
-  - sync
   - prepare_env
   - prepare_release
   - build_docker
@@ -26,7 +25,7 @@ stages:
 sync_release_from_github:
   rules:
     - if: $GITHUB_REF_NAME
-  stage: sync
+  stage: prepare_env
   image:
     name: registry.cern.ch/cmscrab/buildtools
     entrypoint: [""]
