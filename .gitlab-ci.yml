@@ -19,5 +19,5 @@ pull_and_push:
     - BRANCH_NAME=${GITHUB_REF_NAME//[^a-zA-Z0-9._-]/}
     - git clone https://github.com/novicecpp/CRABServer --branch ${BRANCH_NAME} --single-branch CRABServer
     - cd CRABServer
-    - git remote add gitlab https://${GITLAB_ACCESS_TOKEN_NAME}:${GITLAB_ACCESS_TOKEN}@gitlab..cern.ch/tseethon/crabserver.git
+    - git remote add gitlab https://${GITLAB_ACCESS_TOKEN_NAME}:${GITLAB_ACCESS_TOKEN}@gitlab.cern.ch/tseethon/crabserver.git
     - git push gitlab ${BRANCH_NAME}
