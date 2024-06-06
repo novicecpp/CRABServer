@@ -9,15 +9,15 @@ stages:
 pull_and_push:
   rules:
     - if: $GITHUB_REF_NAME
-  variables:
-    GIT_STRATEGY: none
   stage: trigger
   image:
     name: registry.cern.ch/cmscrab/buildtools
     entrypoint: [""]
   script:
-    - BRANCH_NAME=${GITHUB_REF_NAME//[^a-zA-Z0-9._-]/}
+    - BRANCH_NAME=${GITHUB_REF_NAME//[^a-zA-Z0-9\.\_\-]/}  # sanitize input
     - git clone https://github.com/novicecpp/CRABServer --branch ${BRANCH_NAME} --single-branch CRABServer
     - cd CRABServer
-    - git remote add gitlab https://${GITLAB_ACCESS_TOKEN_NAME}:${GITLAB_ACCESS_TOKEN}@gitlab.cern.ch/tseethon/crabserver.git
+    - SSH_KEY=$(cicd/gitlab/credFile.sh ${CRABINT1_SSH_KEY} ssh)
+    - git config core.sshCommand "ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no"
+    - git remote add gitlab ssh://git@gitlab.cern.ch:7999/tseethon/crabserver.git
     - git push gitlab ${BRANCH_NAME}
