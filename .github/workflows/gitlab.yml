@@ -12,7 +12,6 @@ jobs:
     steps:
       - name: run curl
         # trigger sync_release_from_github job in gitlab-ci
-        # https://docs.gitlab.com/ee/ci/triggers/
         run: |
           curl -X POST \
           --fail \

@@ -34,11 +34,11 @@ sync_release_from_github:
     entrypoint: [""]
   script:
     - BRANCH_NAME=${GITHUB_REF_NAME//[^a-zA-Z0-9\.\_\-]/}  # sanitize input
-    - GITHUB_URL=${GITHUB_URL:-https://github.com/dmwm/CRABServer}  # allow to override from url
-    - GIT_REMOTE_URL=${GITHUB_URL//[^a-zA-Z0-9\.\_\-\:\/]/}  # sanitize input
-    - git clone ${GIT_REMOTE_ENDPOINT} --branch ${BRANCH_NAME} --single-branch CRABServer
+    - git clone https://github.com/dmwm/CRABServer --branch ${BRANCH_NAME} --single-branch CRABServer
     - cd CRABServer
-    - git remote add gitlab https://${GITLAB_USERNAME}:${GITLAB_PASSWORD}@gitlab.cern.ch/crab3/CRABServer.git
+    - SSH_KEY=$(cicd/gitlab/credFile.sh ${CRABINT1_SSH_KEY} ssh)
+    - git config core.sshCommand "ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no"
+    - git remote add gitlab ssh://git@gitlab.cern.ch:7999/crab3/CRABServer.git
     - git push gitlab ${BRANCH_NAME}
 
 get_env:
