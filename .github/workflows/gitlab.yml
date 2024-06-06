@@ -1,7 +1,7 @@
 ---
 name: Trigger gitlab pipeline when publish new release
 
-# run only when release
+# https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#release
 on:
   release:
     types: [published]
