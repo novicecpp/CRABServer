@@ -8,7 +8,7 @@ stages:
 
 pull_and_push:
   rules:
-    - if: $GITHUB_REF
+    - if: $GITHUB_REF_NAME
   variables:
     GIT_STRATEGY: none
   stage: trigger
@@ -16,7 +16,7 @@ pull_and_push:
     name: registry.cern.ch/cmscrab/buildtools
     entrypoint: [""]
   script:
-    - git clone https://github.com/novicecpp/CRABServer --branch ${GITHUB_REF} --single-branch CRABServer
+    - git clone https://github.com/novicecpp/CRABServer --branch ${GITHUB_REF_NAME} --single-branch CRABServer
     - cd CRABServer
     - git remote add origin https://${GITLAB_ACCESS_TOKEN_NAME}:${GITLAB_ACCESS_TOKEN}@gitlab..cern.ch/tseethon/crabserver.git
     - git push origin ${GITHUB_REF}
