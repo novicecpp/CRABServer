@@ -13,6 +13,7 @@ variables:
     - if: $CI_COMMIT_TAG =~ /v3\.[0-9]{6}.*/  # same as above
 
 stages:
+  - sync
   - prepare_env
   - prepare_release
   - build_docker
@@ -20,6 +21,25 @@ stages:
   - run_testsuite
   - check_testsuite
   - tagging_release
+
+# will move to child pipeline later
+sync_release_from_github:
+  rules:
+    - if: $GITHUB_REF_NAME
+  variables:
+    GIT_STRATEGY: none
+  stage: sync
+  image:
+    name: registry.cern.ch/cmscrab/buildtools
+    entrypoint: [""]
+  script:
+    - BRANCH_NAME=${GITHUB_REF_NAME//[^a-zA-Z0-9\.\_\-]/}  # sanitize input
+    - GITHUB_URL=${GITHUB_URL:-https://github.com/dmwm/CRABServer}  # allow to override from url
+    - GIT_REMOTE_URL=${GITHUB_URL//[^a-zA-Z0-9\.\_\-\:\/]/}  # sanitize input
+    - git clone ${GIT_REMOTE_ENDPOINT} --branch ${BRANCH_NAME} --single-branch CRABServer
+    - cd CRABServer
+    - git remote add gitlab https://${GITLAB_USERNAME}:${GITLAB_PASSWORD}@gitlab.cern.ch/crab3/CRABServer.git
+    - git push gitlab ${BRANCH_NAME}
 
 get_env:
   rules:
