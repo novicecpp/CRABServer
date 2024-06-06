@@ -16,7 +16,8 @@ pull_and_push:
     name: registry.cern.ch/cmscrab/buildtools
     entrypoint: [""]
   script:
-    - git clone https://github.com/novicecpp/CRABServer --branch ${GITHUB_REF_NAME} --single-branch CRABServer
+    - BRANCH_NAME=${GITHUB_REF_NAME//[^a-zA-Z0-9_-]/}
+    - git clone https://github.com/novicecpp/CRABServer --branch ${BRANCH_NAME} --single-branch CRABServer
     - cd CRABServer
     - git remote add gitlab https://${GITLAB_ACCESS_TOKEN_NAME}:${GITLAB_ACCESS_TOKEN}@gitlab..cern.ch/tseethon/crabserver.git
-    - git push gitlab ${GITHUB_REF}
+    - git push gitlab ${BRANCH_NAME}
