@@ -18,5 +18,5 @@ pull_and_push:
   script:
     - git clone https://github.com/novicecpp/CRABServer --branch ${GITHUB_REF_NAME} --single-branch CRABServer
     - cd CRABServer
-    - git remote add origin https://${GITLAB_ACCESS_TOKEN_NAME}:${GITLAB_ACCESS_TOKEN}@gitlab..cern.ch/tseethon/crabserver.git
-    - git push origin ${GITHUB_REF}
+    - git remote add gitlab https://${GITLAB_ACCESS_TOKEN_NAME}:${GITLAB_ACCESS_TOKEN}@gitlab..cern.ch/tseethon/crabserver.git
+    - git push gitlab ${GITHUB_REF}
