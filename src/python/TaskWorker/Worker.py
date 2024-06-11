@@ -8,6 +8,7 @@ from queue import Empty
 from logging import FileHandler
 from http.client import HTTPException
 from logging.handlers import TimedRotatingFileHandler
+from concurrent.futures import ProcessPoolExecutor
 
 import sys
 if sys.version_info >= (3, 0):
@@ -96,7 +97,10 @@ def processWorkerLoop(inputs, results, resthost, dbInstance, procnum, logger, lo
         logger.debug("%s: Starting %s on %s", procName, str(work), task['tm_taskname'])
         try:
             msg = None
-            outputs = work(resthost, dbInstance, WORKER_CONFIG, task, procnum, inputargs)
+            #outputs = work(resthost, dbInstance, WORKER_CONFIG, task, procnum, inputargs)
+            with ProcessPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(work, resthost, dbInstance, WORKER_CONFIG, task, procnum, inputargs)
+                outputs = future.result(timeout=30)
         except TapeDatasetException as tde:
             outputs = Result(task=task, err=str(tde))
         except WorkerHandlerException as we:
