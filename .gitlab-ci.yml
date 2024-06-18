@@ -263,7 +263,8 @@ check_test_result:
 # if test is pass, retag with `*-stable`
 release_stable:
   rules:
-    - !reference [.default_rules, release]
+    #- !reference [.default_rules, release]
+    - !reference [.default_rules, default]
   stage: tagging_release
   image:
     name: registry.cern.ch/cmscrab/buildtools
