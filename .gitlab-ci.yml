@@ -130,7 +130,7 @@ tag_monit_latest:
   rules:
     #- !reference [.default_rules, release]
     - !reference [.default_rules, default]
-  stage: build_monit
+  stage: tagging_release
   needs: ["build_monit_image"]
   image:
     name: registry.cern.ch/cmscrab/buildtools
