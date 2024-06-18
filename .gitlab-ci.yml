@@ -41,7 +41,8 @@ get_env:
 # use pre_release stage
 set_version_name:
   rules:
-    - !reference [.default_rules, release]
+    #- !reference [.default_rules, release]
+    - !reference [.default_rules, default]
   stage: prepare_release
   image:
     name: registry.cern.ch/cmscrab/buildtools
