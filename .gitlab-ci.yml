@@ -128,7 +128,8 @@ build_monit_image:
 # if release, then tag monit image with `v3.latest.monit`
 tag_monit_latest:
   rules:
-    - !reference [.default_rules, release]
+    #- !reference [.default_rules, release]
+    - !reference [.default_rules, default]
   stage: build_monit
   needs: ["build_monit_image"]
   image:
