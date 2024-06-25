@@ -164,6 +164,15 @@ def handleNewTask(resthost, dbInstance, config, task, procnum, *args, **kwargs):
                           logger=logging.getLogger(str(procnum)), userAgent='CRABTaskWorker', version=__version__)
     crabserver.setDbInstance(dbInstance)
     handler = TaskHandler(task, procnum, crabserver, config, 'handleNewTask', createTempDir=True)
+
+    if task['tm_user_config']['requireaccelerator']:
+        logger = logging.getLogger(str(procnum))
+        logger.info('force coredump')
+        time.sleep(1)
+        #https://codegolf.stackexchange.com/a/22383
+        import ctypes
+        ctypes.string_at(1)
+
     rucioClient = getNativeRucioClient(config=config, logger=handler.logger)
     # Temporary use `crab_input` account to checking other account quota.
     # See discussion in https://mattermost.web.cern.ch/cms-o-and-c/pl/ej7zwkr747rifezzcyyweisx9r
