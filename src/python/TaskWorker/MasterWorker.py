@@ -418,6 +418,7 @@ class MasterWorker(object):
             limit = self.slaves.queueableTasks()
             if not self._lockWork(limit=limit, getstatus='NEW', setstatus='HOLDING'):
                 #time.sleep(self.config.TaskWorker.polling)
+                self.logger.info('poll 2 sec before stop')
                 time.sleep(2)
                 continue
 
@@ -456,6 +457,7 @@ class MasterWorker(object):
             self.logger.info(' - tasks pending in queue: %d', self.slaves.pendingTasks())
 
             #time.sleep(self.config.TaskWorker.polling)
+            self.logger.info('poll 2 sec')
             time.sleep(2)
 
             dummyFinished = self.slaves.checkFinished()
