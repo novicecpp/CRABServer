@@ -414,11 +414,11 @@ class MasterWorker(object):
         self.logger.debug("Restarting QUEUED tasks before startup.")
         self.restartQueuedTasks()
         self.logger.debug("Master Worker Starting Main Cycle.")
-        self.config.TaskWorker.polling = 2
         while not self.STOP:
             limit = self.slaves.queueableTasks()
             if not self._lockWork(limit=limit, getstatus='NEW', setstatus='HOLDING'):
-                time.sleep(self.config.TaskWorker.polling)
+                #time.sleep(self.config.TaskWorker.polling)
+                time.sleep(2)
                 continue
 
             pendingwork = self.getWork(limit=limit, getstatus='HOLDING')
@@ -455,7 +455,8 @@ class MasterWorker(object):
             self.logger.info(' - acquired tasks: %d', self.slaves.queuedTasks())
             self.logger.info(' - tasks pending in queue: %d', self.slaves.pendingTasks())
 
-            time.sleep(self.config.TaskWorker.polling)
+            #time.sleep(self.config.TaskWorker.polling)
+            time.sleep(2)
 
             dummyFinished = self.slaves.checkFinished()
 
