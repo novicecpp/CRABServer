@@ -18,7 +18,8 @@ if sys.version_info < (3, 0):
 from RESTInteractions import CRABRest
 from TaskWorker.DataObjects.Result import Result
 from ServerUtilities import truncateError, executeCommand
-from TaskWorker.WorkerExceptions import WorkerHandlerException, TapeDatasetException
+from TaskWorker.WorkerExceptions import WorkerHandlerException, TapeDatasetException, SlaveUnexpectedExitException
+from TaskWorker.WorkerSubprocess import startSubprocess
 
 
 ## Creating configuration globals to avoid passing these around at every request
@@ -96,7 +97,9 @@ def processWorkerLoop(inputs, results, resthost, dbInstance, procnum, logger, lo
         logger.debug("%s: Starting %s on %s", procName, str(work), task['tm_taskname'])
         try:
             msg = None
-            outputs = work(resthost, dbInstance, WORKER_CONFIG, task, procnum, inputargs)
+            #outputs = work(resthost, dbInstance, WORKER_CONFIG, task, procnum, inputargs)
+            args = (resthost, dbInstance, WORKER_CONFIG, task, procnum, inputargs)
+            outputs = startSubprocess(WORKER_CONFIG, work, args, logger)
         except TapeDatasetException as tde:
             outputs = Result(task=task, err=str(tde))
         except WorkerHandlerException as we:

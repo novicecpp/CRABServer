@@ -43,3 +43,6 @@ class TapeDatasetException(TaskWorkerException):
 
 class CannotMigrateException(TaskWorkerException):
     """Used by Publisher in case DBS server refuses to migrate"""
+
+class SlaveUnexpectedExitException(TaskWorkerException):
+    """a"""
