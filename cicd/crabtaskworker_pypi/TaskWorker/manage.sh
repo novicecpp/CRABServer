@@ -41,7 +41,7 @@ start_srv() {
         python3 -m pdb "${APP_DIR}"/TaskWorker/SequentialWorker.py "${CONFIG}" --logDebug
     else
         APP_DIR=/data/srv/current/lib/python/site-packages
-        python3 "${APP_DIR}"/TaskWorker/MasterWorker.py --config "${CONFIG}" --logDebug &
+        python3 "${APP_DIR}"/TaskWorker/Main.py --config "${CONFIG}" --logDebug &
     fi
 }
 
