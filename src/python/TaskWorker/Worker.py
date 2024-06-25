@@ -17,8 +17,8 @@ if sys.version_info < (3, 0):
 
 from RESTInteractions import CRABRest
 from TaskWorker.DataObjects.Result import Result
-from ServerUtilities import truncateError, executeCommand
-from TaskWorker.WorkerExceptions import WorkerHandlerException, TapeDatasetException, ChildUnexpectedExitException
+from ServerUtilities import truncateError, executeCommand, FEEDBACKMAIL
+from TaskWorker.WorkerExceptions import WorkerHandlerException, TapeDatasetException, ChildUnexpectedExitException, ChildTimeoutException
 from TaskWorker.ChildWorker import startChildWorker
 
 
@@ -105,11 +105,12 @@ def processWorkerLoop(inputs, results, resthost, dbInstance, procnum, logger, lo
         except WorkerHandlerException as we:
             outputs = Result(task=task, err=str(we))
             msg = str(we)
-        except (ChildUnexpectedExitException,) as e:
+        except (ChildUnexpectedExitException, ChildTimeoutException) as e:
             # custom message later
             outputs = Result(task=task, err=str(e))
-            msg = 'child work die unexpectedly.'
-            msg += f'\n {str(e)}'
+            msg = f'Server-side failed with error: {str(e)}'
+            msg += "\nThis could be a temporary glitch. Please try again later."
+            msg += f" If the error persists, please send an e-mail to {FEEDBACKMAIL}."
         except Exception as exc: #pylint: disable=broad-except
             outputs = Result(task=task, err=str(exc))
             msg = "%s: I just had a failure for %s" % (procName, str(exc))
