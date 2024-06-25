@@ -7,7 +7,7 @@ import logging
 
 
 def startSubprocess(config, work, workArgs, logger):
-    procTimeout = getattr(config.TaskWorker, 'workerTimeout', 10)
+    procTimeout = getattr(config.TaskWorker, 'workerTimeout', 120)
     loggerName = logger.name
     work = work
     workArgs = workArgs
