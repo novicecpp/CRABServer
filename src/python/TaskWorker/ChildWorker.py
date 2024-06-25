@@ -8,7 +8,7 @@ import logging
 
 
 def startChildWorker(config, work, workArgs, logger):
-    procTimeout = getattr(config.TaskWorker, 'workerTimeout', 120)
+    procTimeout = getattr(config.TaskWorker, 'childWorkerTimeout', 120)
     loggerName = logger.name
     work = work
     workArgs = workArgs
@@ -17,7 +17,7 @@ def startChildWorker(config, work, workArgs, logger):
         try:
             outputs = future.result(timeout=procTimeout+1)
         except BrokenProcessPool as e:
-            raise ChildUnexpectedExitException('Child exit unexpectedly.') from e
+            raise ChildUnexpectedExitException('Child process exit unexpectedly.') from e
         except TimeoutError as e:
             raise ChildTimeoutException(f'Child process timeout reached (timeout {procTimeout} seconds).')
         except Exception as e:
