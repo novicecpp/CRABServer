@@ -18,8 +18,8 @@ if sys.version_info < (3, 0):
 from RESTInteractions import CRABRest
 from TaskWorker.DataObjects.Result import Result
 from ServerUtilities import truncateError, executeCommand
-from TaskWorker.WorkerExceptions import WorkerHandlerException, TapeDatasetException, SlaveUnexpectedExitException
-from TaskWorker.WorkerSubprocess import startSubprocess
+from TaskWorker.WorkerExceptions import WorkerHandlerException, TapeDatasetException, ChildUnexpectedExitException
+from TaskWorker.ChildWorker import startChildWorker
 
 
 ## Creating configuration globals to avoid passing these around at every request
@@ -99,12 +99,17 @@ def processWorkerLoop(inputs, results, resthost, dbInstance, procnum, logger, lo
             msg = None
             #outputs = work(resthost, dbInstance, WORKER_CONFIG, task, procnum, inputargs)
             args = (resthost, dbInstance, WORKER_CONFIG, task, procnum, inputargs)
-            outputs = startSubprocess(WORKER_CONFIG, work, args, logger)
+            outputs = startChildWorker(WORKER_CONFIG, work, args, logger)
         except TapeDatasetException as tde:
             outputs = Result(task=task, err=str(tde))
         except WorkerHandlerException as we:
             outputs = Result(task=task, err=str(we))
             msg = str(we)
+        except (ChildUnexpectedExitException,) as e:
+            # custom message later
+            outputs = Result(task=task, err=str(e))
+            msg = 'child work die unexpectedly.'
+            msg += f'\n {str(e)}'
         except Exception as exc: #pylint: disable=broad-except
             outputs = Result(task=task, err=str(exc))
             msg = "%s: I just had a failure for %s" % (procName, str(exc))
