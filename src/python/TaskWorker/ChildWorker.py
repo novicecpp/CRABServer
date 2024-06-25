@@ -1,22 +1,25 @@
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures.process import BrokenProcessPool
-from TaskWorker.WorkerExceptions import SlaveUnexpectedExitException
+from TaskWorker.WorkerExceptions import ChildUnexpectedExitException, ChildTimeoutException
+import multiprocessing as mp
 import signal
 import traceback
 import logging
 
 
-def startSubprocess(config, work, workArgs, logger):
+def startChildWorker(config, work, workArgs, logger):
     procTimeout = getattr(config.TaskWorker, 'workerTimeout', 120)
     loggerName = logger.name
     work = work
     workArgs = workArgs
-    with ProcessPoolExecutor(max_workers=1) as executor:
-        future = executor.submit(runSubprocess, work, workArgs, procTimeout, loggerName)
+    with ProcessPoolExecutor(max_workers=1, mp_context=mp.get_context('forkserver')) as executor:
+        future = executor.submit(runChildWorker, work, workArgs, procTimeout, loggerName)
         try:
-            outputs = future.result(timeout=procTimeout)
+            outputs = future.result(timeout=procTimeout+1)
         except BrokenProcessPool as e:
-            raise SlaveUnexpectedExitException('Slave exit unexpectedly.') from e
+            raise ChildUnexpectedExitException('Child exit unexpectedly.') from e
+        except TimeoutError as e:
+            raise ChildTimeoutException(f'Child process timeout reached (timeout {procTimeout} seconds).')
         except Exception as e:
             raise e
     return outputs
@@ -24,7 +27,7 @@ def startSubprocess(config, work, workArgs, logger):
 def _signalHandler(signum, frame):
      raise TimeoutError(f"The process reached timeout.")
 
-def runSubprocess(work, workArgs, timeout, loggerName):
+def runChildWorker(work, workArgs, timeout, loggerName):
     logger = logging.getLogger(f'{loggerName}.childprocess')
     logger.info(f'Installing SIGALARM with timeout {timeout}')
     signal.signal(signal.SIGALRM, _signalHandler)
