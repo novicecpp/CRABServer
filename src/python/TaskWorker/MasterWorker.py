@@ -414,6 +414,7 @@ class MasterWorker(object):
         self.logger.debug("Restarting QUEUED tasks before startup.")
         self.restartQueuedTasks()
         self.logger.debug("Master Worker Starting Main Cycle.")
+        self.config.TaskWorker.polling = 2
         while not self.STOP:
             limit = self.slaves.queueableTasks()
             if not self._lockWork(limit=limit, getstatus='NEW', setstatus='HOLDING'):
