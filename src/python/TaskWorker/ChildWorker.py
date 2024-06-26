@@ -59,7 +59,9 @@ def _signalHandler(signum, frame):
 
 def _runChildWorker(work, workArgs, timeout, loggerName):
     """
-    The wrapper function to start running `work()` on the child-worker.
+    The wrapper function to start running `work()` on the child-worker. It
+    install SIGALARM with `timeout` to stop processing current work and raise
+    TimeoutError when timeout is reach.
 
     Note about loggerConfig argument, logging object cannot be pickled so we pass
     the logging configuration and set it up on child-worker side.
