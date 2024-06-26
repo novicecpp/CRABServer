@@ -35,7 +35,7 @@ def startChildWorker(config, work, workArgs, logger):
     :rtype: any
     """
     procTimeout = config.FeatureFlags.childWorkerTimeout
-    with ProcessPoolExecutor(max_workers=1, mp_context=mp.get_context('fork')) as executor:
+    with ProcessPoolExecutor(max_workers=1, mp_context=mp.get_context('spawn')) as executor:
         future = executor.submit(_runChildWorker, work, workArgs, procTimeout, logger)
         try:
             outputs = future.result(timeout=procTimeout+1)
@@ -61,8 +61,9 @@ def _runChildWorker(work, workArgs, timeout, logger):
     install SIGALARM with `timeout` to stop processing current work and raise
     TimeoutError when timeout is reach.
 
-    Note about loggerConfig argument, logging object cannot be pickled so we pass
-    the logging configuration and set it up on child-worker side.
+    Note about `logger` object. It works out of the box because:
+    - Parent process are stop and wait until this function return.
+    - Fd
 
     :param work: a function that need to run in child process
     :type work: function
@@ -76,11 +77,6 @@ def _runChildWorker(work, workArgs, timeout, logger):
     :returns: return value from `work()`
     :rtype: any
     """
-    # log is a bit complicate here because
-    # https://docs.python.org/3/howto/logging-cookbook.html#logging-to-a-single-file-from-multiple-processes
-    #procName = f'{loggerName}'
-    #logger = logging.getLogger(procName)
-    #logger.debug(f'{logger.handlers}')
 
     # main
     logger.debug(f'Installing SIGALARM with timeout {timeout} seconds.')
