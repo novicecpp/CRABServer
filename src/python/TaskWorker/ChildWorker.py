@@ -35,7 +35,7 @@ def startChildWorker(config, work, workArgs, logger):
     :rtype: any
     """
     procTimeout = config.FeatureFlags.childWorkerTimeout
-    with ProcessPoolExecutor(max_workers=1, mp_context=mp.get_context('spawn')) as executor:
+    with ProcessPoolExecutor(max_workers=1, mp_context=mp.get_context('fork')) as executor:
         future = executor.submit(_runChildWorker, work, workArgs, procTimeout, logger)
         try:
             outputs = future.result(timeout=procTimeout+1)
