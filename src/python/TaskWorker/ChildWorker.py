@@ -78,7 +78,7 @@ def _runChildWorker(work, workArgs, timeout, loggerName):
     :returns: return value from `work()`
     :rtype: any
     """
-    procName = f'{loggerName}.ChildWorker'
+    procName = f'{loggerName}.ChildProc'
     logger = logging.getLogger(procName)
     # not 100% sure what is going on here but StreamHandler make the logs
     # from child process go through parent process and write out to
