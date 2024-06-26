@@ -97,7 +97,9 @@ def processWorkerLoop(inputs, results, resthost, dbInstance, procnum, logger, lo
         logger.debug("%s: Starting %s on %s", procName, str(work), task['tm_taskname'])
         try:
             msg = None
-            if WORKER_CONFIG.FeatureFlags.childWorker:
+            if hasattr(WORKER_CONFIG, 'FeatureFlags') and \
+               hasattr(WORKER_CONFIG.FeatureFlags, 'childWorker') and \
+               WORKER_CONFIG.FeatureFlags.childWorker:
                 args = (resthost, dbInstance, WORKER_CONFIG, task, procnum, inputargs)
                 outputs = startChildWorker(WORKER_CONFIG, work, args, logger)
             else:
