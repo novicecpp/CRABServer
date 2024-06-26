@@ -81,10 +81,11 @@ def _runChildWorker(work, workArgs, timeout, loggerConfig):
     :rtype: any
     """
     logger = logging.getLogger(f'{loggerConfig["name"]}.ChildWorker')
-    handler = logging.StreamHandler()
-    handler.setFormatter(logging.Formatter(loggerConfig['format']))
-    logger.addHandler(handler)
-    logger.setLevel(loggerConfig['level'])
+    #handler = logging.StreamHandler()
+    #handler.setFormatter(logging.Formatter(loggerConfig['format']))
+    #logger.addHandler(handler)
+    #logger.setLevel(loggerConfig['level'])
+    logger.setLevel(logging.DEBUG)
     logger.info(f'Installing SIGALARM with timeout {timeout} seconds.')
     signal.signal(signal.SIGALRM, _signalHandler)
     signal.alarm(timeout)
