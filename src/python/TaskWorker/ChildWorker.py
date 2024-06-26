@@ -78,19 +78,33 @@ def _runChildWorker(work, workArgs, timeout, loggerName):
     :returns: return value from `work()`
     :rtype: any
     """
-    procName = f'{loggerName}.ChildProc'
+    procName = f'{loggerName}'
     logger = logging.getLogger(procName)
+    logger.debug(f'{logger.handlers}')
+    if len(logger.handlers):
+        logger.error(f'_fmt: {logger.handlers[0].formatter._fmt}')
+
     # not 100% sure what is going on here but StreamHandler make the logs
     # from child process go through parent process and write out to
     # process/tasks log files.
-    handler = logging.StreamHandler()
+    #handler = logging.StreamHandler()
+
     # hardcode formatter to make in more simple. The format is based on:
     # https://github.com/dmwm/CRABServer/blob/43a8454abec4059ae5b2804b4efe8e77553d1f38/src/python/TaskWorker/Worker.py#L30
-    formatter = f"%(asctime)s:%(levelname)s:%(module)s:{procName}: %(message)s"
-    handler.setFormatter(logging.Formatter(formatter))
+    #formatter = f"%(asctime)s:%(levelname)s:%(module)s:{procName}: %(message)s"
+    #handler.setFormatter(logging.Formatter(formatter))
     # also hardcode the log level
-    handler.setLevel(logging.DEBUG)
-    logger.addHandler(handler)
+    #handler.setLevel(logging.DEBUG)
+    #logger.addHandler(handler)
+
+    #procName = '1112'
+    #logger = logging.getLogger(procName)
+    #handler = logging.StreamHandler()
+    #formatter = f"%(asctime)s:%(levelname)s:%(module)s: %(message)s"
+    #handler.setFormatter(logging.Formatter(formatter))
+    #logger.addHandler(handler)
+
+
 
     # main
     logger.debug(f'Installing SIGALARM with timeout {timeout} seconds.')
