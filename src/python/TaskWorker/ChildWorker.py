@@ -35,10 +35,8 @@ def startChildWorker(config, work, workArgs, logger):
     :rtype: any
     """
     procTimeout = config.FeatureFlags.childWorkerTimeout
-    # we cannot passing the logger object to child worker.
-    loggerName = logger.name
     with ProcessPoolExecutor(max_workers=1, mp_context=mp.get_context('fork')) as executor:
-        future = executor.submit(_runChildWorker, work, workArgs, procTimeout, loggerName)
+        future = executor.submit(_runChildWorker, work, workArgs, procTimeout, logger)
         try:
             outputs = future.result(timeout=procTimeout+1)
         except BrokenProcessPool as e:
@@ -57,7 +55,7 @@ def _signalHandler(signum, frame):
     """
     raise TimeoutError("The process reached timeout.")
 
-def _runChildWorker(work, workArgs, timeout, loggerName):
+def _runChildWorker(work, workArgs, timeout, logger):
     """
     The wrapper function to start running `work()` on the child-worker. It
     install SIGALARM with `timeout` to stop processing current work and raise
@@ -78,33 +76,11 @@ def _runChildWorker(work, workArgs, timeout, loggerName):
     :returns: return value from `work()`
     :rtype: any
     """
-    procName = f'{loggerName}.ChildWork'
-    logger = logging.getLogger(procName)
-    logger.debug(f'{logger.handlers}')
-    if len(logger.handlers):
-        logger.error(f'_fmt: {logger.handlers[0].formatter._fmt}')
-
-    # not 100% sure what is going on here but StreamHandler make the logs
-    # from child process go through parent process and write out to
-    # process/tasks log files.
-    #handler = logging.StreamHandler()
-
-    # hardcode formatter to make in more simple. The format is based on:
-    # https://github.com/dmwm/CRABServer/blob/43a8454abec4059ae5b2804b4efe8e77553d1f38/src/python/TaskWorker/Worker.py#L30
-    #formatter = f"%(asctime)s:%(levelname)s:%(module)s:{procName}: %(message)s"
-    #handler.setFormatter(logging.Formatter(formatter))
-    # also hardcode the log level
-    #handler.setLevel(logging.DEBUG)
-    #logger.addHandler(handler)
-
-    #procName = '1112'
+    # log is a bit complicate here because
+    # https://docs.python.org/3/howto/logging-cookbook.html#logging-to-a-single-file-from-multiple-processes
+    #procName = f'{loggerName}'
     #logger = logging.getLogger(procName)
-    #handler = logging.StreamHandler()
-    #formatter = f"%(asctime)s:%(levelname)s:%(module)s: %(message)s"
-    #handler.setFormatter(logging.Formatter(formatter))
-    #logger.addHandler(handler)
-
-
+    #logger.debug(f'{logger.handlers}')
 
     # main
     logger.debug(f'Installing SIGALARM with timeout {timeout} seconds.')
