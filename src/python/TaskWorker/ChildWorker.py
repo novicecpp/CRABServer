@@ -36,7 +36,7 @@ def startChildWorker(config, work, workArgs, logger):
     """
     procTimeout = config.FeatureFlags.childWorkerTimeout
     # we cannot passing the logger object to child worker.
-    loggerName = logger.name,
+    loggerName = logger.name
     with ProcessPoolExecutor(max_workers=1, mp_context=mp.get_context('fork')) as executor:
         future = executor.submit(_runChildWorker, work, workArgs, procTimeout, loggerName)
         try:
