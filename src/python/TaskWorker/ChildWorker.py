@@ -34,12 +34,15 @@ def startChildWorker(config, work, workArgs, logger):
     :returns: return value from `work()`
     :rtype: any
     """
-    procTimeout = getattr(config.TaskWorker, 'childWorkerTimeout', 120)
+    procTimeout = config.FeatureFlags.childWorkerTimeout
     # we cannot passing the logger object to child worker.
     loggerConfig = {
         'name': logger.name,
-        'format': "%(asctime)s:%(levelname)s:%(module)s %(message)s", # hardcode. Fetch formatter from handler(s) is fragile.
-        'level': logger.getEffectiveLevel(),
+        # hardcode formatter to make in more simple. The format is copied from:
+        # https://github.com/dmwm/CRABServer/blob/43a8454abec4059ae5b2804b4efe8e77553d1f38/src/python/TaskWorker/Worker.py#L30
+        'format': "%(asctime)s:%(levelname)s:%(module)s %(message)s",
+        # also hardcode the log level
+        'level': logging.DEBUG,
     }
     with ProcessPoolExecutor(max_workers=1, mp_context=mp.get_context('fork')) as executor:
         future = executor.submit(_runChildWorker, work, workArgs, procTimeout, loggerConfig)
