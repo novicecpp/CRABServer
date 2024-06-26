@@ -24,25 +24,24 @@ def mock_logger():
     return logger
 
 def fn(n, timeSleep=0, mode='any'):
+    """
+    function to test startChildWorker contains 4 behaviors
+    1. normal: normal function
+    2. exception: any exception occur in child should raise to parent properly
+    3. timeout: should raise ChildTimeoutException
+    4. coredump: should raise ChildUnexpectedExitException
+    """
     print(f'executing function with n={n},timeSleep={timeSleep},mode={mode}')
-    if mode == 'timeout':
-        time.sleep(timeSleep)
-    elif mode == 'exception':
+    if mode == 'exception':
         raise TypeError('simulate raise generic exception')
+    elif mode == 'timeout':
+        time.sleep(timeSleep)
     elif mode == 'coredump':
         #https://codegolf.stackexchange.com/a/22383
         ctypes.string_at(1)
     else:
         pass
     return n*5
-
-
-def test_startChildWorker_normal(config_ChildWorker, mock_logger):
-    n = 17
-    timeSleep = 0
-    mode = 'any'
-    startChildWorker(config_ChildWorker, fn, (n, timeSleep, mode), mock_logger)
-
 
 testList = [
     (17, 0, 'any', None),
