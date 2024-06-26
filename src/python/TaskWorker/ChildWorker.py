@@ -49,7 +49,7 @@ def startChildWorker(config, work, workArgs, logger):
         try:
             outputs = future.result(timeout=procTimeout+1)
         except BrokenProcessPool as e:
-            raise ChildUnexpectedExitException('Child process exit unexpectedly.') from e
+            raise ChildUnexpectedExitException('Child process exited unexpectedly.') from e
         except TimeoutError as e:
             raise ChildTimeoutException(f'Child process timeout reached (timeout {procTimeout} seconds).') from e
         except Exception as e:

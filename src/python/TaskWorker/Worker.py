@@ -112,7 +112,7 @@ def processWorkerLoop(inputs, results, resthost, dbInstance, procnum, logger, lo
         except (ChildUnexpectedExitException, ChildTimeoutException) as e:
             # custom message
             outputs = Result(task=task, err=str(e))
-            msg =  f"Server-side failed with error: {str(e)}"
+            msg =  f"Server-side failed with an error: {str(e)}"
             msg +=  "\n This could be a temporary glitch. Please try again later."
             msg += f"\n If the error persists, please send an e-mail to {FEEDBACKMAIL}."
         except Exception as exc: #pylint: disable=broad-except
