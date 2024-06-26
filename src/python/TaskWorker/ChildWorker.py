@@ -78,7 +78,7 @@ def _runChildWorker(work, workArgs, timeout, loggerName):
     :returns: return value from `work()`
     :rtype: any
     """
-    procName = f'{loggerName}'
+    procName = f'{loggerName}.ChildWork'
     logger = logging.getLogger(procName)
     logger.debug(f'{logger.handlers}')
     if len(logger.handlers):
