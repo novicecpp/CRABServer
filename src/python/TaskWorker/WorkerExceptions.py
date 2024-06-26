@@ -45,7 +45,7 @@ class CannotMigrateException(TaskWorkerException):
     """Used by Publisher in case DBS server refuses to migrate"""
 
 class ChildUnexpectedExitException(TaskWorkerException):
-    """a"""
+    """Used by ChildWorker simply to rename BrokenProcessPool to be more understandable name"""
 
 class ChildTimeoutException(TaskWorkerException):
-    """b"""
+    """Used by ChildWorker to rename built-in TimeoutException from SIGALARM's signalHandler function to be more understandable name"""
