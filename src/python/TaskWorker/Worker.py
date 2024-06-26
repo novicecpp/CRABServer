@@ -97,20 +97,22 @@ def processWorkerLoop(inputs, results, resthost, dbInstance, procnum, logger, lo
         logger.debug("%s: Starting %s on %s", procName, str(work), task['tm_taskname'])
         try:
             msg = None
-            #outputs = work(resthost, dbInstance, WORKER_CONFIG, task, procnum, inputargs)
-            args = (resthost, dbInstance, WORKER_CONFIG, task, procnum, inputargs)
-            outputs = startChildWorker(WORKER_CONFIG, work, args, logger)
+            if hasattr(WORKER_CONFIG.FeatureFlags, 'childWorker') and WORKER_CONFIG.FeatureFlags.childWorker:
+                args = (resthost, dbInstance, WORKER_CONFIG, task, procnum, inputargs)
+                outputs = startChildWorker(WORKER_CONFIG, work, args, logger)
+            else:
+                outputs = work(resthost, dbInstance, WORKER_CONFIG, task, procnum, inputargs)
         except TapeDatasetException as tde:
             outputs = Result(task=task, err=str(tde))
         except WorkerHandlerException as we:
             outputs = Result(task=task, err=str(we))
             msg = str(we)
         except (ChildUnexpectedExitException, ChildTimeoutException) as e:
-            # custom message later
+            # custom message
             outputs = Result(task=task, err=str(e))
-            msg = f'Server-side failed with error: {str(e)}'
-            msg += "\nThis could be a temporary glitch. Please try again later."
-            msg += f" If the error persists, please send an e-mail to {FEEDBACKMAIL}."
+            msg =  f"Server-side failed with error: {str(e)}"
+            msg +=  "\n This could be a temporary glitch. Please try again later."
+            msg += f"\n If the error persists, please send an e-mail to {FEEDBACKMAIL}."
         except Exception as exc: #pylint: disable=broad-except
             outputs = Result(task=task, err=str(exc))
             msg = "%s: I just had a failure for %s" % (procName, str(exc))
