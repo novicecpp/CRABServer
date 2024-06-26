@@ -12,7 +12,7 @@ def startChildWorker(config, work, workArgs, logger):
     loggerName = logger.name
     work = work
     workArgs = workArgs
-    with ProcessPoolExecutor(max_workers=1, mp_context=mp.get_context('forkserver')) as executor:
+    with ProcessPoolExecutor(max_workers=1, mp_context=mp.get_context('fork')) as executor:
         future = executor.submit(runChildWorker, work, workArgs, procTimeout, loggerName)
         try:
             outputs = future.result(timeout=procTimeout+1)
