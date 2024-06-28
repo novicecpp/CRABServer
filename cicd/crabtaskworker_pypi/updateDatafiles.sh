@@ -25,10 +25,14 @@ export DATAFILES_WORKDIR
 export RUNTIME_WORKDIR
 export WMCOREDIR
 export CRABSERVERDIR
-# this script is too verbose, pipe it to file instead
-logpath=/tmp/buildDatafiles-$(date +"%Y%m%d-%H%M%S").log
-bash cicd/crabtaskworker_pypi/buildDatafiles.sh &> "${logpath}"
-echo "buildDatafiles.sh log path: ${logpath}"
+# the buildDatafiles is too verbose, pipe it to file instead if not TRACE
+if [[ -n ${TRACE+x} ]]; then
+    bash cicd/crabtaskworker_pypi/buildDatafiles.sh
+else
+    logpath=/tmp/buildDatafiles-$(date +"%Y%m%d-%H%M%S").log
+    bash cicd/crabtaskworker_pypi/buildDatafiles.sh &> "${logpath}"
+    echo "buildDatafiles.sh log path: ${logpath}"
+fi
 popd
 
 # copy new data files to data files path
