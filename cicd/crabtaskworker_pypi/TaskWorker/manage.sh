@@ -45,9 +45,9 @@ start_srv() {
     export PYTHONPATH
     echo "Starting TaskWorker..."
     if [[ $DEBUG ]]; then
-        taskworker --config "${CONFIG}" --logDebug --pdb
+        crab-taskworker --config "${CONFIG}" --logDebug --pdb
     else
-        taskworker --config "${CONFIG}" --logDebug &
+        crab-taskworker --config "${CONFIG}" --logDebug &
     fi
     echo "Started TaskWorker with MasterWorker pid $(_getMasterWorkerPid)"
 }
