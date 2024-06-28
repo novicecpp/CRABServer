@@ -38,11 +38,11 @@ helpFunction() {
 start_srv() {
     # Check require env
     # shellcheck disable=SC2269
-    export PYTHONPATH="${PYTHONPATH}"
+    export PYTHONPATH
     if [[ $DEBUG ]]; then
         DEBUG_OPTION=--sequential
     fi
-    python3 "${APP_DIR}"/TaskWorker/Main.py --config "${CONFIG}" --logDebug ${DEBUG_OPTION} &
+    python3 "${APP_PATH}"/TaskWorker/Main.py --config "${CONFIG}" --logDebug ${DEBUG_OPTION:-} &
 }
 
 stop_srv() {
