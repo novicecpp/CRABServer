@@ -67,10 +67,9 @@ def main():
         configuration.TaskWorker.nslaves = 1
         configuration.FeatureFlags.childWorker = False
         # start with pdb
-        import pdb
+        import pdb #pylint: disable=import-outside-toplevel
         pdb.set_trace()
-        pdb.set_trace()
-        mc = MasterWorker(config=config, logWarning=False, logDebug=True, sequential=True, console=True)
+        mc = MasterWorker(config=configuration, logWarning=False, logDebug=True, sequential=True, console=True)
         mc.algorithm()
         return 0
 
