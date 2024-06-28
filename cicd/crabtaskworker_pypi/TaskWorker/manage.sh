@@ -53,7 +53,7 @@ stop_srv() {
     checkTimes=12
     timeout=15 #that will give 12*15=180 seconds (3min) for the TW to finish work
 
-    TaskMasterPid=$(ps exfww | grep TaskWorker/Main.py | grep -v grep | head -1 | awk '{print $1}') || true
+    TaskMasterPid=$(ps exfww | grep 'python /usr/local/bin/taskworker' | grep -v grep | head -1 | awk '{print $1}') || true
     if [[ -z $TaskMasterPid ]]; then
         echo "No master process running."
         return;
