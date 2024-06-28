@@ -36,8 +36,8 @@ helpFunction() {
 }
 
 _getMasterWorkerPid() {
-    pid=$(ps exfww | grep 'python /usr/local/bin/taskworker' | grep -v grep | head -1 | awk '{print $1}') || true
-    echo $pid
+    pid=$(pgrep 'crab-taskworker' | grep -v grep | head -1 ) || true
+    echo "${pid}"
 }
 
 start_srv() {
