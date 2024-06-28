@@ -42,7 +42,7 @@ start_srv() {
     if [[ $DEBUG ]]; then
         DEBUG_OPTION=--sequential
     fi
-    python3 "${APP_PATH}"/TaskWorker/Main.py --config "${CONFIG}" --logDebug ${DEBUG_OPTION:-} &
+    taskworker --config "${CONFIG}" --logDebug ${DEBUG_OPTION:-} &
 }
 
 stop_srv() {

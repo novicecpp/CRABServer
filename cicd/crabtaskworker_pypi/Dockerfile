@@ -121,6 +121,8 @@ COPY cicd/crabtaskworker_pypi/TaskWorker/start.sh \
      cicd/crabtaskworker_pypi/updateDatafiles.sh \
      ${WDIR}/srv/TaskManager/
 
+COPY cicd/crabtaskworker_pypi/TaskWorker/bin/taskworker /usr/local/bin/taskworker
+
 ## publisher
 COPY cicd/crabtaskworker_pypi/Publisher/start.sh \
      cicd/crabtaskworker_pypi/Publisher/env.sh \
