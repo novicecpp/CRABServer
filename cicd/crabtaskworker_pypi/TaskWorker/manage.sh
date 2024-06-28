@@ -42,11 +42,12 @@ _getMasterWorkerPid() {
 
 start_srv() {
     # Check require env
-    # shellcheck disable=SC2269
     export PYTHONPATH
     echo "Starting TaskWorker..."
     if [[ $DEBUG ]]; then
-        DEBUG_OPTION=--sequential
+        taskworker --config "${CONFIG}" --logDebug --pdb
+    else
+        taskworker --config "${CONFIG}" --logDebug &
     fi
     echo "Started TaskWorker with MasterWorker pid $(_getMasterWorkerPid)"
 }

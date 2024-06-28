@@ -23,7 +23,6 @@ from WMCore.Configuration import loadConfigurationFile
 
 #CRAB dependencies
 from RESTInteractions import CRABRest
-import HTCondorLocator
 from ServerUtilities import newX509env
 from ServerUtilities import SERVICE_INSTANCES
 from TaskWorker import __version__

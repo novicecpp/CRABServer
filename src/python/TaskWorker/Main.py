@@ -2,10 +2,12 @@ from optparse import OptionParser
 import signal
 import os
 import logging
+import sys
 
 from WMCore.Configuration import loadConfigurationFile
 from TaskWorker.WorkerExceptions import ConfigException
 from TaskWorker.MasterWorker import MasterWorker
+import HTCondorLocator
 
 def validateConfig(config):
     """Verify that the input configuration contains all needed info
@@ -18,7 +20,11 @@ def validateConfig(config):
         config.TaskWorker.scheddPickerFunction = HTCondorLocator.memoryBasedChoices
     return True, 'Ok'
 
+
 def main():
+    """
+    parse args and run.
+    """
     usage = "usage: %prog [options] [args]"
     parser = OptionParser(usage=usage)
 
@@ -42,12 +48,16 @@ def main():
                       dest="console",
                       default=False,
                       help="log to console")
-
     parser.add_option("--config",
                       dest="config",
                       default=None,
                       metavar="FILE",
                       help="configuration file path")
+    parser.add_option("--pdb",
+                      action="store_true",
+                      dest="pdb",
+                      default=False,
+                      help="Enter pdb mode. Set up TW to run sequential mode and invoke pdb.")
 
     (options, args) = parser.parse_args()
 
@@ -60,19 +70,21 @@ def main():
     if not status_:
         raise ConfigException(msg_)
 
-    if options.sequential:
+    if options.pdb:
         # override root loglevel to debug
         logging.getLogger().setLevel(logging.DEBUG)
-        # need for single thread
+        # need to force a single thread
         configuration.TaskWorker.nslaves = 1
         configuration.FeatureFlags.childWorker = False
         # start with pdb
         import pdb #pylint: disable=import-outside-toplevel
-        pdb.set_trace()
+        pdb.set_trace() #pylint: disable=forgotten-debug-statement
         mc = MasterWorker(config=configuration, logWarning=False, logDebug=True, sequential=True, console=True)
         mc.algorithm()
-        return 0
+        # exit program
+        sys.exit(0)
 
+    # main
     mw = None
     try:
         mw = MasterWorker(configuration, logWarning=options.logWarning, logDebug=options.logDebug, sequential=options.sequential, console=options.console)
