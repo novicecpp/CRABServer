@@ -36,7 +36,7 @@ helpFunction() {
 }
 
 _getMasterWorkerPid() {
-    pid=$(pgrep 'crab-taskworker' | grep -v grep | head -1 ) || true
+    pid=$(pgrep -f 'crab-taskworker' | grep -v grep | head -1 ) || true
     echo "${pid}"
 }
 

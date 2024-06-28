@@ -10,7 +10,7 @@ echo "(DEBUG) Environment: ${Environment}"
 WORK_DIR=$PWD
 
 if [ "X${Service}" == "XTaskWorker" ] ; then
-	processName=TaskWorker/Main.py
+	processName=crab-taskworker
 else
 	processName=RunPublisher
 fi
