@@ -69,6 +69,7 @@ def main():
         # start with pdb
         import pdb
         pdb.set_trace()
+        pdb.set_trace()
         mc = MasterWorker(config=config, logWarning=False, logDebug=True, sequential=True, console=True)
         mc.algorithm()
         return 0
