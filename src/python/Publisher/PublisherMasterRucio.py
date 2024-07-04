@@ -19,7 +19,8 @@ from multiprocessing import Process
 
 from WMCore.Configuration import loadConfigurationFile
 
-from ServerUtilities import encodeRequest, oracleOutputMapping, executeCommand
+from ServerUtilities import (encodeRequest, oracleOutputMapping,
+                             executeCommand, getLock)
 from TaskWorker.WorkerUtilities import getCrabserver
 from RucioUtils import getNativeRucioClient
 
@@ -420,5 +421,12 @@ if __name__ == '__main__':
 
     master = Master(confFile=configurationFile)
     while True:
-        master.algorithm()
+        if hasattr(configurationFile.General, 'publishingStatePath'):
+            with getLock(configurationFile.General.publishingStatePath):
+                master.algorithm()
+                sl = 99999
+                print(f'sleep {sl} secs')
+                time.sleep(sl)
+        else:
+            master.algorithm()
         time.sleep(master.pollInterval())
