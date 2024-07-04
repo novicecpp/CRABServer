@@ -418,15 +418,17 @@ if __name__ == '__main__':
     args = parser.parse_args()
     # need to pass the configuration file path to the slaves
     configurationFile = os.path.abspath(args.config)
+    config = loadConfigurationFile(configurationFile)
 
     master = Master(confFile=configurationFile)
     while True:
-        if hasattr(configurationFile.General, 'publishingStatePath'):
-            with getLock(configurationFile.General.publishingStatePath):
+        if hasattr(config.General, 'publishingStatePath'):
+            with getLock(config.General.publishingStatePath):
                 master.algorithm()
                 sl = 99999
                 print(f'sleep {sl} secs')
                 time.sleep(sl)
         else:
+
             master.algorithm()
         time.sleep(master.pollInterval())
