@@ -19,15 +19,63 @@
 
 set -euo pipefail
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+if [[ -n ${TRACE+x} ]]; then
+    set -x
+    export TRACE
+fi
 
 # some variable use in start_srv
 CONFIG="${SCRIPT_DIR}"/current/PublisherConfig.py
+PROCESS_NAME=RunPublisher.py
 
 helpFunction() {
     grep "^##H" "${0}" | sed -r "s/##H(| )//g"
 }
 
+_getRunPublisherPid() {
+    pid=$(pgrep -f "${PROCESS_NAME}" | grep -v grep | head -1 ) || true
+    echo "${pid}"
+}
+
+_isPublisherBusy() {
+    # a function to tell if PublisherMaster is busy or waiting
+    #   return 0 = success = Publisher is Busy
+    #   return 1 = failure = Publisher can be killed w/o fear
+    # Check if Publisher process is still running
+    # find my bearings
+    myLog="${SCRIPT_DIR}"/hostdisk/logs/log.txt
+    if [[ ! -f "$myLog" ]]; then
+        echo "Error: \"${myLog}\" could not be found."
+        exit 1
+    fi
+
+    # check if it still running
+    [[ -z "$(_getRunPublisherPid)" ]] && return 1
+
+    lastLine=$(tail -1 "${myLog}")
+    echo "${lastLine}" | grep -q 'Next cycle will start at'
+    cycleDone=$?
+    if [[ $cycleDone = 1 ]] ; then
+        # inside working cycle
+        return 0
+    else
+        # in waiting mode, checks when it is next start
+        start=$(echo "${lastLine}" | awk '{print $NF}')
+        startTime=$(date -d ${start} +%s)  # in seconds from Epoch
+        now=$(date +%s) # in seconds from Epoch
+        delta=$((${startTime}-${now}))
+        if [[ $delta -gt 60 ]]; then
+            # no race with starting of next cycle, safe to kill
+            return 1
+        else
+            # next cycle about to start, wait until is done
+            return 0
+        fi
+    fi
+}
+
 start_srv() {
+    echo "Starting Publisher..."
     # Check require env
     # shellcheck disable=SC2269
     SERVICE="${SERVICE}"
@@ -46,73 +94,33 @@ start_srv() {
 }
 
 stop_srv() {
-    # This part is copy directly from https://github.com/dmwm/CRABServer/blob/3af9d658271a101db02194f48c5cecaf5fab7725/src/script/Deployment/Publisher/stop.sh
-
-  # find my bearings
-  myDir="${SCRIPT_DIR}"
-  myLog="${myDir}"/logs/log.txt
-
-  PublisherBusy(){
-  # a function to tell if PublisherMaster is busy or waiting
-  #   return 0 = success = Publisher is Busy
-  #   return 1 = failure = Publisher can be killed w/o fear
-    lastLine=$(tail -1 "${myLog}")
-    echo "${lastLine}" | grep -q 'Next cycle will start at'
-    cycleDone=$?
-    if [ $cycleDone = 1 ] ; then
-      # inside working cycle
-      return 0
-    else
-      # in waiting mode, checks when it is next start
-      start=$(echo "${lastLine}" | awk '{print $NF}')
-      startTime=$(date -d ${start} +%s)  # in seconds from Epoch
-      now=$(date +%s) # in seconds from Epoch
-      delta=$((${startTime}-${now}))
-      if [[ $delta -gt 60 ]]; then
-        # no race with starting of next cycle, safe to kill
-        return 1
-      else
-        # next cycle about to start, wait until is done
+    echo "Stopping Publisher..."
+    if [[ -z "$(_getRunPublisherPid)" ]]; then
+        echo "No Publisher is running."
         return 0
-      fi
     fi
-  }
 
-  nIter=1
-  while PublisherBusy
-  do
-    [[ $nIter = 1 ]] && echo "Waiting for MasterPublisher to complete cycle: ."
-    nIter=$((nIter+1))
-    sleep 10
-    echo -n "."
-    if (( nIter%6  == 0 )); then
-      minutes=$((nIter/6))
-      echo -n "${minutes}m"
-    fi
-  done
-  echo ""
-  echo "Publisher is in waiting now. Killing RunPublisher"
-  # ignore retcode in case it got kill by other process or crash
-  pkill -f RunPublisher || true
+    nIter=1
+    while _isPublisherBusy
+    do
+        [[ $nIter = 1 ]] && echo "Waiting for MasterPublisher to complete cycle: ."
+        nIter=$((nIter+1))
+        sleep 10
+        echo -n "."
+        if (( nIter%6  == 0 )); then
+            minutes=$((nIter/6))
+            echo -n "${minutes}m"
+        fi
+    done
+    echo ""
+    echo "Publisher is in waiting now. Killing RunPublisher"
+    # ignore retcode in case it got kill by other process or crash
+    pkill -f "${PROCESS_NAME}" || true
 }
 
 # Main routine, perform action requested on command line.
 case ${1:-help} in
-  # Separate start/restart because stop_srv does not work when next cycle is
-  # less than now and its block the container to start.
-  start )
-    # check if Publisher process still running.
-    rc=0;
-    # shellcheck disable=SC2207
-    pids=($(pgrep -f RunPublisher 2> /dev/null)) || rc=$?
-    if [[ $rc -eq 0 ]]; then
-       >&2 echo "Error: Publisher process still running (pid: ${pids[@]})"
-       exit 1
-    fi
-    # start
-    start_srv
-    ;;
-  restart )
+  start | restart )
     stop_srv
     start_srv
     ;;
@@ -123,7 +131,7 @@ case ${1:-help} in
 
   help )
     helpFunction
-    exit 1
+    exit 0
     ;;
 
   * )
