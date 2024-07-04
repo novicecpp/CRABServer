@@ -17,6 +17,7 @@ import logging
 import os
 import argparse
 import time
+from ServerUtilities import getLock
 
 logging.getLogger().setLevel(logging.DEBUG)
 
@@ -48,6 +49,14 @@ if debug:
 
 master = Master(configurationFile, quiet=QUIET, debug=debug, testMode=testMode)
 
+config = loadConfigurationFile(configurationFile)
 while True:
-    master.algorithm()
+    if hasattr(config.General, 'publishingStatePath'):
+        with getLock(config.General.publishingStatePath):
+            master.algorithm()
+            sl = 99999
+            print(f'sleep {sl} secs')
+            time.sleep(sl)
+    else:
+        master.algorithm()
     time.sleep(master.pollInterval())
