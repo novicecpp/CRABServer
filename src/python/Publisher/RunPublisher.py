@@ -18,6 +18,7 @@ import os
 import argparse
 import time
 from ServerUtilities import getLock
+from WMCore.Configuration import loadConfigurationFile
 
 logging.getLogger().setLevel(logging.DEBUG)
 
