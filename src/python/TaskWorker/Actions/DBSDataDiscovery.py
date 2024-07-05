@@ -180,7 +180,7 @@ class DBSDataDiscovery(DataDiscovery):
         inputBlocks = kwargs['task']['tm_user_config']['inputblocks']
         inputUserFiles = kwargs['task']['tm_user_files']
         if inputBlocks:
-            msg = f'Only blocks in "Data.inputBlocks" will be processed ({len(inputBlocks)} blocks).'
+            msg = f'Only blocks in "Data.inputBlocks" will be processed ({len(inputBlocks)} blocks). {ddd}'
             self.uploadWarning(msg, self.userproxy, self.taskName)
             self.logger.info(msg)
             self.validateInputBlocks(dataset=inputDataset, blocks=inputBlocks)
@@ -264,7 +264,7 @@ class DBSDataDiscovery(DataDiscovery):
                     if fullReplicas:  # only fill map for blocks which have at least one location
                         locationsMap[blockName] = fullReplicas
                         totalSizeBytes += sizeBytes  # this will be used for tapeRecall
-                    if partialReplicas:
+                    if not partialReplicas:
                         partialLocationsMap[blockName] = partialReplicas
 
             except Exception as exc:  # pylint: disable=broad-except
