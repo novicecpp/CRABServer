@@ -261,6 +261,7 @@ class DBSDataDiscovery(DataDiscovery):
                         else:
                             partialReplicas.add(item['rse'])
                         sizeBytes = item['bytes']
+                    self.logger.info(f"i will check if not fullReplicas: {not fullReplicas}")
                     if not fullReplicas:  # only fill map for blocks which have at least one location
                         locationsMap[blockName] = fullReplicas
                         totalSizeBytes += sizeBytes  # this will be used for tapeRecall
