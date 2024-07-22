@@ -41,45 +41,42 @@ fi
 #[ ! -d 'CRABServer' ] && git clone git@github.com:dmwm/CRABServer
 
 case $CRABClient_version in
-  #dev)
-  #  source /cvmfs/cms-ib.cern.ch/latest/common/crab-setup.sh dev
-  #  alias crab='crab-dev'
-  #  ;;
-  #GH)
-  #  set -euo pipefail
-  #  #cd CRABServer; git checkout ${CRABServer_tag}; cd ..
-  #  rm -rf CRABClient
-  #  git clone https://github.com/${CRABCLIENT_FORK}/CRABClient CRABClient -b $CRABCLIENT_TAG
-  #  cp src/python/ServerUtilities.py CRABClient/src/python/
-  #  cp src/python/RESTInteractions.py CRABClient/src/python/
-  #  #$ghprbPullId is used for PR testing. If this variable is set, that means
-  #  #we need to run test against specific commit
-  #  #if [ ! -z "$ghprbPullId" ]; then
-  #  #	cd CRABClient
-  #  #	git fetch origin pull/${ghprbPullId}/merge:PR_MERGE
-  #  #	export COMMIT=`git rev-parse "PR_MERGE^{commit}"`
-  #  #	git checkout -f ${COMMIT}
-  #  #	cd ..
-  #  #fi
-  #  cd ${WORK_DIR}
-  #  GitDir=${WORK_DIR}
-  #
-  #  MY_CRAB=${GitDir}/CRABClient
-  #
-  #  # install the fake WMCore dependency for CRABClient, taking inspiration from
-  #  # https://github.com/cms-sw/cmsdist/blob/b38a4b3339f12706513917153a2ec6cdcb23741c/crab-build.file#L37
-  #  mkdir -p ${GitDir}/WMCore/src/python/WMCore
-  #  touch ${GitDir}/WMCore/src/python/__init__.py
-  #  touch ${GitDir}/WMCore/src/python/WMCore/__init__.py
-  #  cp ${GitDir}/CRABClient/src/python/CRABClient/WMCoreConfiguration.py ${GitDir}/WMCore/src/python/WMCore/Configuration.py
-  #
-  #  export PYTHONPATH=${MY_CRAB}/src/python:${PYTHONPATH:-}
-  #  export PYTHONPATH=${GitDir}/WMCore/src/python:$PYTHONPATH
-  #
-  #  export PATH=${MY_CRAB}/bin:$PATH
-  #  set +euo pipefail
-  #  source ${MY_CRAB}/etc/crab-bash-completion.sh
-  #  ;;
+  dev)
+    source /cvmfs/cms-ib.cern.ch/latest/common/crab-setup.sh dev
+    alias crab='crab-dev'
+    ;;
+  GH)
+    #cd CRABServer; git checkout ${CRABServer_tag}; cd ..
+    rm -rf CRABClient
+    git clone https://github.com/dmwm/CRABClient CRABClient -b master
+    cp src/python/ServerUtilities.py CRABClient/src/python/
+    cp src/python/RESTInteractions.py CRABClient/src/python/
+    #  #$ghprbPullId is used for PR testing. If this variable is set, that means
+    #  #we need to run test against specific commit
+    #  #if [ ! -z "$ghprbPullId" ]; then
+    #  #	cd CRABClient
+    #  #	git fetch origin pull/${ghprbPullId}/merge:PR_MERGE
+    #  #	export COMMIT=`git rev-parse "PR_MERGE^{commit}"`
+    #  #	git checkout -f ${COMMIT}
+    #  #	cd ..
+    #  #fi
+    #  cd ${WORK_DIR}
+    GitDir=${PWD}
+    #
+    MY_CRAB=${GitDir}/CRABClient
+    # install the fake WMCore dependency for CRABClient, taking inspiration from
+    # https://github.com/cms-sw/cmsdist/blob/b38a4b3339f12706513917153a2ec6cdcb23741c/crab-build.file#L37
+    mkdir -p ${GitDir}/WMCore/src/python/WMCore
+    touch ${GitDir}/WMCore/src/python/__init__.py
+    touch ${GitDir}/WMCore/src/python/WMCore/__init__.py
+    cp ${GitDir}/CRABClient/src/python/CRABClient/WMCoreConfiguration.py ${GitDir}/WMCore/src/python/WMCore/Configuration.py
+
+    export PYTHONPATH=${MY_CRAB}/src/python:${PYTHONPATH:-}
+    export PYTHONPATH=${GitDir}/WMCore/src/python:$PYTHONPATH
+    export PATH=${MY_CRAB}/bin:$PATH
+
+    source ${MY_CRAB}/etc/crab-bash-completion.sh
+    ;;
   prod)
 	source /cvmfs/cms.cern.ch/common/crab-setup.sh prod
 esac
