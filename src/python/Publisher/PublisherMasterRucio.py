@@ -30,14 +30,14 @@ from PublisherUtils import getInfoFromFMD, markFailed
 class Master():  # pylint: disable=too-many-instance-attributes
     """I am the main daemon kicking off all Publisher work via slave Publishers"""
 
-    def __init__(self, confFile=None, quiet=False, debug=True, testMode=False):
+    def __init__(self, confFile=None, quiet=False, debug=True, sequential=False):
         """
         Initialise class members
 
         :arg WMCore.Configuration config: input Publisher configuration
         :arg bool quiet: it tells if a quiet logger is needed
         :arg bool debug: it tells if needs a verbose logger
-        :arg bool testMode: it tells if to run in test (no subprocesses) mode.
+        :arg bool sequential: it tells if to run in test (no subprocesses) mode.
         """
 
         self.configurationFile = confFile         # remember this, will have to pass it to TaskPublish
@@ -53,7 +53,7 @@ class Master():  # pylint: disable=too-many-instance-attributes
         self.lfn_map = {}
         self.force_publication = False
         self.force_failure = False
-        self.TestMode = testMode
+        self.sequential = sequential
         self.taskFilesDir = self.config.taskFilesDir
         createLogdir(self.taskFilesDir)
         createLogdir(os.path.join(self.taskFilesDir, 'FailedBlocks'))
@@ -61,7 +61,8 @@ class Master():  # pylint: disable=too-many-instance-attributes
         self.blackListedTaskDir = os.path.join(self.taskFilesDir, 'BlackListedTasks')
         createLogdir(self.blackListedTaskDir)
 
-        self.logger = setRootLogger(self.config.logsDir, quiet=quiet, debug=debug, console=self.TestMode)
+        # if self.sequential is True, we want the log output to console
+        self.logger = setRootLogger(self.config.logsDir, quiet=quiet, debug=debug, console=self.sequential)
         logVersionAndConfig(config, self.logger)
 
         # CRAB REST API
@@ -230,7 +231,7 @@ class Master():  # pylint: disable=too-many-instance-attributes
                 if username in self.config.skipUsers:
                     self.logger.info("Skipped user %s task %s", username, taskname)
                     continue
-                if self.TestMode:
+                if self.sequential:
                     self.startSlave(task)  # sequentially do one task after another
                     continue
                 # deal with each task in a separate process

@@ -68,7 +68,7 @@ case $MODE in
     COMMAND_DIR=${PUBLISHER_ROOT}/lib/python3.8/site-packages/Publisher/
     CONFIG=${PUBLISHER_HOME}/PublisherConfig.py
     if [ "$debug" = true ]; then
-      python3 ${COMMAND_DIR}/RunPublisher.py --config ${CONFIG} --service ${SERVICE} --debug --testMode
+      python3 ${COMMAND_DIR}/RunPublisher.py --config ${CONFIG} --service ${SERVICE} --debug --
     else
       nohup python3 ${COMMAND_DIR}/RunPublisher.py --config ${CONFIG} --service ${SERVICE} &
     fi
