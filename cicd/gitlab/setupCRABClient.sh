@@ -47,11 +47,11 @@ case $CRABClient_version in
     ;;
   GH)
     #cd CRABServer; git checkout ${CRABServer_tag}; cd ..
-
+    MY_CRAB=${PWD}/CRABClient
     rm -rf CRABClient
-    git clone https://github.com/dmwm/CRABClient CRABClient -b master
-    cp ${ROOT_DIR}/src/python/ServerUtilities.py CRABClient/src/python/
-    cp ${ROOT_DIR}/src/python/RESTInteractions.py CRABClient/src/python/
+    git clone https://github.com/dmwm/CRABClient ${MY_CRAB} -b master
+    cp ${ROOT_DIR}/src/python/ServerUtilities.py ${MY_CRAB}/src/python/
+    cp ${ROOT_DIR}/src/python/RESTInteractions.py ${MY_CRAB}/src/python/
     #  #$ghprbPullId is used for PR testing. If this variable is set, that means
     #  #we need to run test against specific commit
     #  #if [ ! -z "$ghprbPullId" ]; then
@@ -65,12 +65,11 @@ case $CRABClient_version in
     #
     # install the fake WMCore dependency for CRABClient, taking inspiration from
     # https://github.com/cms-sw/cmsdist/blob/b38a4b3339f12706513917153a2ec6cdcb23741c/crab-build.file#L37
-    mkdir -p WMCore/src/python/WMCore
-    touch CRABClient/WMCore/src/python/__init__.py
-    touch CRABClient/WMCore/src/python/WMCore/__init__.py
-    cp CRABClient/src/python/CRABClient/WMCoreConfiguration.py CRABClient/WMCore/src/python/WMCore/Configuration.py
+    mkdir -p ${MY_CRAB}/WMCore/src/python/WMCore
+    touch ${MY_CRAB}/WMCore/src/python/__init__.py
+    touch ${MY_CRAB}/WMCore/src/python/WMCore/__init__.py
+    cp ${MY_CRAB}/src/python/CRABClient/WMCoreConfiguration.py ${MY_CRAB}/WMCore/src/python/WMCore/Configuration.py
 
-    MY_CRAB=${PWD}/CRABClient
     export PYTHONPATH=${MY_CRAB}/src/python:${PYTHONPATH:-}
     export PYTHONPATH=${MY_CRAB}/WMCore/src/python:$PYTHONPATH
     export PATH=${MY_CRAB}/bin:$PATH
