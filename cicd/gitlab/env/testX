@@ -1,0 +1,4 @@
+KUBECONTEXT=cmsweb-test12
+Environment=crab-dev-tw03
+REST_Instance=testX
+CRABClient_version=GH
