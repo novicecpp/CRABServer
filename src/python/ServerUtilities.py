@@ -47,7 +47,7 @@ FILE_MEMORY_LIMIT = 512 * 1024
 SERVICE_INSTANCES = {'prod': {'restHost': 'cmsweb.cern.ch', 'dbInstance': 'prod'},
                      'preprod': {'restHost': 'cmsweb-testbed.cern.ch', 'dbInstance': 'preprod'},
                      'auth': {'restHost': 'cmsweb-auth.cern.ch', 'dbInstance': 'preprod'},
-                     'test1': {'restHost': 'cmsweb-test1.cern.ch', 'dbInstance': 'dev'},
+                     'test1': {'restHost': 'cmsweb-test1.cern.ch', 'dbInstance': 'devfour'},
                      'test2': {'restHost': 'cmsweb-test2.cern.ch', 'dbInstance': 'dev'},
                      'test3': {'restHost': 'cmsweb-test3.cern.ch', 'dbInstance': 'dev'},
                      'test4': {'restHost': 'cmsweb-test4.cern.ch', 'dbInstance': 'dev'},
@@ -55,6 +55,7 @@ SERVICE_INSTANCES = {'prod': {'restHost': 'cmsweb.cern.ch', 'dbInstance': 'prod'
                      'test6': {'restHost': 'cmsweb-test6.cern.ch', 'dbInstance': 'dev'},
                      'test11': {'restHost': 'cmsweb-test11.cern.ch', 'dbInstance': 'devtwo'},
                      'test12': {'restHost': 'cmsweb-test12.cern.ch', 'dbInstance': 'devthree'},
+                     # For testing CRABClient GH mode
                      'testX': {'restHost': 'cmsweb-test12.cern.ch', 'dbInstance': 'devthree'},
                      'stefanovm': {'restHost': 'stefanovm.cern.ch', 'dbInstance': 'dev'},
                      'stefanovm2': {'restHost': 'stefanovm2.cern.ch', 'dbInstance': 'dev'},
