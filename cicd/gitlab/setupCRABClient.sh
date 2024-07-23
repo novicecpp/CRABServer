@@ -61,7 +61,7 @@ case $CRABClient_version in
     #  #	cd ..
     #  #fi
     #  cd ${WORK_DIR}
-    GitDir=${PWD}
+    GitDir=${ROOT_DIR}
     #
     MY_CRAB=${GitDir}/CRABClient
     # install the fake WMCore dependency for CRABClient, taking inspiration from
