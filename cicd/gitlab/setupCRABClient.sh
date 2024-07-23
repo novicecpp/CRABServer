@@ -42,11 +42,12 @@ fi
 
 case $CRABClient_version in
   dev)
+    set +euo pipefail
     source /cvmfs/cms-ib.cern.ch/latest/common/crab-setup.sh dev
+    set -euo pipefail
     alias crab='crab-dev'
     ;;
   GH)
-    #cd CRABServer; git checkout ${CRABServer_tag}; cd ..
     MY_CRAB=${PWD}/CRABClient
     rm -rf CRABClient
     git clone https://github.com/dmwm/CRABClient ${MY_CRAB} -b master
@@ -76,7 +77,9 @@ case $CRABClient_version in
     source ${MY_CRAB}/etc/crab-bash-completion.sh
     ;;
   prod)
+    set +euo pipefail
 	source /cvmfs/cms.cern.ch/common/crab-setup.sh prod
+    set -euo pipefail
 esac
 
 #cd "${CURRENT_DIR}"
