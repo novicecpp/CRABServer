@@ -148,7 +148,7 @@ deploy_server:
 
 .deploy_tw_template:
   rules:
-    - if: $SKIP_DEPLOY || $FORCE_RELEASE
+    - if: $SKIP_DEPLOY || $FORCE_RELEASE || $SUBMIT_STATUS_TRACKING
       when: never
     - !reference [.default_rules, default]
     - !reference [.default_rules, release]
