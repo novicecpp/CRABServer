@@ -26,6 +26,10 @@ CONFIG="${SCRIPT_DIR}"/current/PublisherConfig.py
 helpFunction() {
     grep "^##H" "${0}" | sed -r "s/##H(| )//g"
 }
+_getPublisherPid() {
+    pid=$(pgrep -f 'crab-taskworker' | grep -v grep | head -1 ) || true
+    echo "${pid}"
+}
 
 start_srv() {
     # Check require env
@@ -37,12 +41,12 @@ start_srv() {
 
     # hardcode APP_DIR, but if debug mode, APP_DIR can be override
     if [[ "${DEBUG}" = 'true' ]]; then
-        APP_DIR="${APP_DIR:-/data/repos/CRABServer/src/python}"
-        python3 "${APP_DIR}"/Publisher/RunPublisher.py --config "${CONFIG}" --service "${SERVICE}" --debug --testMode
+        crab-publisher --config "${CONFIG}" --service "${SERVICE}" --logDebug --pdb
     else
-        APP_DIR=/data/srv/current/lib/python/site-packages
-        python3 "${APP_DIR}"/Publisher/RunPublisher.py --config "${CONFIG}" --service "${SERVICE}" &
+        crab-publisher --config "${CONFIG}" --service "${SERVICE}" --logDebug &
     fi
+    echo "Started Publisher with Publisher pid $(_getPub)"
+
 }
 
 stop_srv() {
