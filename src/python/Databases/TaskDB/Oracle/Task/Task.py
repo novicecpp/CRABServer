@@ -146,6 +146,11 @@ class Task(object):
     UpdateWorker_sql = "UPDATE tasks SET tw_name = :tw_name, tm_task_status = :set_status \
                         WHERE tm_task_status = :get_status AND rownum <= :limit"
 
+    UpdateWorkerTW06_sql = """UPDATE tasks SET tw_name = :tw_name, tm_task_status = :set_status \
+                            WHERE tm_task_status = :get_status AND rownum <= :limit AND tm_taskname LIKE '%__tw06'"""
+    UpdateWorkerNotTW06_sql = """UPDATE tasks SET tw_name = :tw_name, tm_task_status = :set_status \
+                            WHERE tm_task_status = :get_status AND rownum <= :limit AND tm_taskname NOT LIKE '%__tw06'"""
+
     #UpdateOutDataset
     SetUpdateOutDataset_sql = """UPDATE tasks SET tm_output_dataset = :tm_output_dataset \
                                 WHERE tm_taskname = :tm_taskname"""

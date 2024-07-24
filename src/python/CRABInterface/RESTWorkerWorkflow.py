@@ -79,6 +79,11 @@ class RESTWorkerWorkflow(RESTEntity):
             subresource = 'state'
         if not subresource in list(methodmap.keys()):
             raise InvalidParameter("Subresource of workflowdb has not been found")
+        if subresource == 'process':
+            if workername == 'crab-dev-tw06':
+                methodmap['process']['args'] = (self.Task.UpdateWorkerTW06_sql,)
+            else:
+                methodmap['process']['args'] = (self.Task.UpdateWorkerNotTW06_sql,)
         methodmap[subresource]['method'](*methodmap[subresource]['args'], **methodmap[subresource]['kwargs'])
         return []
 
