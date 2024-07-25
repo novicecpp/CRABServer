@@ -2,14 +2,12 @@
   Unified script to start Publisher in normal or debug (sequential) mode
   and to select Publisher_rucio vs Publisher_schedd
   This worker can be used for testing purposes. Just run:
-         "python Publisher.py --config /path/to/config --service Publisher_rucio "
-    and have fun!
-    If you want to immediately start a pdb session
-         "python SequentialPublisher.py --config /path/to/config --debug"
+         "crab-publisher --config /path/to/config --service Publisher_rucio --pdb"
+    with "--pdb", loglevel is set to debug, and print to , the worker will
+      - initiate pdb
+      - run in sequential
+      - log level set to debug and print to console
 
-    More details: it instantiates the Publisher Worker with the TEST flag True. This makes the Worker
-    sequential (it does not instantiate new threads) and the logging is done at the console and not on
-    a file.
 """
 from __future__ import division
 
@@ -41,9 +39,12 @@ def main():
                         action="store_true",
                         default=False,
                         help="print log level debug to stdout")
+    parser.add_argument("--console",
+                        action="store_true",
+                        default=False,
+                        help="log to console")
 
     args = parser.parse_args()
-
     # the following if surely is "bad". In the end we can not maintain two PublisheMaster with 80% code overlap
     # but since we did not touch PublisherMaster.py (the _schedd) one in one year, maybe we can limp a along
     if args.service == 'Publisher_schedd':
@@ -53,14 +54,18 @@ def main():
     else:
         raise Exception(f"Unknown/Unspecified service= {args.service}")
 
-    QUIET = False  # there is actually no need for this in PublisherMaster*py, Some cleanup could be done
     if args.pdb:
+        args.console = True
+        args.sequential = True
+        args.logDebug = True
         import pdb #pylint: disable=import-outside-toplevel
         pdb.set_trace()  # pylint: disable=forgotten-debug-statement
 
     # need to pass the configuration file path to the slaves
     configurationFile = os.path.abspath(args.config)
-    master = Master(configurationFile, quiet=QUIET, debug=args.logDebug, sequential=args.sequential)
+
+    # main
+    master = Master(configurationFile, sequential=args.sequential, logDebug=args.logDebug, console=args.console)
     while True:
         master.algorithm()
         time.sleep(master.pollInterval())
