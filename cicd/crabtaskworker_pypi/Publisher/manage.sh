@@ -16,9 +16,12 @@
 ##H   - PYTHONPATH: inherit from ./start.sh
 ##H   - SERVICE:    inherit from container environment
 ##H                 (e.g., `-e SERVICE=Publisher_schedd` when do `docker run`)
-set -x
 set -euo pipefail
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+if [[ -n ${TRACE+x} ]]; then
+    set -x
+    export TRACE
+fi
 
 # some variable use in start_srv
 CONFIG="${SCRIPT_DIR}"/current/PublisherConfig.py
