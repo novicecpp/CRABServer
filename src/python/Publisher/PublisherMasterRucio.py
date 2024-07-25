@@ -23,8 +23,8 @@ from ServerUtilities import encodeRequest, oracleOutputMapping, executeCommand
 from TaskWorker.WorkerUtilities import getCrabserver
 from RucioUtils import getNativeRucioClient
 
-from PublisherUtils import createLogdir, setRootLogger, setSlaveLogger, logVersionAndConfig
-from PublisherUtils import getInfoFromFMD, markFailed
+from Publisher.PublisherUtils import createLogdir, setRootLogger, setSlaveLogger, logVersionAndConfig
+from Publisher.PublisherUtils import getInfoFromFMD, markFailed
 
 
 class Master():  # pylint: disable=too-many-instance-attributes

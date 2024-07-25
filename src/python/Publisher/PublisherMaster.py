@@ -27,8 +27,8 @@ from ServerUtilities import getHashLfn
 from ServerUtilities import getProxiedWebDir
 from TaskWorker.WorkerUtilities import getCrabserver
 
-from PublisherUtils import createLogdir, setRootLogger, setSlaveLogger, logVersionAndConfig
-from PublisherUtils import getInfoFromFMD
+from Publisher.PublisherUtils import createLogdir, setRootLogger, setSlaveLogger, logVersionAndConfig
+from Publisher.PublisherUtils import getInfoFromFMD
 
 
 class Master():  # pylint: disable=too-many-instance-attributes
