@@ -30,7 +30,7 @@ from Publisher.PublisherUtils import getInfoFromFMD, markFailed
 class Master():  # pylint: disable=too-many-instance-attributes
     """I am the main daemon kicking off all Publisher work via slave Publishers"""
 
-    def __init__(self, confFile=None, quiet=False, debug=True, sequential=False):
+    def __init__(self, confFile=None, sequential=False, logDebug=True, console=False):
         """
         Initialise class members
 
@@ -62,7 +62,7 @@ class Master():  # pylint: disable=too-many-instance-attributes
         createLogdir(self.blackListedTaskDir)
 
         # if self.sequential is True, we want the log output to console
-        self.logger = setRootLogger(self.config.logsDir, quiet=quiet, debug=debug, console=self.sequential)
+        self.logger = setRootLogger(self.config.logsDir, logDebug=logDebug, console=console)
         logVersionAndConfig(config, self.logger)
 
         # CRAB REST API
