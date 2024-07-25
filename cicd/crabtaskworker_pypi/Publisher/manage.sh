@@ -16,7 +16,7 @@
 ##H   - PYTHONPATH: inherit from ./start.sh
 ##H   - SERVICE:    inherit from container environment
 ##H                 (e.g., `-e SERVICE=Publisher_schedd` when do `docker run`)
-
+set -x
 set -euo pipefail
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
@@ -29,17 +29,20 @@ helpFunction() {
 
 _getPublisherPid() {
     pid=$(pgrep -f 'crab-publisher' | grep -v grep | head -1 ) || true
-    return "${pid}"
+    echo "${pid}"
 }
 
 _isPublisherBusy(){
+    # find my bearings
+    myDir="${SCRIPT_DIR}"
+    myLog="${myDir}"/logs/log.txt
     # a function to tell if PublisherMaster is busy or waiting
     #   return 0 = success = Publisher is Busy
     #   return 1 = failure = Publisher can be killed w/o fear
     lastLine=$(tail -1 "${myLog}")
     echo "${lastLine}" | grep -q 'Next cycle will start at'
     cycleDone=$?
-    if [ $cycleDone = 1 ] ; then
+    if [[ $cycleDone = 1 ]] ; then
         # inside working cycle
         return 0
     else
@@ -48,12 +51,12 @@ _isPublisherBusy(){
         startTime=$(date -d ${start} +%s)  # in seconds from Epoch
         now=$(date +%s) # in seconds from Epoch
         delta=$((${startTime}-${now}))
-        if [[ $delta -gt 60 ]]; then
-            # no race with starting of next cycle, safe to kill
-            return 1
-        else
+        if [[ $delta -gt -300 && $delta -lt 60 ]]; then
             # next cycle about to start, wait until is done
             return 0
+        else
+            # no race with starting of next cycle, safe to kill
+            return 1
         fi
     fi
 }
@@ -73,21 +76,18 @@ start_srv() {
     else
         crab-publisher --config "${CONFIG}" --service "${SERVICE}" --logDebug &
     fi
-    echo "Started Publisher with Publisher pid $(_getPub)"
+    echo "Started Publisher with Publisher pid $(_getPublisherPid)"
 
 }
 
 stop_srv() {
     # This part is copy directly from https://github.com/dmwm/CRABServer/blob/3af9d658271a101db02194f48c5cecaf5fab7725/src/script/Deployment/Publisher/stop.sh
 
-  # find my bearings
-  myDir="${SCRIPT_DIR}"
-  myLog="${myDir}"/logs/log.txt
   nIter=1
   # check if publisher is still processing by look at the pb logs
   while _isPublisherBusy;  do
       # exit loop if publisher process is gone
-      if [[ -n $(_getPublisherPid) ]]; then
+      if [[ -z $(_getPublisherPid) ]]; then
          break;
       fi
       [[ $nIter = 1 ]] && echo "Waiting for MasterPublisher to complete cycle: ."
@@ -102,7 +102,14 @@ stop_srv() {
   echo ""
   echo "Publisher is in waiting now. Killing RunPublisher"
   # ignore retcode in case it got kill by other process or crash
-  pkill -f RunPublisher || true
+  pkill -f crab-publisher || true
+  # exit loop if publisher process is gone
+  stillrunpid=$(_getPublisherPid)
+  if [[ -n ${stillrunpid} ]]; then
+      echo "Error: crab-publisher is still running ${stillrunpid}"
+      exit 1
+  fi
+
 }
 
 # Main routine, perform action requested on command line.
