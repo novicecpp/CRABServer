@@ -106,7 +106,7 @@ stop_srv() {
   echo "Publisher is in waiting now. Killing RunPublisher"
   # ignore retcode in case it got kill by other process or crash
   pkill -f crab-publisher || true
-  # exit loop if publisher process is gone
+  # ensure there is no crab-publisher process
   stillrunpid=$(_getPublisherPid)
   if [[ -n ${stillrunpid} ]]; then
       echo "Error: crab-publisher is still running ${stillrunpid}"

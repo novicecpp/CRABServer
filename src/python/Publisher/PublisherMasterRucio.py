@@ -30,7 +30,7 @@ from Publisher.PublisherUtils import getInfoFromFMD, markFailed
 class Master():  # pylint: disable=too-many-instance-attributes
     """I am the main daemon kicking off all Publisher work via slave Publishers"""
 
-    def __init__(self, confFile=None, sequential=False, logDebug=True, console=False):
+    def __init__(self, confFile=None, sequential=False, logDebug=False, console=False):
         """
         Initialise class members
 
