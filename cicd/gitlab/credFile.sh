@@ -33,6 +33,7 @@ case "${CREDS_TYPE}" in
         if [[ "${rc}" -ne 0 ]]; then
             >&2 echo "Proxy file has expired. Generating new one from local cert..."
             >&2 voms-proxy-init --rfc --voms cms -valid 196:00
+            >&2 voms-proxy-info
             CREDS_FILE="$(voms-proxy-info -path)"
         fi
         ;;
