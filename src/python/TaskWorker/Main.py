@@ -6,7 +6,7 @@ import sys
 
 from WMCore.Configuration import loadConfigurationFile
 from TaskWorker.WorkerExceptions import ConfigException
-from TaskWorker.MasterWorker import MasterWorker
+
 import HTCondorLocator
 
 def validateConfig(config):
@@ -69,6 +69,11 @@ def main():
     status_, msg_ = validateConfig(configuration)
     if not status_:
         raise ConfigException(msg_)
+
+    if getattr(configuration.TaskWorker, 'useHtcV2', None):
+        os.environ['useHtcV2'] = 'True'
+        print("V2")
+    from TaskWorker.MasterWorker import MasterWorker #pylint: disable=import-outside-toplevel
 
     if options.pdb:
         # override root loglevel to debug
