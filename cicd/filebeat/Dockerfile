@@ -26,3 +26,4 @@ ENTRYPOINT ["tini", "--"]
 CMD [ "/usr/share/filebeat/bin/filebeat", "--path.home", "/tmp/filebeat", \
       "-c", "/data/hostdisk/filebeat-crabtwfilebeat.yaml" ]
 
+
