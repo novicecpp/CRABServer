@@ -129,10 +129,10 @@ COPY chown -R 1000:1000 src/python/ ${WDIR}/srv/current/lib/python/site-packages
 ## TaskWorker
 COPY --chown -R 1000:1000 cicd/crabtaskworker_pypi/TaskWorker/start.sh \
      && --chown -R 1000:1000 cicd/crabtaskworker_pypi/TaskWorker/env.sh \
-     && --chown -R 1000:1000 -g 1000 cicd/crabtaskworker_pypi/TaskWorker/stop.sh \
-     && --chown -R 1000:1000 -g 1000 cicd/crabtaskworker_pypi/TaskWorker/manage.sh \
-     && --chown -R 1000:1000 -g 1000 cicd/crabtaskworker_pypi/updateDatafiles.sh \
-     && --chown -R 1000:1000 -g 1000 ${WDIR}/srv/TaskManager/
+     && --chown -R 1000:1000 cicd/crabtaskworker_pypi/TaskWorker/stop.sh \
+     && --chown -R 1000:1000 cicd/crabtaskworker_pypi/TaskWorker/manage.sh \
+     && --chown -R 1000:1000 cicd/crabtaskworker_pypi/updateDatafiles.sh \
+     && --chown -R 1000:1000 ${WDIR}/srv/TaskManager/
 
 COPY --chown -R 1000:1000 cicd/crabtaskworker_pypi/bin/crab-taskworker /usr/local/bin/crab-taskworker
 
