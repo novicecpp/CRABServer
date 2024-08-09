@@ -1,5 +1,3 @@
-ARG BASE_TAG=latest
-
 # caching wmcore src, need for building TaskManagerRun.tar.gz
 FROM python:3.8 as wmcore-src
 SHELL ["/bin/bash", "-c"]
@@ -65,99 +63,80 @@ RUN apt-get update \
 # local timezone (hardcode)
 RUN ln -sf /usr/share/zoneinfo/Europe/Zurich /etc/localtime
 
-# prepare build
-RUN mkdir /build
+# add new user and switch to user early
+RUN useradd -m -d ${WDIR} ${USER}
+USER ${USER}
+
+# create necessary directories with correct ownership
+RUN mkdir -p ${WDIR}/srv/tmp \
+    ${WDIR}/srv/TaskManager/current \
+    ${WDIR}/srv/TaskManager/cfg \
+    ${WDIR}/srv/TaskManager/logs \
+    ${WDIR}/srv/Publisher/current \
+    ${WDIR}/srv/Publisher/cfg \
+    ${WDIR}/srv/Publisher/logs \
+    ${WDIR}/srv/Publisher/PublisherFiles
+
+# prepare build as the non-root user
 WORKDIR /build
 
 # install dependencies
 COPY --from=wmcore-src /wmcore_version .
-COPY cicd/crabtaskworker_pypi/requirements.txt .
+COPY --chown=${USER}:${USER} cicd/crabtaskworker_pypi/requirements.txt .
 RUN pip install -r requirements.txt \
     && pip install --no-deps wmcore==$(cat wmcore_version) \
     && pip cache purge
 
 # copy htcondor config
 RUN mkdir /etc/condor
-COPY cicd/crabtaskworker_pypi/condor_config /etc/condor/
+COPY --chown=${USER}:${USER} cicd/crabtaskworker_pypi/condor_config /etc/condor/
 
 # install crabserver
-# will replace with pip later
-COPY src/python/ ${WDIR}/srv/current/lib/python/site-packages/
+COPY --chown=${USER}:${USER} src/python/ ${WDIR}/srv/current/lib/python/site-packages/
 # copy TaskManagerRun.tar.gz
-COPY --from=build-data /build/data_files/data ${WDIR}/srv/current/lib/python/site-packages/data
+COPY --from=build-data --chown=${USER}:${USER} /build/data_files/data ${WDIR}/srv/current/lib/python/site-packages/data
 
 # copy cern openldap config
-COPY --from=cern-cc7 /etc/openldap /etc/openldap
+COPY --from=cern-cc7 --chown=${USER}:${USER} /etc/openldap /etc/openldap
 
 # copy rucio config
-RUN mkdir -p /opt/rucio/etc/
-COPY cicd/crabtaskworker_pypi/rucio.cfg /opt/rucio/etc/
+COPY --chown=${USER}:${USER} cicd/crabtaskworker_pypi/rucio.cfg /opt/rucio/etc/
 
 # add github repos, reuse script in crabserver_pypi
-COPY cicd/crabserver_pypi/addGH.sh .
+COPY --chown=${USER}:${USER} cicd/crabserver_pypi/addGH.sh .
 RUN bash addGH.sh
 
 # clean up
 WORKDIR ${WDIR}
 RUN rm -rf /build
 
-# add new user and switch to user
-RUN useradd -m ${USER} \
-    && install -o ${USER} -d ${WDIR}
-
-# create working directory
-RUN mkdir -p ${WDIR}/srv/tmp
-## taskworker
-RUN install -d -o 1000 -g 1000 ${WDIR}/srv/TaskManager/current \
-    && install -d -o 1000 -g 1000 ${WDIR}/srv/TaskManager/cfg \
-    && install -d -o 1000 -g 1000 ${WDIR}/srv/TaskManager/log
-
-## publisher
-RUN install -d -o 1000 -g 1000 ${WDIR}/srv/Publisher/current \
-    && install -d -o 1000 -g 1000 ${WDIR}/srv/Publisher/cfg \
-    && install -d -o 1000 -g 1000 ${WDIR}/srv/Publisher/log \
-    && install -d -o 1000 -g 1000 ${WDIR}/srv/Publisher/PublisherFiles
-
-USER ${USER}
-
-ENTRYPOINT ["tini", "--"]
-CMD ["/data/run.sh"]
-
-# copy TaskManagerRun.tar.gz
-COPY install -d -o 1000 -g 1000 --from=build-data /build/data_files/data ${WDIR}/srv/current/lib/python/site-packages/data
-
-# install crabserver
-# will replace with pip later
-COPY install -d -o 1000 -g 1000 src/python/ ${WDIR}/srv/current/lib/python/site-packages/
-
 # copy process executor scripts
 ## TaskWorker
-COPY install -d -o 1000 -g 1000 cicd/crabtaskworker_pypi/TaskWorker/start.sh \
-     && install -d -o 1000 -g 1000 cicd/crabtaskworker_pypi/TaskWorker/env.sh \
-     && install -d -o 1000 -g 1000 cicd/crabtaskworker_pypi/TaskWorker/stop.sh \
-     && install -d -o 1000 -g 1000 cicd/crabtaskworker_pypi/TaskWorker/manage.sh \
-     && install -d -o 1000 -g 1000 cicd/crabtaskworker_pypi/updateDatafiles.sh \
-     && install -d -o 1000 -g 1000 ${WDIR}/srv/TaskManager/
+COPY --chown=${USER}:${USER} cicd/crabtaskworker_pypi/TaskWorker/start.sh \
+     cicd/crabtaskworker_pypi/TaskWorker/env.sh \
+     cicd/crabtaskworker_pypi/TaskWorker/stop.sh \
+     cicd/crabtaskworker_pypi/TaskWorker/manage.sh \
+     cicd/crabtaskworker_pypi/updateDatafiles.sh \
+     ${WDIR}/srv/TaskManager/
 
-COPY install -d -o 1000 -g 1000 cicd/crabtaskworker_pypi/bin/crab-taskworker /usr/local/bin/crab-taskworker
+COPY --chown=${USER}:${USER} cicd/crabtaskworker_pypi/bin/crab-taskworker \
+     cicd/crabtaskworker_pypi/bin/crab-publisher /usr/local/bin
 
-## publisher
-COPY install -d -o 1000 -g 1000 cicd/crabtaskworker_pypi/Publisher/start.sh \
-     && install -d -o 1000 -g 1000 cicd/crabtaskworker_pypi/Publisher/env.sh \
-     && install -d -o 1000 -g 1000 cicd/crabtaskworker_pypi/Publisher/stop.sh \
-     && install -d -o 1000 -g 1000 cicd/crabtaskworker_pypi/Publisher/manage.sh \
-     && install -d -o 1000 -g 1000 ${WDIR}/srv/Publisher/
+## Publisher
+COPY --chown=${USER}:${USER} cicd/crabtaskworker_pypi/Publisher/start.sh \
+     cicd/crabtaskworker_pypi/Publisher/env.sh \
+     cicd/crabtaskworker_pypi/Publisher/stop.sh \
+     cicd/crabtaskworker_pypi/Publisher/manage.sh \
+     ${WDIR}/srv/Publisher/
 
 ## entrypoint
-COPY cicd/crabtaskworker_pypi/run.sh /data
-USER root
+COPY --chown=${USER}:${USER} cicd/crabtaskworker_pypi/run.sh ${WDIR}
 
-# for debugging purpose
+# for debugging purposes (requires root access)
+USER root
 RUN echo "${USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/01-crab3
 
-# ensure all /data owned by running user
-# RUN chown -R 1000:1000 ${WDIR}
-
+# switch back to non-root user
 USER ${USER}
 
 ENTRYPOINT ["tini", "--"]
