@@ -48,13 +48,6 @@ SHELL ["/bin/bash", "-c"]
 ENV USER=crab3
 ENV WDIR=/data
 
-# FROM registry.cern.ch/cmscrab/crabtaskworker:${BASE_TAG}
-
-# # start image
-# FROM registry.cern.ch/cmscrab/crabtaskworker:${BASE_TAG} as base-image
-
-
-
 # install gfal
 # symlink to workaround calling gfal from absolute path
 COPY --from=wmcore-gfal ${WDIR}/miniconda ${WDIR}/miniconda
@@ -108,49 +101,29 @@ RUN bash addGH.sh
 WORKDIR ${WDIR}
 RUN rm -rf /build
 
-# add new user and switch to user
-RUN useradd -m ${USER} \
-    && install -o ${USER} -d ${WDIR}
+# # add new user and switch to user
+# RUN useradd -m ${USER} \
+#     && install -o ${USER} -d ${WDIR}
 
-# create working directory
-RUN mkdir -p ${WDIR}/srv/tmp
-## taskworker
-RUN install -d -o 1000 -g 1000 ${WDIR}/srv/TaskManager/current \
-    && install -d -o 1000 -g 1000 ${WDIR}/srv/TaskManager/cfg \
-    && install -d -o 1000 -g 1000 ${WDIR}/srv/TaskManager/log
-
-## publisher
-RUN install -d -o 1000 -g 1000 ${WDIR}/srv/Publisher/current \
-    && install -d -o 1000 -g 1000 ${WDIR}/srv/Publisher/cfg \
-    && install -d -o 1000 -g 1000 ${WDIR}/srv/Publisher/log \
-    && install -d -o 1000 -g 1000 ${WDIR}/srv/Publisher/PublisherFiles
-
-# # copy process executor scripts
-# ## TaskWorker
-# COPY cicd/crabtaskworker_pypi/TaskWorker/start.sh \
-#      cicd/crabtaskworker_pypi/TaskWorker/env.sh \
-#      cicd/crabtaskworker_pypi/TaskWorker/stop.sh \
-#      cicd/crabtaskworker_pypi/TaskWorker/manage.sh \
-#      cicd/crabtaskworker_pypi/updateDatafiles.sh \
-#      ${WDIR}/srv/TaskManager/
-
-# COPY cicd/crabtaskworker_pypi/bin/crab-taskworker /usr/local/bin/crab-taskworker
+# # create working directory
+# RUN mkdir -p ${WDIR}/srv/tmp
+# ## taskworker
+# RUN install -d -o 1000 -g 1000 ${WDIR}/srv/TaskManager/current \
+#     && install -d -o 1000 -g 1000 ${WDIR}/srv/TaskManager/cfg \
+#     && install -d -o 1000 -g 1000 ${WDIR}/srv/TaskManager/log
 
 # ## publisher
-# COPY cicd/crabtaskworker_pypi/Publisher/start.sh \
-#      cicd/crabtaskworker_pypi/Publisher/env.sh \
-#      cicd/crabtaskworker_pypi/Publisher/stop.sh \
-#      cicd/crabtaskworker_pypi/Publisher/manage.sh \
-#      ${WDIR}/srv/Publisher/
+# RUN install -d -o 1000 -g 1000 ${WDIR}/srv/Publisher/current \
+#     && install -d -o 1000 -g 1000 ${WDIR}/srv/Publisher/cfg \
+#     && install -d -o 1000 -g 1000 ${WDIR}/srv/Publisher/log \
+#     && install -d -o 1000 -g 1000 ${WDIR}/srv/Publisher/PublisherFiles
 
-# ## entrypoint
-# COPY cicd/crabtaskworker_pypi/run.sh /data
-
-# # for debuggin purpose
-# RUN echo "${USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/01-crab3
-
-# make sure all /data own by running user
-# RUN chown -R 1000:1000 ${WDIR}
+# add new user and switch to user
+RUN useradd -m -d ${WDIR} ${USER} \
+    && mkdir -p ${WDIR}/srv/tmp \
+    && mkdir -p ${WDIR}/srv/TaskManager/current ${WDIR}/srv/TaskManager/cfg ${WDIR}/srv/TaskManager/log \
+    && mkdir -p ${WDIR}/srv/Publisher/current ${WDIR}/srv/Publisher/cfg ${WDIR}/srv/Publisher/log ${WDIR}/srv/Publisher/PublisherFiles \
+    && chown -R ${USER}:${USER} ${WDIR}
 
 USER ${USER}
 
