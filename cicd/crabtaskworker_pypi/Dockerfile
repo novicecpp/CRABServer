@@ -143,7 +143,7 @@ COPY --chown=1000:1000 cicd/crabtaskworker_pypi/Publisher/manage.sh ${WDIR}/srv/
 
 
 ## entrypoint
-COPY cicd/crabtaskworker_pypi/run.sh /data
+COPY --chown=1000:1000 cicd/crabtaskworker_pypi/run.sh ${WDIR}
 USER root
 
 # for debugging purpose
