@@ -149,7 +149,7 @@ COPY install -d -o 1000 -g 1000 cicd/crabtaskworker_pypi/Publisher/start.sh \
      && install -d -o 1000 -g 1000 ${WDIR}/srv/Publisher/
 
 ## entrypoint
-COPY install -d -o 1000 -g 1000 cicd/crabtaskworker_pypi/run.sh /data
+COPY cicd/crabtaskworker_pypi/run.sh /data
 USER root
 
 # for debugging purpose
