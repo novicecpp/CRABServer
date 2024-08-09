@@ -171,8 +171,8 @@ deploy_server:
     - yq -i -y ".\"current-context\" = \"$KUBECONTEXT\"" $KUBECONFIG_FILE
     - export KUBECONFIG=$KUBECONFIG_FILE
     - kubectl set image deployment/crabserver "crabserver=registry.cern.ch/cmscrab/crabserver:${IMAGE_TAG}"
-    - kubectl rollout status deployment crabserver --watch --timeout=5m
     - kubectl get pods -l app=crabserver
+    - kubectl rollout status deployment crabserver --watch --timeout=5m
 
 .deploy_tw_template:
   rules:
