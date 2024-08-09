@@ -101,29 +101,22 @@ RUN bash addGH.sh
 WORKDIR ${WDIR}
 RUN rm -rf /build
 
-# # add new user and switch to user
-# RUN useradd -m ${USER} \
-#     && install -o ${USER} -d ${WDIR}
-
-# # create working directory
-# RUN mkdir -p ${WDIR}/srv/tmp
-# ## taskworker
-# RUN install -d -o 1000 -g 1000 ${WDIR}/srv/TaskManager/current \
-#     && install -d -o 1000 -g 1000 ${WDIR}/srv/TaskManager/cfg \
-#     && install -d -o 1000 -g 1000 ${WDIR}/srv/TaskManager/log
-
-# ## publisher
-# RUN install -d -o 1000 -g 1000 ${WDIR}/srv/Publisher/current \
-#     && install -d -o 1000 -g 1000 ${WDIR}/srv/Publisher/cfg \
-#     && install -d -o 1000 -g 1000 ${WDIR}/srv/Publisher/log \
-#     && install -d -o 1000 -g 1000 ${WDIR}/srv/Publisher/PublisherFiles
-
 # add new user and switch to user
-RUN useradd -m -d ${WDIR} ${USER} \
-    && mkdir -p ${WDIR}/srv/tmp \
-    && mkdir -p ${WDIR}/srv/TaskManager/current ${WDIR}/srv/TaskManager/cfg ${WDIR}/srv/TaskManager/log \
-    && mkdir -p ${WDIR}/srv/Publisher/current ${WDIR}/srv/Publisher/cfg ${WDIR}/srv/Publisher/log ${WDIR}/srv/Publisher/PublisherFiles \
-    && chown -R ${USER}:${USER} ${WDIR}
+RUN useradd -m ${USER} \
+    && install -o ${USER} -d ${WDIR}
+
+# create working directory
+RUN mkdir -p ${WDIR}/srv/tmp
+## taskworker
+RUN install -d -o 1000 -g 1000 ${WDIR}/srv/TaskManager/current \
+    && install -d -o 1000 -g 1000 ${WDIR}/srv/TaskManager/cfg \
+    && install -d -o 1000 -g 1000 ${WDIR}/srv/TaskManager/log
+
+## publisher
+RUN install -d -o 1000 -g 1000 ${WDIR}/srv/Publisher/current \
+    && install -d -o 1000 -g 1000 ${WDIR}/srv/Publisher/cfg \
+    && install -d -o 1000 -g 1000 ${WDIR}/srv/Publisher/log \
+    && install -d -o 1000 -g 1000 ${WDIR}/srv/Publisher/PublisherFiles
 
 USER ${USER}
 
@@ -131,32 +124,32 @@ ENTRYPOINT ["tini", "--"]
 CMD ["/data/run.sh"]
 
 # copy TaskManagerRun.tar.gz
-COPY --from=build-data /build/data_files/data ${WDIR}/srv/current/lib/python/site-packages/data
+COPY install -d -o 1000 -g 1000 --from=build-data /build/data_files/data ${WDIR}/srv/current/lib/python/site-packages/data
 
 # install crabserver
 # will replace with pip later
-COPY src/python/ ${WDIR}/srv/current/lib/python/site-packages/
+COPY install -d -o 1000 -g 1000 src/python/ ${WDIR}/srv/current/lib/python/site-packages/
 
 # copy process executor scripts
 ## TaskWorker
-COPY cicd/crabtaskworker_pypi/TaskWorker/start.sh \
-     cicd/crabtaskworker_pypi/TaskWorker/env.sh \
-     cicd/crabtaskworker_pypi/TaskWorker/stop.sh \
-     cicd/crabtaskworker_pypi/TaskWorker/manage.sh \
-     cicd/crabtaskworker_pypi/updateDatafiles.sh \
-     ${WDIR}/srv/TaskManager/
+COPY install -d -o 1000 -g 1000 cicd/crabtaskworker_pypi/TaskWorker/start.sh \
+     && install -d -o 1000 -g 1000 cicd/crabtaskworker_pypi/TaskWorker/env.sh \
+     && install -d -o 1000 -g 1000 cicd/crabtaskworker_pypi/TaskWorker/stop.sh \
+     && install -d -o 1000 -g 1000 cicd/crabtaskworker_pypi/TaskWorker/manage.sh \
+     && install -d -o 1000 -g 1000 cicd/crabtaskworker_pypi/updateDatafiles.sh \
+     && install -d -o 1000 -g 1000 ${WDIR}/srv/TaskManager/
 
-COPY cicd/crabtaskworker_pypi/bin/crab-taskworker /usr/local/bin/crab-taskworker
+COPY install -d -o 1000 -g 1000 cicd/crabtaskworker_pypi/bin/crab-taskworker /usr/local/bin/crab-taskworker
 
 ## publisher
-COPY cicd/crabtaskworker_pypi/Publisher/start.sh \
-     cicd/crabtaskworker_pypi/Publisher/env.sh \
-     cicd/crabtaskworker_pypi/Publisher/stop.sh \
-     cicd/crabtaskworker_pypi/Publisher/manage.sh \
-     ${WDIR}/srv/Publisher/
+COPY install -d -o 1000 -g 1000 cicd/crabtaskworker_pypi/Publisher/start.sh \
+     && install -d -o 1000 -g 1000 cicd/crabtaskworker_pypi/Publisher/env.sh \
+     && install -d -o 1000 -g 1000 cicd/crabtaskworker_pypi/Publisher/stop.sh \
+     && install -d -o 1000 -g 1000 cicd/crabtaskworker_pypi/Publisher/manage.sh \
+     && install -d -o 1000 -g 1000 ${WDIR}/srv/Publisher/
 
 ## entrypoint
-COPY cicd/crabtaskworker_pypi/run.sh /data
+COPY install -d -o 1000 -g 1000 cicd/crabtaskworker_pypi/run.sh /data
 USER root
 
 # for debugging purpose
