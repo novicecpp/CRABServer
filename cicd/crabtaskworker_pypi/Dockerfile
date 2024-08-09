@@ -127,21 +127,20 @@ COPY --chown=1000:1000 src/python/ ${WDIR}/srv/current/lib/python/site-packages/
 
 # copy process executor scripts
 ## TaskWorker
-COPY --chown=1000:1000 cicd/crabtaskworker_pypi/TaskWorker/start.sh \
-COPY --chown=1000:1000 cicd/crabtaskworker_pypi/TaskWorker/env.sh \
-COPY --chown=1000:1000 cicd/crabtaskworker_pypi/TaskWorker/stop.sh \
-COPY --chown=1000:1000 cicd/crabtaskworker_pypi/TaskWorker/manage.sh \
-COPY --chown=1000:1000 cicd/crabtaskworker_pypi/updateDatafiles.sh \
-COPY --chown=1000:1000 ${WDIR}/srv/TaskManager/
+COPY --chown=1000:1000 cicd/crabtaskworker_pypi/TaskWorker/start.sh ${WDIR}/srv/TaskManager/
+COPY --chown=1000:1000 cicd/crabtaskworker_pypi/TaskWorker/env.sh ${WDIR}/srv/TaskManager/
+COPY --chown=1000:1000 cicd/crabtaskworker_pypi/TaskWorker/stop.sh ${WDIR}/srv/TaskManager/
+COPY --chown=1000:1000 cicd/crabtaskworker_pypi/TaskWorker/manage.sh ${WDIR}/srv/TaskManager/
+COPY --chown=1000:1000 cicd/crabtaskworker_pypi/updateDatafiles.sh ${WDIR}/srv/TaskManager/
 
 COPY --chown=1000:1000 cicd/crabtaskworker_pypi/bin/crab-taskworker /usr/local/bin/crab-taskworker
 
 ## publisher
-COPY --chown=1000:1000 cicd/crabtaskworker_pypi/Publisher/start.sh \
-COPY --chown=1000:1000 cicd/crabtaskworker_pypi/Publisher/env.sh \
-COPY --chown=1000:1000 cicd/crabtaskworker_pypi/Publisher/stop.sh \
-COPY --chown=1000:1000 cicd/crabtaskworker_pypi/Publisher/manage.sh \
-COPY --chown=1000:1000 ${WDIR}/srv/Publisher/
+COPY --chown=1000:1000 cicd/crabtaskworker_pypi/Publisher/start.sh ${WDIR}/srv/Publisher/
+COPY --chown=1000:1000 cicd/crabtaskworker_pypi/Publisher/env.sh ${WDIR}/srv/Publisher/
+COPY --chown=1000:1000 cicd/crabtaskworker_pypi/Publisher/stop.sh ${WDIR}/srv/Publisher/
+COPY --chown=1000:1000 cicd/crabtaskworker_pypi/Publisher/manage.sh ${WDIR}/srv/Publisher/
+
 
 ## entrypoint
 COPY cicd/crabtaskworker_pypi/run.sh /data
