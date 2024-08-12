@@ -80,33 +80,33 @@ RUN pip install -r requirements.txt \
 RUN mkdir /etc/condor
 COPY cicd/crabtaskworker_pypi/condor_config /etc/condor/
 
+# add new user and switch to user
+RUN useradd -m ${USER} \
+    && install -o 1000 -g 1000 ${USER} -d ${WDIR}
+
 # install crabserver
 # will replace with pip later
-COPY src/python/ ${WDIR}/srv/current/lib/python/site-packages/
+COPY --chown=1000:1000 src/python/ ${WDIR}/srv/current/lib/python/site-packages/
 # copy TaskManagerRun.tar.gz
-COPY --from=build-data /build/data_files/data ${WDIR}/srv/current/lib/python/site-packages/data
+COPY --chown=1000:1000 --from=build-data /build/data_files/data ${WDIR}/srv/current/lib/python/site-packages/data
 
 # copy cern openldap config
-COPY --from=cern-cc7 /etc/openldap /etc/openldap
+COPY --chown=1000:1000 --from=cern-cc7 /etc/openldap /etc/openldap
 
 # copy rucio config
 RUN mkdir -p /opt/rucio/etc/
-COPY cicd/crabtaskworker_pypi/rucio.cfg /opt/rucio/etc/
+COPY --chown=1000:1000 cicd/crabtaskworker_pypi/rucio.cfg /opt/rucio/etc/
 
 # add github repos, reuse script in crabserver_pypi
-COPY cicd/crabserver_pypi/addGH.sh .
-RUN bash addGH.sh
+COPY --chown=1000:1000 cicd/crabserver_pypi/addGH.sh .
+RUN install -d -o 1000 -g 1000 bash addGH.sh
 
 # clean up
 WORKDIR ${WDIR}
 RUN rm -rf /build
 
-# add new user and switch to user
-RUN useradd -m ${USER} \
-    && install -o ${USER} -d ${WDIR}
-
 # create working directory
-RUN mkdir -p ${WDIR}/srv/tmp
+RUN install -d -o 1000 -g 1000 mkdir -p ${WDIR}/srv/tmp
 ## taskworker
 RUN install -d -o 1000 -g 1000 ${WDIR}/srv/TaskManager/current \
     && install -d -o 1000 -g 1000 ${WDIR}/srv/TaskManager/cfg \
@@ -150,8 +150,8 @@ USER root
 RUN echo "${USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/01-crab3
 
 # Ensure ownership of specific critical directories/files
-RUN chown -R 1000:1000 ${WDIR}/srv/TaskManager/log
-RUN chown -R 1000:1000 ${WDIR}/srv/Publisher/PublisherFiles
+RUN chown -R 1000:1000 ${WDIR}/srv/TaskManager/
+RUN chown -R 1000:1000 ${WDIR}/srv/Publisher/
 
 # ensure all /data owned by running user
 # RUN chown -R 1000:1000 ${WDIR}
