@@ -133,26 +133,26 @@ build_image:
 #         - src/python/TaskWorker/__init__.py
 #       policy: pull
 
-build_crabtwfilebeat_image:
-  rules:
-    - if: $SUBMIT_STATUS_TRACKING
-      when: never
-    - !reference [.default_rules, release]
-  stage: build_docker
-  image:
-    name: docker:27.1.1
-  services:
-    - name: docker:27.1.1-dind
-  script:
-    - echo "{\"auths\":{\"$CMSCRAB_REGISTRY_URL\":{\"auth\":\"$(echo -n $CMSCRAB_REGISTRY_USER:$CMSCRAB_REGISTRY_PASSWORD | base64)\"}}}" 
-    - docker login -u $CMSCRAB_REGISTRY_USER -p $CMSCRAB_REGISTRY_PASSWORD $CMSCRAB_REGISTRY_URL
-    - docker build --build-arg "BASE_TAG=${IMAGE_TAG}" -f "${CI_PROJECT_DIR}/cicd/filebeat/Dockerfile" -t "registry.cern.ch/cmscrab/crabtwfilebeat:${IMAGE_TAG}" .
-    - docker push "registry.cern.ch/cmscrab/crabtwfilebeat:${IMAGE_TAG}"
-  cache:
-    - key: $CI_PIPELINE_ID
-      paths:
-        - src/python/TaskWorker/__init__.py
-      policy: pull
+# build_crabtwfilebeat_image:
+#   rules:
+#     - if: $SUBMIT_STATUS_TRACKING
+#       when: never
+#     - !reference [.default_rules, release]
+#   stage: build_docker
+#   image:
+#     name: docker:27.1.1
+#   services:
+#     - name: docker:27.1.1-dind
+#   script:
+#     - echo "{\"auths\":{\"$CMSCRAB_REGISTRY_URL\":{\"auth\":\"$(echo -n $CMSCRAB_REGISTRY_USER:$CMSCRAB_REGISTRY_PASSWORD | base64)\"}}}" 
+#     - docker login -u $CMSCRAB_REGISTRY_USER -p $CMSCRAB_REGISTRY_PASSWORD $CMSCRAB_REGISTRY_URL
+#     - docker build --build-arg "BASE_TAG=${IMAGE_TAG}" -f "${CI_PROJECT_DIR}/cicd/filebeat/Dockerfile" -t "registry.cern.ch/cmscrab/crabtwfilebeat:${IMAGE_TAG}" .
+#     - docker push "registry.cern.ch/cmscrab/crabtwfilebeat:${IMAGE_TAG}"
+#   cache:
+#     - key: $CI_PIPELINE_ID
+#       paths:
+#         - src/python/TaskWorker/__init__.py
+#       policy: pull
 
 deploy_server:
   rules:
