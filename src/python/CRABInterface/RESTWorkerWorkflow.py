@@ -124,7 +124,12 @@ def fixupTask(task):
                   'tm_edm_outfiles', 'tm_user_infiles', 'tm_arguments', 'tm_scriptargs',
                   'tm_user_files']:
         current = result[field]
-        result[field] = literal_eval(current)
+        try:
+            result[field] = literal_eval(current)
+        except Exception as e:
+            import pdb;
+            pdb.set_trace()
+            raise e
         for idx, value in enumerate(result[field]):
             if isinstance(value, bytes):
                 result[field][idx] = value.decode("utf8")
