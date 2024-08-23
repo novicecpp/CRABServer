@@ -21,6 +21,9 @@ variables:
     - if: $CI_COMMIT_TAG =~ /pypi-.*/         # pypi-(prod|preprod|test*)-1714418922
   release:
     - if: $CI_COMMIT_TAG =~ /v3\.[0-9]{6}.*/  # same as above
+  skip_deploy_and_test:
+    - if: $SUBMIT_STATUS_TRACKING || $MANUAL_CI_PIPELINE_ID || $BUILD || $BUILD_ALL || $FORCE_RELEASE
+      when: never
 
 stages:
   - prepare_env
@@ -70,7 +73,7 @@ set_version_name:
 
 build_rest_image:
   rules:
-    - if: $SUBMIT_STATUS_TRACKING
+    - if: $SUBMIT_STATUS_TRACKING || $MANUAL_CI_PIPELINE_ID
       when: never
     - !reference [.default_rules, default]
     - !reference [.default_rules, release]
@@ -93,10 +96,11 @@ build_rest_image:
         - src/python/CRABInterface/__init__.py
       policy: pull
 
-build_image:
+build_tw_image:
   rules:
-    - if: $SUBMIT_STATUS_TRACKING
+    - if: $SUBMIT_STATUS_TRACKING || $MANUAL_CI_PIPELINE_ID
       when: never
+    - if: $BUILD_ALL
     - !reference [.default_rules, default]
     - !reference [.default_rules, release]
   stage: build_docker
@@ -118,11 +122,10 @@ build_image:
 
 build_monit_image:
   rules:
-    - if: $SUBMIT_STATUS_TRACKING
-      when: never
+    - if: $BUILD_ALL
     - !reference [.default_rules, release]
   stage: build_docker
-  needs: ["build_image", "get_env"]
+  needs: ["build_tw_image", "get_env"]
   image:
     name: docker:27.1.1
   services:
@@ -141,8 +144,7 @@ build_monit_image:
 
 build_crabtwfilebeat_image:
   rules:
-    - if: $SUBMIT_STATUS_TRACKING
-      when: never
+    - if: $BUILD_ALL
     - !reference [.default_rules, release]
   stage: build_docker
   image:
@@ -163,8 +165,7 @@ build_crabtwfilebeat_image:
 
 deploy_server:
   rules:
-    - if: $SKIP_DEPLOY || $FORCE_RELEASE || $SUBMIT_STATUS_TRACKING
-      when: never
+    - !reference [.default_rules, skip_deploy_and_test]
     - !reference [.default_rules, default]
     - !reference [.default_rules, release]
   stage: deploy
@@ -182,8 +183,7 @@ deploy_server:
 
 .deploy_tw_template:
   rules:
-    - if: $SKIP_DEPLOY || $FORCE_RELEASE || $SUBMIT_STATUS_TRACKING
-      when: never
+    - !reference [.default_rules, skip_deploy_and_test]
     - !reference [.default_rules, default]
     - !reference [.default_rules, release]
   stage: deploy
@@ -215,11 +215,7 @@ deploy_publisher_rucio:
 
 task_submission_status_tracking:
   rules:
-    - if: $MANUAL_CI_PIPELINE_ID
-      when: never
-    - if: $SUBMIT_STATUS_TRACKING
-    - if: $SKIP_DEPLOY || $FORCE_RELEASE
-      when: never
+    - !reference [.default_rules, skip_deploy_and_test]
     - !reference [.default_rules, default]
     - !reference [.default_rules, release]
   stage: run_testsuite
@@ -245,10 +241,8 @@ task_submission_status_tracking:
 
 check_test_result:
   rules:
-    - if: $SUBMIT_STATUS_TRACKING
     - if: $MANUAL_CI_PIPELINE_ID
-    - if: $SKIP_DEPLOY || $FORCE_RELEASE
-      when: never
+    - !reference [.default_rules, skip_deploy_and_test]
     - !reference [.default_rules, default]
     - !reference [.default_rules, release]
   stage: check_testsuite
