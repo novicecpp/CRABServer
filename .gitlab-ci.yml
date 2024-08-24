@@ -215,8 +215,7 @@ deploy_publisher_rucio:
 
 task_submission_status_tracking:
   rules:
-    - if: $BUILD_DEPLOY
-      when: never
+    - if: $SUBMIT_STATUS_TRACKING
     - !reference [.default_rules, skip_deploy_and_test]
     - !reference [.default_rules, default]
     - !reference [.default_rules, release]
@@ -243,9 +242,7 @@ task_submission_status_tracking:
 
 check_test_result:
   rules:
-    - if: $BUILD_DEPLOY
-      when: never
-    - if: $MANUAL_CI_PIPELINE_ID
+    - if: $MANUAL_CI_PIPELINE_ID || $SUBMIT_STATUS_TRACKING
     - !reference [.default_rules, skip_deploy_and_test]
     - !reference [.default_rules, default]
     - !reference [.default_rules, release]
