@@ -22,7 +22,7 @@ variables:
   release:
     - if: $CI_COMMIT_TAG =~ /v3\.[0-9]{6}.*/  # same as above
   skip_deploy_and_test:
-    - if: $SUBMIT_STATUS_TRACKING || $MANUAL_CI_PIPELINE_ID || $BUILD || $BUILD_ALL || $FORCE_RELEASE
+    - if: $SUBMIT_STATUS_TRACKING || $MANUAL_CI_PIPELINE_ID || $BUILD || $BUILD_DEPLOY || $FORCE_RELEASE
       when: never
 
 stages:
@@ -100,7 +100,6 @@ build_tw_image:
   rules:
     - if: $SUBMIT_STATUS_TRACKING || $MANUAL_CI_PIPELINE_ID
       when: never
-    - if: $BUILD_ALL
     - !reference [.default_rules, default]
     - !reference [.default_rules, release]
   stage: build_docker
@@ -122,7 +121,6 @@ build_tw_image:
 
 build_monit_image:
   rules:
-    - if: $BUILD_ALL
     - !reference [.default_rules, release]
   stage: build_docker
   needs: ["build_tw_image", "get_env"]
@@ -144,7 +142,6 @@ build_monit_image:
 
 build_crabtwfilebeat_image:
   rules:
-    - if: $BUILD_ALL
     - !reference [.default_rules, release]
   stage: build_docker
   image:
