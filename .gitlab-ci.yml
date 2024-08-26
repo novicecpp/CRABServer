@@ -73,7 +73,7 @@ set_version_name:
 
 build_rest_image:
   rules:
-    - if: $BUILD || $BUILD_DEPLOY || FORCE_RELEASE
+    - if: $BUILD || $BUILD_DEPLOY || $FORCE_RELEASE
     - !reference [.default_rules, skip_all_base]
     - !reference [.default_rules, default]
     - !reference [.default_rules, release]
@@ -98,7 +98,7 @@ build_rest_image:
 
 build_tw_image:
   rules:
-    - if: $BUILD || $BUILD_DEPLOY || FORCE_RELEASE
+    - if: $BUILD || $BUILD_DEPLOY || $FORCE_RELEASE
     - !reference [.default_rules, skip_all_base]
     - !reference [.default_rules, default]
     - !reference [.default_rules, release]
