@@ -83,7 +83,7 @@ def parse_result(listOfTasks, checkPublication=False):
                 result = 'TestRunning'
         elif task['dbStatus'] in ['HOLDING', 'QUEUED', 'NEW']:
             result = 'TestRunning'
-        else:
+        elif task['dbStatus'] in ['SUBMITTED']:
             needToResubmit = True
         if needToResubmit:
             resubmit = crab_cmd({'cmd': 'resubmit', 'args': {'dir': task['workdir']}})
