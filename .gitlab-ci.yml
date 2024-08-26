@@ -18,12 +18,12 @@ variables:
 # and https://docs.gitlab.com/ee/ci/yaml/yaml_optimization.html#reference-tags
 .default_rules:
   default:
-    - if: $CI_COMMIT_TAG =~ /pypi-.*/         # pypi-(prod|preprod|test*)-1714418922
+    - if: $CI_COMMIT_TAG =~ /pypi-.*/         # match tag: pypi-(prod|preprod|test*)-1714418922
   release:
-    - if: $CI_COMMIT_TAG =~ /v3\.[0-9]{6}.*/  # same as above
-  skip_deploy_and_test:
-    - if: $SUBMIT_STATUS_TRACKING || $MANUAL_CI_PIPELINE_ID || $BUILD || $BUILD_DEPLOY || $FORCE_RELEASE
-      when: never
+    - if: $CI_COMMIT_TAG =~ /v3\.[0-9]{6}.*/  # match tag: v3.240101
+  skip_all_base:
+    - if: $BUILD || $BUILD_DEPLOY || $FORCE_RELEASE || $SUBMIT_STATUS_TRACKING || $MANUAL_CI_PIPELINE_ID
+      when: never                             # helper var
 
 stages:
   - prepare_env
@@ -73,8 +73,8 @@ set_version_name:
 
 build_rest_image:
   rules:
-    - if: $SUBMIT_STATUS_TRACKING || $MANUAL_CI_PIPELINE_ID
-      when: never
+    - if: $BUILD || $BUILD_DEPLOY || FORCE_RELEASE
+    - !reference [.default_rules, skip_all_base]
     - !reference [.default_rules, default]
     - !reference [.default_rules, release]
   stage: build_docker
@@ -98,8 +98,8 @@ build_rest_image:
 
 build_tw_image:
   rules:
-    - if: $SUBMIT_STATUS_TRACKING || $MANUAL_CI_PIPELINE_ID
-      when: never
+    - if: $BUILD || $BUILD_DEPLOY || FORCE_RELEASE
+    - !reference [.default_rules, skip_all_base]
     - !reference [.default_rules, default]
     - !reference [.default_rules, release]
   stage: build_docker
@@ -121,6 +121,7 @@ build_tw_image:
 
 build_monit_image:
   rules:
+    - if: $BUILD
     - !reference [.default_rules, release]
   stage: build_docker
   needs: ["build_tw_image", "get_env"]
@@ -142,6 +143,7 @@ build_monit_image:
 
 build_crabtwfilebeat_image:
   rules:
+    - if: $BUILD
     - !reference [.default_rules, release]
   stage: build_docker
   image:
@@ -162,7 +164,8 @@ build_crabtwfilebeat_image:
 
 deploy_server:
   rules:
-    - !reference [.default_rules, skip_deploy_and_test]
+    - if: $BUILD_DEPLOY
+    - !reference [.default_rules, skip_all_base]
     - !reference [.default_rules, default]
     - !reference [.default_rules, release]
   stage: deploy
@@ -180,7 +183,8 @@ deploy_server:
 
 .deploy_tw_template:
   rules:
-    - !reference [.default_rules, skip_deploy_and_test]
+    - if: $BUILD_DEPLOY
+    - !reference [.default_rules, skip_all_base]
     - !reference [.default_rules, default]
     - !reference [.default_rules, release]
   stage: deploy
@@ -213,7 +217,7 @@ deploy_publisher_rucio:
 task_submission_status_tracking:
   rules:
     - if: $SUBMIT_STATUS_TRACKING
-    - !reference [.default_rules, skip_deploy_and_test]
+    - !reference [.default_rules, skip_all_base]
     - !reference [.default_rules, default]
     - !reference [.default_rules, release]
   stage: run_testsuite
@@ -240,7 +244,7 @@ task_submission_status_tracking:
 check_test_result:
   rules:
     - if: $MANUAL_CI_PIPELINE_ID || $SUBMIT_STATUS_TRACKING
-    - !reference [.default_rules, skip_deploy_and_test]
+    - !reference [.default_rules, skip_all_base]
     - !reference [.default_rules, default]
     - !reference [.default_rules, release]
   stage: check_testsuite
