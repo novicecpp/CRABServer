@@ -9,19 +9,11 @@ if [[ -n ${TRACE+x} ]]; then
     export TRACE
 fi
 
-echo $COMMAND > /dev/null
-echo $MODE > /dev/null
-echo $DEBUG > /dev/null
-echo $SERVICE > /dev/null
-
-script_env() {
-    # some variable use in start_srv
-    CONFIG="${SCRIPT_DIR}"/current/PublisherConfig.py
-    # just t
-    export PYTHONPATH="${PYTHONPATH}"
-    export DEBUG
-    export SERVICE="${SERVICE}"
-}
+# sanity check
+if [[ -z ${COMMAND+x} || -z ${MODE+x} || -z ${DEBUG+x} || -z ${SERVICE+x} ]]; then
+    >&2 echo "All envvars are not set!."
+    exit 1
+fi
 
 _getPublisherPid() {
     pid=$(pgrep -f 'crab-publisher' | grep -v grep | head -1 ) || true
@@ -57,21 +49,26 @@ _isPublisherBusy(){
     fi
 }
 
+script_env() {
+    CONFIG="${SCRIPT_DIR}"/current/PublisherConfig.py
+    # just t
+    export PYTHONPATH="${PYTHONPATH}"
+    export DEBUG
+    export SERVICE="${SERVICE}"
+}
+
 start_srv() {
     script_env
     # hardcode APP_DIR, but if debug mode, APP_DIR can be override
-    if [[ "${DEBUG}" = 'true' ]]; then
+    if [[ -n "${DEBUG}" = 'true' ]]; then
         crab-publisher --config "${CONFIG}" --service "${SERVICE}" --logDebug --pdb
     else
         crab-publisher --config "${CONFIG}" --service "${SERVICE}" --logDebug &
     fi
     echo "Started Publisher with Publisher pid $(_getPublisherPid)"
-
 }
 
 stop_srv() {
-    # This part is copy directly from https://github.com/dmwm/CRABServer/blob/3af9d658271a101db02194f48c5cecaf5fab7725/src/script/Deployment/Publisher/stop.sh
-
   nIter=1
   # check if publisher is still processing by look at the pb logs
   while _isPublisherBusy;  do
@@ -101,6 +98,12 @@ stop_srv() {
 
 }
 
+status_srv() {
+    >&2 echo "Error: Not implemented."
+    exit 1
+}
+
+
 env_eval() {
     script_env
     echo "export PYTHONPATH=${PYTHONPATH}"
@@ -109,7 +112,7 @@ env_eval() {
 
 # Main routine, perform action requested on command line.
 case ${COMMAND:-help} in
-    start | restart )
+    start )
         stop_srv
         start_srv
         ;;
@@ -118,8 +121,8 @@ case ${COMMAND:-help} in
         stop_srv
         ;;
 
-    help )
-        helpFunction
+    status )
+        status_srv
         ;;
 
     env )

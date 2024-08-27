@@ -1,4 +1,5 @@
 #! /bin/bash
+# manage.sh for crab rest
 
 set -euo pipefail
 if [[ -n ${TRACE+x} ]]; then
@@ -36,8 +37,8 @@ script_env() {
     STATEDIR=/data/srv/state/crabserver
 }
 
-# Good thing is REST/Main.py already handle signal and has start/stop/status
-# flag for us and ready to use.
+# Good thing is REST/Main.py already handled signal and has start/stop/status
+# flag and ready to use.
 start_srv() {
     script_env
     wmc-httpd -r -d $STATEDIR -l "$STATEDIR/crabserver-fifo" $CFGFILE
