@@ -68,7 +68,7 @@ start_srv() {
     if [[ -n ${DEBUG} ]]; then
         crab-publisher --config "${CONFIG}" --service "${SERVICE}" --logDebug --pdb
     else
-        crab-publisher --config "${CONFIG}" --service "${SERVICE}" --logDebug &
+        nohup crab-publisher --config "${CONFIG}" --service "${SERVICE}" --logDebug &> logs/nohup.out
     fi
     echo "Started Publisher with Publisher pid $(_getPublisherPid)"
 }
