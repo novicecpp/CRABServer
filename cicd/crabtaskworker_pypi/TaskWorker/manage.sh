@@ -24,17 +24,17 @@ start_srv() {
     script_env
     echo "Starting TaskWorker..."
     markmodify_path=/data/srv/current/data_files_modified
-    if [[ $MODE = "fromGH" ]]; then
+    if [[ ${MODE} = "fromGH" ]]; then
         touch ${markmodify_path}
         ./updateDatafiles.sh
     elif [[ -f ${markmodify_path} ]]; then
         echo "Error: ${markmodify_path} exists."
     fi
 
-    if [[ $DEBUG = 't' ]]; then
+    if [[ -n ${DEBUG} ]]; then
         crab-taskworker --config "${CONFIG}" --logDebug --pdb
     else
-        crab-taskworker --config "${CONFIG}" --logDebug &
+        nohup crab-taskworker --config "${CONFIG}" --logDebug &> logs/nohup.out
     fi
     echo "Started TaskWorker with MasterWorker pid $(_getMasterWorkerPid)"
 }
@@ -45,17 +45,15 @@ script_env() {
     # path where we install crab code
     APP_PATH="${APP_PATH:-/data/srv/current/lib/python/site-packages/}"
 
-    # CRABTASKWORKER_ROOT is a mandatory variable for getting data directory in `DagmanCreator.getLocation()`
-    # Hardcoded the path and use new_updateTMRuntime.sh to build it from source and copy to this path.
+    # $CRABTASKWORKER_ROOT is a mandatory for getting data directory in `DagmanCreator.getLocation()`
     export CRABTASKWORKER_ROOT="${APP_PATH}"
-
+    # PYTHONPATH
     if [[ $MODE = 'fromGH' ]]; then
-       PYTHONPATH=/data/repos/CRABServer/src/python:/data/repos/WMCore/src/python:${PYTHONPATH:-}
+        PYTHONPATH=/data/repos/CRABServer/src/python:/data/repos/WMCore/src/python:${PYTHONPATH:-}
     else
-       PYTHONPATH=/data/srv/current/lib/python/site-packages:${PYTHONPATH:-}
+        PYTHONPATH="${APP_PATH}":"${PYTHONPATH:-}"
     fi
     export PYTHONPATH
-    export DEBUG
 }
 
 stop_srv() {

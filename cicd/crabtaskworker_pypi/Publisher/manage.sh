@@ -50,17 +50,22 @@ _isPublisherBusy(){
 }
 
 script_env() {
+    # config
     CONFIG="${SCRIPT_DIR}"/current/PublisherConfig.py
-    # just t
-    export PYTHONPATH="${PYTHONPATH}"
-    export DEBUG
-    export SERVICE="${SERVICE}"
+    # path where we install crab code
+    APP_PATH="${APP_PATH:-/data/srv/current/lib/python/site-packages/}"
+    # PYTHONPATH
+    if [[ $MODE = 'fromGH' ]]; then
+        PYTHONPATH=/data/repos/CRABServer/src/python:/data/repos/WMCore/src/python:${PYTHONPATH:-}
+    else
+        PYTHONPATH="${APP_PATH}":${PYTHONPATH:-}
+    fi
+    export PYTHONPATH
 }
 
 start_srv() {
     script_env
-    # hardcode APP_DIR, but if debug mode, APP_DIR can be override
-    if [[ -n "${DEBUG}" = 'true' ]]; then
+    if [[ -n ${DEBUG} ]]; then
         crab-publisher --config "${CONFIG}" --service "${SERVICE}" --logDebug --pdb
     else
         crab-publisher --config "${CONFIG}" --service "${SERVICE}" --logDebug &
@@ -107,7 +112,6 @@ status_srv() {
 env_eval() {
     script_env
     echo "export PYTHONPATH=${PYTHONPATH}"
-    echo "export SERVICE=${SERVICE}"
 }
 
 # Main routine, perform action requested on command line.
