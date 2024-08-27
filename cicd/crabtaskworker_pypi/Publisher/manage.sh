@@ -57,7 +57,6 @@ _isPublisherBusy(){
     fi
 }
 
-
 start_srv() {
     script_env
     # hardcode APP_DIR, but if debug mode, APP_DIR can be override
