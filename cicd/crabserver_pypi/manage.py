@@ -1,8 +1,7 @@
+#! /usr/bin/env python
 """
 The python helper to parse args
 """
-
-#! /usr/bin/env python
 import argparse
 import os
 
