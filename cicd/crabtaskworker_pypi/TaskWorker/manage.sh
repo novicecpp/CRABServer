@@ -97,6 +97,11 @@ stop_srv() {
     fi
 }
 
+status_srv() {
+    >&2 echo "Error: Not implemented."
+    exit 1
+}
+
 env_eval() {
     script_env
     echo "export CRABTASKWORKER_ROOT=${CRABTASKWORKER_ROOT}"
