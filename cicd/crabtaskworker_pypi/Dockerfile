@@ -123,7 +123,7 @@ RUN install -d -o ${USER} -g ${USER} ${WDIR}/srv/Publisher/current \
 # copy process executor scripts
 
 # common script
-COPY cicd/crabserver_pypi/start.sh \
+COPY --chown=${USER}:${USER} cicd/crabserver_pypi/start.sh \
      cicd/crabserver_pypi/env.sh \
      cicd/crabserver_pypi/stop.sh \
      cicd/crabserver_pypi/manage.py \
