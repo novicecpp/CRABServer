@@ -15,21 +15,11 @@ mkfifo /data/srv/state/crabserver/crabserver-fifo
 cat /data/srv/state/crabserver/crabserver-fifo &
 
 #start the service
-./manage.py start -c -s REST
-
-# trap sigterm to trigger stop process command
-stop_proc() {
-    echo "Receiving SIGTERM. Stopping wmc-httpd..."
-    ./manage.py stop
-}
-trap stop_proc SIGTERM
+#export CRYPTOGRAPHY_ALLOW_OPENSSL_102=true
+/data/start.sh -c
 
 # cat fifo forever to read logs
 while true;
 do
-    # make it background and wait
-    # Ref: https://github.com/moby/moby/issues/33319#issuecomment-457914349
-    # and https://github.com/dmwm/CMSKubernetes/blob/ca9926d20680fad639f2135d57fbe3376750e7b7/docker/pypi/wmagent/run.sh#L44-L45
-    cat /data/srv/state/crabserver/crabserver-fifo &
-    wait
+    cat /data/srv/state/crabserver/crabserver-fifo
 done
