@@ -1,9 +1,17 @@
-#! /usr/bin/env python
+"""
+The python helper to parse args
+"""
 
+#! /usr/bin/env python
 import argparse
 import os
 
+
 class EnvDefault(argparse.Action):
+    """
+    # copy from https://stackoverflow.com/a/10551190
+    # to be able to read from env if args not provided.
+    """
     def __init__(self, envvar, required=True, default=None, **kwargs):
         if envvar:
             if envvar in os.environ:
@@ -15,7 +23,7 @@ class EnvDefault(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         setattr(namespace, self.dest, values)
 
-parser = argparse.ArgumentParser(description='')
+parser = argparse.ArgumentParser(description='crab service process controller')
 
 subparsers = parser.add_subparsers(dest='command', required=True)
 parserStart = subparsers.add_parser('start')
@@ -33,9 +41,11 @@ groupModeEnv.add_argument('-g', dest='mode', action='store_const', const='fromGH
 args = parser.parse_args()
 
 env = os.environ.copy()
+# always provides variables.
 env['COMMAND'] = args.command
 env['MODE'] = getattr(args, 'mode', 'current')
 env['DEBUG'] = getattr(args, 'debug', '')
 env['SERVICE'] = getattr(args, 'service', '')
 
+# re exec the ./manage.sh
 os.execle('./manage.sh','./manage.sh', env)

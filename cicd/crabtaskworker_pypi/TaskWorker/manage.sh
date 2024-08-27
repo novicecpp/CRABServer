@@ -9,10 +9,10 @@ if [[ -n ${TRACE+x} ]]; then
 fi
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
-echo $COMMAND > /dev/null
-echo $MODE > /dev/null
-echo $DEBUG > /dev/null
-echo $SERVICE > /dev/null
+# sanity check
+if [[ -z ${COMMAND:-} || -z ${MODE:-} || -z ${DEBUG:-} || -z ${SERVICE:-} ]]; then
+    >&2 echo "All envvars are not set!."
+fi
 
 script_env() {
     ## some variable use in start_srv
