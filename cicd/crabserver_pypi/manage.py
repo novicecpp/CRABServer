@@ -40,7 +40,7 @@ groupModeEnv.add_argument('-g', dest='mode', action='store_const', const='fromGH
 args = parser.parse_args()
 
 env = os.environ.copy()
-# always provides variables.
+# always provides env vars
 env['COMMAND'] = args.command
 env['MODE'] = getattr(args, 'mode', 'current')
 env['DEBUG'] = getattr(args, 'debug', '')

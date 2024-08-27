@@ -6,15 +6,14 @@ if [[ -n ${TRACE+x} ]]; then
     export TRACE
 fi
 
-script_env() {
-    # common settings to prettify output
-    echo_e=-e
-    COLOR_OK="\\033[0;32m"
-    COLOR_WARN="\\033[0;31m"
-    COLOR_NORMAL="\\033[0;39m"
+# sanity check
+if [[ -z ${COMMAND+x} || -z ${MODE+x} || -z ${DEBUG+x} || -z ${SERVICE+x} ]]; then
+    >&2 echo "All envvars are not set!."
+    exit 1
+fi
 
-    # necessary env settings for all WM services
-    ## app path. Inherit PYTHONPATH from parent process.
+script_env() {
+    ## app path
     PYTHONPATH=${PYTHONPATH:-/data/srv/current/lib/python/site-packages}
     ## secrets
     PYTHONPATH=/data/srv/current/auth/crabserver:${PYTHONPATH}
@@ -22,8 +21,8 @@ script_env() {
     export PYTHONPATH
 
     ## service creds
-    export X509_USER_CERT=${X509_USER_CERT:-${AUTHDIR}/dmwm-service-cert.pem}
-    export X509_USER_KEY=${X509_USER_KEY:-${AUTHDIR}/dmwm-service-key.pem}
+    export X509_USER_CERT=${X509_USER_CERT:-/data/srv/current/auth/dmwm-service-cert.pem}
+    export X509_USER_KEY=${X509_USER_KEY:-/data/srv/current/auth/dmwm-service-key.pem}
 
     if [[ "${DEBUG:-}" == true ]]; then
         # this will direct WMCore/REST/Main.py to run in the foreground rather than as a demon
@@ -32,60 +31,60 @@ script_env() {
         # this will start crabserver with only one thread (default is 25) to make it easier to run pdb
         export CRABSERVER_THREAD_POOL=1
     fi
-    CFGFILE=/data/srv/current/config/config.py
-
+    # non exported vars
+    CFGFILE=/data/srv/current/config/crabserver/config.py
+    STATEDIR=/data/srv/state/crabserver
 }
 
+# Good thing is REST/Main.py already handle signal and has start/stop/status
+# flag for us and ready to use.
 start_srv() {
     script_env
     wmc-httpd -r -d $STATEDIR -l "$STATEDIR/crabserver-fifo" $CFGFILE
 }
 
 stop_srv() {
-    local pid=$(ps auxwww | egrep "wmc-httpd" | grep -v grep | awk 'BEGIN{ORS=" "} {print $2}') || true
-    if [[ -n "${pid}" ]]; then
-        echo "Stop crabserver service... ${pid}"
-        kill -9 ${pid}
-    else
-        echo "No $srv service process running."
-    fi
+    script_env
+    wmc-httpd -k -d $STATEDIR $CFGFILE
 }
 
 status_srv() {
-    local pid=`ps auxwww | egrep "wmc-httpd" | grep -v grep | awk 'BEGIN{ORS=" "} {print $2}'`
-    if  [ -z "${pid}" ]; then
-        echo "$srv service is not running"
-        return
-    fi
-    if [ ! -z "${pid}" ]; then
-        echo $echo_e "$srv service is ${COLOR_OK}RUNNING${COLOR_NORMAL}, PID=${pid}"
-        ps -f -wwww -p ${pid}
-    else
-        echo $echo_e "$srv service is ${COLOR_WARN}NOT RUNNING${COLOR_NORMAL}"
-    fi
+    script_env
+    wmc-httpd -s -d $STATEDIR $CFGFILE
+}
+
+env_eval() {
+    script_env
+    echo "export PYTHONPATH=${PYTHONPATH}"
+    echo "export X509_USER_CERT=${X509_USER_CERT}"
+    echo "export X509_USER_KEY=${X509_USER_KEY}"
 }
 
 # Main routine, perform action requested on command line.
 case ${COMMAND:-} in
-  start | restart )
-    stop_srv
-    start_srv
-    ;;
+    start | restart )
+        # no need to stop then start.
+        start_srv
+        ;;
 
-  status )
-    status_srv
-    ;;
+    status )
+        status_srv
+        ;;
 
-  stop )
-    stop_srv
-    ;;
+    stop )
+        stop_srv
+        ;;
 
-  help )
-    usage
-    ;;
+    env )
+        env_eval
+        ;;
 
-  * )
-    echo "Error: unknown command '$COMMAND'"
-    exit 1
-    ;;
+    help )
+        usage
+        ;;
+
+    * )
+        echo "Error: unknown command '$COMMAND'"
+        exit 1
+        ;;
 esac
