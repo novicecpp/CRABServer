@@ -121,11 +121,17 @@ RUN install -d -o ${USER} -g ${USER} ${WDIR}/srv/Publisher/current \
     && chown -R ${USER}:${USER} ${WDIR}/srv
 
 # copy process executor scripts
+
+# common script
+COPY cicd/crabserver_pypi/start.sh \
+     cicd/crabserver_pypi/env.sh \
+     cicd/crabserver_pypi/stop.sh \
+     cicd/crabserver_pypi/manage.py \
+     ${WDIR}/srv/TaskManager/
+
 ## TaskWorker
-COPY --chown=${USER}:${USER} cicd/crabtaskworker_pypi/TaskWorker/start.sh \
-     cicd/crabtaskworker_pypi/TaskWorker/env.sh \
-     cicd/crabtaskworker_pypi/TaskWorker/stop.sh \
-     cicd/crabtaskworker_pypi/TaskWorker/manage.sh \
+
+COPY --chown=${USER}:${USER} cicd/crabtaskworker_pypi/TaskWorker/manage.sh \
      cicd/crabtaskworker_pypi/updateDatafiles.sh \
      ${WDIR}/srv/TaskManager/
 
