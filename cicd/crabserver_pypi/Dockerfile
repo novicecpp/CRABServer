@@ -63,7 +63,7 @@ RUN ls ${WDIR}/srv/current/ \
     && install -d -o ${USER} -g ${USER} ${WDIR}/srv/current/auth/crabserver \
     && install -d -o ${USER} -g ${USER} ${WDIR}/srv/current/config/crabserver
 
-# remove unuse ${WDIR}/manage come from baseimage to prevent confusion
+# remove unuse /data/manage come from baseimage to prevent confusion
 RUN rm ${WDIR}/manage
 
 # copy running script files
