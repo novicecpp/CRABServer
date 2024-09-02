@@ -1,5 +1,7 @@
 #! /bin/bash
 
+# another comment
+
 # The entrypoint script to execute actual script base on $SERVICE.
 #
 # This script require the following environment variables:
