@@ -68,7 +68,6 @@ RUN pip install -r requirements.txt \
     && pip cache purge
 
 # install wmcore
-COPY cp ./
 COPY cicd/crabtaskworker_pypi/installWMCore.sh ./
 RUN ./installWMCore.sh
 
