@@ -69,7 +69,7 @@ RUN pip install -r requirements.txt \
 
 # install wmcore
 COPY cicd/crabserver_pypi/wmcore_requirements.txt \
-     cicd/crabtaskworker_pypi/installWMCore.sh \
+     cicd/crabserver_pypi/installWMCore.sh \
      ./
 RUN ./installWMCore.sh wmcore_requirements.txt
 
