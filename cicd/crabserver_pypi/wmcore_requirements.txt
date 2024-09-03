@@ -3,4 +3,4 @@
 # Beware, the format is not the same as the normal python requirements.txt
 # Format:
 # <repository clone url> <tag>
-https://github.com/tseethon/WMCore test_custom_build
+https://github.com/novicecpp/WMCore test_custom_build
