@@ -41,6 +41,10 @@ SHELL ["/bin/bash", "-c"]
 ENV USER=crab3
 ENV WDIR=/data
 
+# add new user
+RUN useradd -m ${USER} \
+    && install -o ${USER} -d ${WDIR}
+
 # install gfal
 # symlink to workaround calling gfal from absolute path
 COPY --chown=${USER}:${USER} --from=wmcore-gfal ${WDIR}/miniconda ${WDIR}/miniconda/
@@ -101,10 +105,6 @@ RUN bash addGH.sh
 # clean up
 WORKDIR ${WDIR}
 RUN rm -rf /build
-
-# add new user and switch to user
-RUN useradd -m ${USER} \
-    && install -o ${USER} -d ${WDIR}
 
 # create working directory
 RUN install -d -o ${USER} -g ${USER} ${WDIR}/srv/tmp
