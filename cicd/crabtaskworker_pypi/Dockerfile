@@ -68,8 +68,10 @@ RUN pip install -r requirements.txt \
     && pip cache purge
 
 # install wmcore
-COPY cicd/crabtaskworker_pypi/installWMCore.sh ./
-RUN ./installWMCore.sh
+COPY cicd/crabserver_pypi/wmcore_requirements.txt \
+     cicd/crabtaskworker_pypi/installWMCore.sh \
+     ./
+RUN ./installWMCore.sh wmcore_requirements.txt
 
 # copy htcondor config
 RUN mkdir /etc/condor
