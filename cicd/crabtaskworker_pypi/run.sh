@@ -7,9 +7,6 @@
 
 set -euo pipefail
 
-set -x
-export TRACE=t
-
 # re-export to check require env
 export SERVICE=${SERVICE}
 
