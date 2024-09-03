@@ -25,5 +25,6 @@ else
     echo "Installing WMCore ${wmcore_version} from ${wmcore_repo} via clone..."
     git clone  --depth 1 "${wmcore_repo}" -b "${wmcore_version}" WMCore
     cp -rp WMCore/src/python/* "${installpath}"
+    cp -rp WMCore/bin/wmc-httpd /usr/local/bin
     rm -rf WMCore
 fi
