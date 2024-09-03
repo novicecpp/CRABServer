@@ -67,21 +67,25 @@ COPY cicd/crabtaskworker_pypi/requirements.txt ./
 RUN pip install -r requirements.txt \
     && pip cache purge
 
+# create install dir
+RUN install -d -o ${USER} -g ${USER} ${WDIR}/srv/current/lib/python/site-packages
+
 # install wmcore
 COPY cicd/crabserver_pypi/wmcore_requirements.txt \
      cicd/crabserver_pypi/installWMCore.sh \
      ./
-RUN ./installWMCore.sh wmcore_requirements.txt
+RUN ./installWMCore.sh wmcore_requirements.txt ${WDIR}/srv/current/lib/python/site-packages
+
+# install crabserver
+# will replace with pip later
+COPY --chown=${USER}:${USER} src/python/ ${WDIR}/srv/current/lib/python/site-packages
+
+# copy TaskManagerRun.tar.gz
+COPY --chown=${USER}:${USER} --from=build-data /build/data_files/data ${WDIR}/srv/current/lib/python/site-packages/data/
 
 # copy htcondor config
 RUN mkdir /etc/condor
 COPY --chown=${USER}:${USER} cicd/crabtaskworker_pypi/condor_config /etc/condor/
-
-# install crabserver
-# will replace with pip later
-COPY --chown=${USER}:${USER} src/python/ ${WDIR}/srv/current/lib/python/site-packages/
-# copy TaskManagerRun.tar.gz
-COPY --chown=${USER}:${USER} --from=build-data /build/data_files/data ${WDIR}/srv/current/lib/python/site-packages/data/
 
 # copy cern openldap config
 COPY --chown=${USER}:${USER} --from=cern-cc7 /etc/openldap /etc/openldap/

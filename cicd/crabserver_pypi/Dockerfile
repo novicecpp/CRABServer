@@ -35,11 +35,14 @@ COPY cicd/crabserver_pypi/requirements.txt .
 # Install dependencies
 RUN pip install -r requirements.txt
 
+# create install dir
+RUN install -d -o ${USER} -g ${USER} ${WDIR}/srv/current/lib/python/site-packages
+
 # Install wmcore
 COPY cicd/crabserver_pypi/wmcore_requirements.txt \
      cicd/crabserver_pypi/installWMCore.sh \
      ./
-RUN ./installWMCore.sh wmcore_requirements.txt
+RUN ./installWMCore.sh wmcore_requirements.txt ${WDIR}/srv/current/lib/python/site-packages
 
 # Install CRAB.
 COPY --chown=${USER}:${USER} src/python/ ${WDIR}/srv/current/lib/python/site-packages
