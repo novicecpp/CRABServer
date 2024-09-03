@@ -1,14 +1,3 @@
-# caching wmcore src, need for building TaskManagerRun.tar.gz
-FROM python:3.8 AS wmcore-src
-SHELL ["/bin/bash", "-c"]
-# Use the "magic" requirements.txt from crabserver pypi
-COPY cicd/crabserver_pypi/ .
-RUN wmcore_repo="$(grep -v '^\s*#' wmcore_requirements.txt | cut -d' ' -f1)" \
-    && wmcore_version="$(grep -v '^\s*#' wmcore_requirements.txt | cut -d' ' -f2)" \
-    && git clone ${wmcore_repo} -b "${wmcore_version}" /WMCore \
-    && ( cd /WMCore; git status ) \
-    && echo "${wmcore_version}" > /wmcore_version
-
 # create data files ./data
 FROM python:3.8 AS build-data
 SHELL ["/bin/bash", "-c"]
@@ -17,11 +6,17 @@ RUN mkdir /build \
     && apt-get install -y curl zip git \
     && apt-get clean all
 WORKDIR /build
-COPY cicd/crabtaskworker_pypi/buildTWTarballs.sh cicd/crabtaskworker_pypi/buildDatafiles.sh /build/
+COPY cicd/crabtaskworker_pypi/buildTWTarballs.sh \
+     cicd/crabtaskworker_pypi/buildDatafiles.sh \
+     cicd/crabserver_pypi/wmcore_requirements.txt /build/
 COPY setup.py /build
 COPY src /build/src
 COPY scripts /build/scripts
-COPY --from=wmcore-src /WMCore /build/WMCore
+
+RUN wmcore_repo="$(grep -v '^\s*#' wmcore_requirements.txt | cut -d' ' -f1)" \
+    && wmcore_version="$(grep -v '^\s*#' wmcore_requirements.txt | cut -d' ' -f2)" \
+    && git clone  --depth 1 ${wmcore_repo} -b "${wmcore_version}" /build/WMCore \
+    && ( cd /build/WMCore; git status )
 RUN WMCOREDIR=./WMCore \
     CRABSERVERDIR=./ \
     DATAFILES_WORKDIR=./data_files\
@@ -68,11 +63,14 @@ RUN mkdir /build
 WORKDIR /build
 
 # install dependencies
-COPY --chown=${USER}:${USER} --from=wmcore-src /wmcore_version ./
-COPY --chown=${USER}:${USER} cicd/crabtaskworker_pypi/requirements.txt ./
+COPY cicd/crabtaskworker_pypi/requirements.txt ./
 RUN pip install -r requirements.txt \
-    && pip install --no-deps wmcore==$(cat wmcore_version) \
     && pip cache purge
+
+# install wmcore
+COPY cp ./
+COPY cicd/crabtaskworker_pypi/installWMCore.sh ./
+RUN ./installWMCore.sh
 
 # copy htcondor config
 RUN mkdir /etc/condor
