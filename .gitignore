@@ -26,5 +26,5 @@ test/Playbook/ASORucio/*
 # optional file that up to dev to create
 cicd/trigger-ci/env
 
-# temp file for build locally
+# ignore temp file when build locally
 cicd/crab_staticanalysis/dmwm
