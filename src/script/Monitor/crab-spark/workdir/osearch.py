@@ -97,6 +97,7 @@ class OpenSearchInterface(object):
             url = 'https://' + username + ':' + password + '@' + host
             self.handle = OpenSearch(
                 [url],
+                http_compress=True,
                 verify_certs=False,
                 use_ssl=True,
                 ca_certs='/etc/pki/tls/certs/ca-bundle.trust.crt',
@@ -243,8 +244,8 @@ def send_os_parallel(docs, index_name, schema, secretpath, timestamp, batch_size
             ndocs, nfails = f.result()
             total_docs += ndocs
             total_fails += nfails
-        print("=================================== RUCIO : Rules History ====================================="
+        print("========================================================================"
               , "FINISHED : "
               , total_docs, "ROWS ARE SENT"
               , total_fails, "ROWS ARE FAILED"
-              , "=================================== RUCIO : Rules History =====================================", sep='\n')
+              , "========================================================================", sep='\n')
