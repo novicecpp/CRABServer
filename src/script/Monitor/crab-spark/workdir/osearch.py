@@ -220,7 +220,7 @@ def send_os(docs, index_name, schema, secretpath, timestamp, batch_size=10000):
 
     client = get_es_client("os-cms.cern.ch/es", secretpath, schema)
     idx = client.get_or_create_index(timestamp=timestamp, index_template=index_name, index_mod="M")
-    no_of_fail_saved = client.send(idx, docs, metadata=None, batch_size=10000, drop_nulls=False)
+    no_of_fail_saved = client.send(idx, docs, metadata=None, batch_size=batch_size, drop_nulls=False)
 
     print("=================================== RUCIO : Rules History ====================================="
               , "FINISHED : "
