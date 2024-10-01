@@ -217,19 +217,34 @@ class OpenSearchInterface(object):
         logging.debug("OpenSearch send", len(data) - result_n_failed, "documents successfully")
         return result_n_failed
 
-def send_os(docs, index_name, schema, secretpath, timestamp, batch_size=10000):
+def send_os(docs, index_name, schema, secretpath, timestamp, batch_size=10000, printsummary=True):
 
     client = get_es_client("os-cms.cern.ch/es", secretpath, schema)
     idx = client.get_or_create_index(timestamp=timestamp, index_template=index_name, index_mod="M")
     no_of_fail_saved = client.send(idx, docs, metadata=None, batch_size=batch_size, drop_nulls=False)
-
-    print("=================================== RUCIO : Rules History ====================================="
+    if printsummary:
+        print("========================================================================"
               , "FINISHED : "
               , len(docs), "ROWS ARE SENT"
               , no_of_fail_saved, "ROWS ARE FAILED"
-              , "=================================== RUCIO : Rules History =====================================", sep='\n')
+              , "========================================================================", sep='\n')
+    else:
+        return len(docs), no_of_fail_saved
 
 def send_os_parallel(docs, index_name, schema, secretpath, timestamp, batch_size=10000):
     with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
+        futures = []
         for chunk in OpenSearchInterface.to_chunks(docs, batch_size):
-            executor.submit(send_os, chunk, index_name, schema, secretpath, timestamp, batch_size+1)
+            future = executor.submit(send_os, chunk, index_name, schema, secretpath, timestamp, batch_size+1, False)
+            futures.append(future)
+        total_docs = 0
+        total_fails = 0
+        for f in futures:
+            ndocs, nfails = f.result()
+            total_docs += ndocs
+            total_fails += nfails
+        print("=================================== RUCIO : Rules History ====================================="
+              , "FINISHED : "
+              , total_docs, "ROWS ARE SENT"
+              , total_fails, "ROWS ARE FAILED"
+              , "=================================== RUCIO : Rules History =====================================", sep='\n')
