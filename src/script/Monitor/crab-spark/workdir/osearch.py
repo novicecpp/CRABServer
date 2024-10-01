@@ -57,7 +57,6 @@ import logging
 import time
 from collections import Counter as collectionsCounter
 from datetime import datetime
-import concurrent.futures
 
 from opensearchpy import OpenSearch
 
@@ -187,7 +186,7 @@ class OpenSearchInterface(object):
             body += json.dumps(data) + "\n"
         return body
 
-    def send(self, idx, data, metadata=None, batch_size=10000, drop_nulls=False, parallel=False):
+    def send(self, idx, data, metadata=None, batch_size=10000, drop_nulls=False):
         """Send data in bulks to OpenSearch instance, batching is implemented by default.
 
         Args:
@@ -205,32 +204,23 @@ class OpenSearchInterface(object):
             data = [data]
 
         result_n_failed = 0
-        def process_chunk(chunk):
+        for chunk in self.to_chunks(data, batch_size):
             if drop_nulls:
                 chunk = [self.drop_nulls_in_dict(_x) for _x in chunk]
             body = self.make_es_body(chunk, metadata)
             res = _opensearch_client.handle.bulk(body=body, index=idx, request_timeout=300)
             if res.get("errors"):
-                return self.parse_errors(res)
-            return 0
-        if parallel:
-            with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
-                futures = executor.map(process_chunk, self.to_chunks(data, batch_size))
-            for f in futures:
-                result_n_failed += f
-        else:
-            for chunk in self.to_chunks(data, batch_size):
-                result_n_failed += process_chunk(chunk)
+                result_n_failed += self.parse_errors(res)
         if result_n_failed > 0:
             logging.error("OpenSearch send failed count: ", result_n_failed)
         logging.debug("OpenSearch send", len(data) - result_n_failed, "documents successfully")
         return result_n_failed
 
-def send_os(docs, index_name, schema, secretpath, timestamp, parallel=False):
+def send_os(docs, index_name, schema, secretpath, timestamp, batch_size=10000):
 
     client = get_es_client("os-cms.cern.ch/es", secretpath, schema)
     idx = client.get_or_create_index(timestamp=timestamp, index_template=index_name, index_mod="M")
-    no_of_fail_saved = client.send(idx, docs, metadata=None, batch_size=10000, drop_nulls=False, parallel=parallel)
+    no_of_fail_saved = client.send(idx, docs, metadata=None, batch_size=10000, drop_nulls=False)
 
     print("=================================== RUCIO : Rules History ====================================="
               , "FINISHED : "
