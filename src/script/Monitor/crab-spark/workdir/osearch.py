@@ -55,6 +55,7 @@ How to use:
 import json
 import logging
 import time
+import concurrent.futures
 from collections import Counter as collectionsCounter
 from datetime import datetime
 
@@ -227,3 +228,8 @@ def send_os(docs, index_name, schema, secretpath, timestamp, batch_size=10000):
               , len(docs), "ROWS ARE SENT"
               , no_of_fail_saved, "ROWS ARE FAILED"
               , "=================================== RUCIO : Rules History =====================================", sep='\n')
+
+def send_os_parallel(docs, index_name, schema, secretpath, timestamp, batch_size=10000):
+    with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
+        for chunk in OpenSearchInterface.to_chunks(docs, batch_size):
+            executor.submit(send_os, chunk, index_name, schema, secretpath, timestamp, batch_size+1)
