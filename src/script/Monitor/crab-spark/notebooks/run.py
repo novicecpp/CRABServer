@@ -14,8 +14,8 @@ def valid_date(s):
 
 parser = argparse.ArgumentParser(description='crab service process controller')
 parser.add_argument('path', help='')
-parser.add_argument('--from', type=valid_date, dest='from_date', help='')
-parser.add_argument('--to', type=valid_date, dest='to_date', help='')
+parser.add_argument('--start', type=valid_date, dest='start_date', help='')
+parser.add_argument('--end', type=valid_date, dest='end_date', help='')
 parser.add_argument('--today', action='store_true', help='')
 parser.add_argument('--prod', action='store_true', help='')
 parser.add_argument('--secretpath', help='')
@@ -24,16 +24,19 @@ args = parser.parse_args()
 sparkjob_env = os.environ.copy()
 if args.today:
     day = datetime.now()
-    sparkjob_env['FROM_DATE'] = day.strftime("%Y-%m-%d")
-    sparkjob_env['TO_DATE'] = (day-timedelta(days=1)).strftime("%Y-%m-%d")
+    sparkjob_env['START_DATE'] = (day-timedelta(days=1)).strftime("%Y-%m-%d")
+    sparkjob_env['END_DATE'] = day.strftime("%Y-%m-%d")
+if not args.today and args.start_date and args.end_date:
+    sparkjob_env['START_DATE'] = args.start_date
+    sparkjob_env['END_DATE'] = args.end_date
 else:
-    sparkjob_env['FROM_DATE'] = args.from_date
-    sparkjob_env['TO_DATE'] = args.to_date
+    raise Exception("Need --today or --start/--end.")
 if args.secretpath:
     sparkjob_env['OPENSEARCH_SECRET_PATH'] = args.secretpath
 if args.prod:
-    sparkjob_env['PROD'] = 'true'
-
+    sparkjob_env['PROD'] = 't'
+else:
+    sparkjob_env['PROD'] = 'f'
 
 path = pathlib.Path(args.path)
 pathpy = path.with_suffix('.py')
