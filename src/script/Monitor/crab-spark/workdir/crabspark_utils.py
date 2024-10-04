@@ -8,7 +8,7 @@ def get_candidate_files(start_date, end_date, spark, base, day_delta=1):
     """
     st_date = start_date - timedelta(days=day_delta)
     ed_date = end_date + timedelta(days=day_delta)
-    days = (ed_date - st_date).days
+    days = (ed_date - st_date).days + 1
 
     sc = spark.sparkContext
     # The candidate files are the folders to the specific dates,
