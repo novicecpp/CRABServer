@@ -4,7 +4,7 @@ import os
 import subprocess
 import pathlib
 from pprint import pprint
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 def valid_date(s):
     try:
@@ -27,7 +27,7 @@ sparkjob_env = {}
 if args.today:
     args.ndaysago = 0
 if args.ndaysago >= 0:
-    day = datetime.now()
+    day = datetime.now().replace(tzinfo=timezone.utc)
     ed = args.ndaysago
     sd = args.ndaysago + 1 # start date is "yesterday" of n days ago
     sparkjob_env['START_DATE'] = (day-timedelta(days=sd)).strftime("%Y-%m-%d")
