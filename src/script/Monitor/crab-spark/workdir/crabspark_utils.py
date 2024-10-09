@@ -2,10 +2,11 @@
 Utility functions for spark scripts
 """
 # pylint: disable=protected-access
-from datetime import timedelta
-from osearch import get_es_client, OpenSearchInterface
 
 import concurrent.futures
+
+from datetime import timedelta
+from osearch import get_es_client, OpenSearchInterface
 
 def get_candidate_files(start_date, end_date, spark, base, day_delta=1):
     """
@@ -21,6 +22,7 @@ def get_candidate_files(start_date, end_date, spark, base, day_delta=1):
     # The candidate files are the folders to the specific dates,
     # but if we are looking at recent days the compaction procedure could
     # have not run yet, so we will consider also the .tmp folders.
+
     candidate_files = [
         f"{base}/{(st_date + timedelta(days=i)).strftime('%Y/%m/%d')}{{,.tmp}}"
         for i in range(0, days)
@@ -34,6 +36,27 @@ def get_candidate_files(start_date, end_date, spark, base, day_delta=1):
 
 
 def send_os(docs, index_name, schema, secretpath, timestamp, batch_size=10000, printsummary=True):
+    """
+    Convenient one-liner function to send data to opensearch using osearch lib
+
+    :param docs: documents to send to opensearch
+    :type docs: dict
+    :param index_name: opensearch index name
+    :type index_name: str
+    :param schema: opensearch index schema
+    :type schema: str
+    :param secretpath: path to secret file which contains "<user>:<password>"
+    :type secretpath: str
+    :param timestamp: timestamp in second to build
+    :type timestamp: str
+    :param batch_size: how many docs we send to os in a single request
+    :type batch_size: int
+    :param printsummary: if yes, print summary text
+    :type printsummary: bool
+
+    :return: number of total docs and number of fail-to-send docs.
+    :rtype: (int, int)
+    """
     client = get_es_client("os-cms.cern.ch/os", secretpath, schema)
     idx = client.get_or_create_index(timestamp=timestamp, index_template=index_name, index_mod="M")
     no_of_fail_saved = client.send(idx, docs, metadata=None, batch_size=batch_size, drop_nulls=False)
@@ -43,10 +66,16 @@ def send_os(docs, index_name, schema, secretpath, timestamp, batch_size=10000, p
               , len(docs), "ROWS ARE SENT"
               , no_of_fail_saved, "ROWS ARE FAILED"
               , "========================================================================", sep='\n')
-    else:
-        return len(docs), no_of_fail_saved
+    return len(docs), no_of_fail_saved
 
 def send_os_parallel(docs, index_name, schema, secretpath, timestamp, batch_size=10000):
+    """
+    Convenient one-liner function to send data to opensearch using osearch lib,
+    in parallel.
+
+    Note that it has the same params as send_os() except `printsummary`, and
+    return None
+    """
     with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
         futures = []
         for chunk in OpenSearchInterface.to_chunks(docs, batch_size):
